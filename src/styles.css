@@ -93,3 +93,32 @@
   to { opacity: 1; transform: translateY(0); }
 }
 .animate-fade-up { animation: fade-up 0.9s cubic-bezier(0.16,1,0.3,1) both; }
+
+/* Ken Burns — slow drift + zoom on hero photography */
+@keyframes ken-burns {
+  0%   { transform: scale(1.08) translate3d(-1.5%, -1%, 0); }
+  50%  { transform: scale(1.16) translate3d(1.2%, 1.5%, 0); }
+  100% { transform: scale(1.08) translate3d(-1.5%, -1%, 0); }
+}
+.animate-ken-burns { animation: ken-burns 28s ease-in-out infinite; will-change: transform; }
+
+/* Character-stagger reveal */
+@keyframes char-reveal {
+  0%   { opacity: 0; transform: translateY(0.6em) rotate(4deg); filter: blur(6px); }
+  60%  { opacity: 1; filter: blur(0); }
+  100% { opacity: 1; transform: translateY(0) rotate(0); filter: blur(0); }
+}
+.split-char {
+  opacity: 0;
+  animation: char-reveal 0.85s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+/* Custom cursor halo on key CTAs */
+.cta-cursor {
+  cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'><circle cx='14' cy='14' r='10' fill='none' stroke='%23dfff5e' stroke-width='2'/><circle cx='14' cy='14' r='2' fill='%23dfff5e'/></svg>") 14 14, pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-ken-burns, .split-char, .animate-fade-up, .animate-marquee { animation: none !important; }
+  .split-char { opacity: 1; }
+}
