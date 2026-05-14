@@ -1,0 +1,68 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
+import img from "@/assets/naari-shakti.jpg";
+import { PageHero, Section } from "@/components/site/PageHero";
+
+export const Route = createFileRoute("/donate")({
+  head: () => ({ meta: [
+    { title: "Donate — India Khelo Football" },
+    { name: "description", content: "Sponsor a kit, fund a trial, back a city. Every rupee is 80G tax-deductible and goes straight to the grassroots." },
+  ]}),
+  component: Donate,
+});
+
+const tiers = [
+  { amt: 500, t: "Kit a Player", b: "Boots, jersey, shorts and shin pads for one trial-stage athlete." },
+  { amt: 2500, t: "Sponsor a Trial", b: "Cover venue, refs, and meals for one open trial day in a tier-3 city." },
+  { amt: 10000, t: "Fund a Camp Week", b: "Lodging, meals and coaching for one player at a residential camp for a week." },
+  { amt: 50000, t: "Adopt a City", b: "Underwrite an entire season of trials in one city. Recognition on all kit." },
+];
+
+function Donate() {
+  const [selected, setSelected] = useState(2500);
+  const [custom, setCustom] = useState("");
+  return (
+    <>
+      <PageHero eyebrow="Donate"
+        title={<>Fuel the <span className="text-neon-strike not-italic">grassroots</span>.</>}
+        sub="100% of donations go to player kits, trials, camps, and academy scholarships. Operating costs are covered by our corporate partners — your money goes straight to the pitch."
+        image={img} />
+      <Section>
+        <div className="grid lg:grid-cols-12 gap-10">
+          <div className="lg:col-span-7">
+            <h2 className="font-display text-4xl uppercase mb-8">Pick a tier</h2>
+            <div className="grid sm:grid-cols-2 gap-3">
+              {tiers.map(tier => {
+                const active = selected === tier.amt && custom === "";
+                return (
+                  <button key={tier.amt} onClick={() => { setSelected(tier.amt); setCustom(""); }}
+                    className={`text-left p-6 border transition-colors ${active ? "border-neon-strike bg-pitch-green/20" : "border-chalk/15 bg-pitch-green/5 hover:border-chalk/40"}`}>
+                    <div className="font-display text-4xl text-neon-strike">₹{tier.amt.toLocaleString("en-IN")}</div>
+                    <h3 className="font-display text-xl uppercase mt-2">{tier.t}</h3>
+                    <p className="text-chalk/65 text-sm mt-2">{tier.b}</p>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <aside className="lg:col-span-5 bg-pitch-black border border-chalk/15 p-8 self-start sticky top-28">
+            <h3 className="font-display text-3xl uppercase">Your donation</h3>
+            <div className="mt-6">
+              <label className="text-xs uppercase tracking-widest text-chalk/60 font-bold">Custom amount (₹)</label>
+              <input type="number" value={custom} onChange={e => setCustom(e.target.value)} placeholder="Any amount"
+                className="mt-2 w-full bg-pitch-green/10 border border-chalk/15 px-4 py-3 font-display text-2xl text-chalk focus:outline-none focus:border-neon-strike" />
+            </div>
+            <div className="mt-6 flex justify-between text-sm text-chalk/70">
+              <span>Total</span>
+              <span className="font-display text-3xl text-neon-strike">₹{(custom ? Number(custom) || 0 : selected).toLocaleString("en-IN")}</span>
+            </div>
+            <button className="mt-6 w-full bg-neon-strike text-pitch-black px-8 py-4 font-display text-2xl uppercase tracking-wide hover:scale-[1.01] transition-transform">
+              Donate Now
+            </button>
+            <p className="mt-4 text-[10px] text-chalk/40 uppercase tracking-widest text-center">80G Tax Deductible · Registered Non-Profit</p>
+          </aside>
+        </div>
+      </Section>
+    </>
+  );
+}
