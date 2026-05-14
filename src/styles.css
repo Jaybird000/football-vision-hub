@@ -122,3 +122,76 @@
   .animate-ken-burns, .split-char, .animate-fade-up, .animate-marquee { animation: none !important; }
   .split-char { opacity: 1; }
 }
+
+/* ============================================================
+   IKF 360 Platform — scoped theme
+   All tokens below live under .ikf360-theme so they can be swapped
+   without affecting the marketing site. Change these 8 vars to
+   re-skin the entire platform mockup.
+   ============================================================ */
+.ikf360-theme {
+  --ikf-bg:        #0B1220;   /* page background */
+  --ikf-surface:   #131C2E;   /* cards, panels */
+  --ikf-surface-2: #1B2538;   /* nested surfaces, inputs */
+  --ikf-border:    #243049;   /* hairlines */
+  --ikf-text:      #EAF0F7;   /* primary text */
+  --ikf-text-dim:  #8A98AE;   /* secondary text */
+  --ikf-brand:     #DFFF5E;   /* neon strike (primary CTA) */
+  --ikf-accent:    #F5C518;   /* IKF yellow */
+  --ikf-success:   #4ADE80;
+  --ikf-warning:   #F59E0B;
+  --ikf-danger:    #F87171;
+
+  background: var(--ikf-bg);
+  color: var(--ikf-text);
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+}
+.ikf360-theme h1, .ikf360-theme h2, .ikf360-theme h3, .ikf360-theme h4 {
+  font-family: 'Inter', sans-serif;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+}
+.ikf-card {
+  background: var(--ikf-surface);
+  border: 1px solid var(--ikf-border);
+  border-radius: 12px;
+}
+.ikf-input {
+  background: var(--ikf-surface-2);
+  border: 1px solid var(--ikf-border);
+  border-radius: 8px;
+  color: var(--ikf-text);
+  padding: 10px 14px;
+  width: 100%;
+  font-size: 14px;
+  transition: border-color 0.15s;
+}
+.ikf-input:focus { outline: none; border-color: var(--ikf-brand); }
+.ikf-btn-primary {
+  background: var(--ikf-brand);
+  color: #0B1220;
+  font-weight: 700;
+  padding: 12px 22px;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: transform 0.15s, opacity 0.15s;
+}
+.ikf-btn-primary:hover { transform: translateY(-1px); }
+.ikf-btn-primary:disabled { opacity: 0.4; transform: none; cursor: not-allowed; }
+.ikf-btn-ghost {
+  background: transparent;
+  color: var(--ikf-text);
+  border: 1px solid var(--ikf-border);
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.ikf-btn-ghost:hover { border-color: var(--ikf-brand); color: var(--ikf-brand); }
+.ikf-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.08em; padding: 4px 10px; border-radius: 999px;
+}
+
