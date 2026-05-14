@@ -23,7 +23,8 @@ function Players() {
       <PageHero eyebrow="For Players"
         title={<>Your <span className="text-neon-strike not-italic">talent</span><br />deserves a stage.</>}
         sub="If you can play, we'll find you. IKF runs 200+ free open trials a year across India. Show up — the rest is on us."
-        image={img} />
+        image={img}
+        quote={{ text: "I played barefoot in Imphal till IKF gave me boots. Eight months later I signed with an I-League academy.", author: "Lalrinpuia H.", role: "Age 16, Mizoram" }} />
       <Section>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
           <div>
