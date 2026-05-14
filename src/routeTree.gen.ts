@@ -13,10 +13,17 @@ import { Route as PlayersRouteImport } from './routes/players'
 import { Route as PartnersRouteImport } from './routes/partners'
 import { Route as ParentsRouteImport } from './routes/parents'
 import { Route as InitiativesRouteImport } from './routes/initiatives'
+import { Route as Ikf360RouteImport } from './routes/ikf360'
 import { Route as DonateRouteImport } from './routes/donate'
 import { Route as CoachesRouteImport } from './routes/coaches'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as Ikf360IndexRouteImport } from './routes/ikf360.index'
+import { Route as Ikf360UploadRouteImport } from './routes/ikf360.upload'
+import { Route as Ikf360IntentRouteImport } from './routes/ikf360.intent'
+import { Route as Ikf360DashboardRouteImport } from './routes/ikf360.dashboard'
+import { Route as Ikf360AdminRouteImport } from './routes/ikf360.admin'
+import { Route as Ikf360AdminIdRouteImport } from './routes/ikf360.admin.$id'
 
 const PlayersRoute = PlayersRouteImport.update({
   id: '/players',
@@ -36,6 +43,11 @@ const ParentsRoute = ParentsRouteImport.update({
 const InitiativesRoute = InitiativesRouteImport.update({
   id: '/initiatives',
   path: '/initiatives',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Ikf360Route = Ikf360RouteImport.update({
+  id: '/ikf360',
+  path: '/ikf360',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DonateRoute = DonateRouteImport.update({
@@ -58,16 +70,53 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const Ikf360IndexRoute = Ikf360IndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => Ikf360Route,
+} as any)
+const Ikf360UploadRoute = Ikf360UploadRouteImport.update({
+  id: '/upload',
+  path: '/upload',
+  getParentRoute: () => Ikf360Route,
+} as any)
+const Ikf360IntentRoute = Ikf360IntentRouteImport.update({
+  id: '/intent',
+  path: '/intent',
+  getParentRoute: () => Ikf360Route,
+} as any)
+const Ikf360DashboardRoute = Ikf360DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => Ikf360Route,
+} as any)
+const Ikf360AdminRoute = Ikf360AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => Ikf360Route,
+} as any)
+const Ikf360AdminIdRoute = Ikf360AdminIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => Ikf360AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/coaches': typeof CoachesRoute
   '/donate': typeof DonateRoute
+  '/ikf360': typeof Ikf360RouteWithChildren
   '/initiatives': typeof InitiativesRoute
   '/parents': typeof ParentsRoute
   '/partners': typeof PartnersRoute
   '/players': typeof PlayersRoute
+  '/ikf360/admin': typeof Ikf360AdminRouteWithChildren
+  '/ikf360/dashboard': typeof Ikf360DashboardRoute
+  '/ikf360/intent': typeof Ikf360IntentRoute
+  '/ikf360/upload': typeof Ikf360UploadRoute
+  '/ikf360/': typeof Ikf360IndexRoute
+  '/ikf360/admin/$id': typeof Ikf360AdminIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -78,6 +127,12 @@ export interface FileRoutesByTo {
   '/parents': typeof ParentsRoute
   '/partners': typeof PartnersRoute
   '/players': typeof PlayersRoute
+  '/ikf360/admin': typeof Ikf360AdminRouteWithChildren
+  '/ikf360/dashboard': typeof Ikf360DashboardRoute
+  '/ikf360/intent': typeof Ikf360IntentRoute
+  '/ikf360/upload': typeof Ikf360UploadRoute
+  '/ikf360': typeof Ikf360IndexRoute
+  '/ikf360/admin/$id': typeof Ikf360AdminIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -85,10 +140,17 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/coaches': typeof CoachesRoute
   '/donate': typeof DonateRoute
+  '/ikf360': typeof Ikf360RouteWithChildren
   '/initiatives': typeof InitiativesRoute
   '/parents': typeof ParentsRoute
   '/partners': typeof PartnersRoute
   '/players': typeof PlayersRoute
+  '/ikf360/admin': typeof Ikf360AdminRouteWithChildren
+  '/ikf360/dashboard': typeof Ikf360DashboardRoute
+  '/ikf360/intent': typeof Ikf360IntentRoute
+  '/ikf360/upload': typeof Ikf360UploadRoute
+  '/ikf360/': typeof Ikf360IndexRoute
+  '/ikf360/admin/$id': typeof Ikf360AdminIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -97,10 +159,17 @@ export interface FileRouteTypes {
     | '/about'
     | '/coaches'
     | '/donate'
+    | '/ikf360'
     | '/initiatives'
     | '/parents'
     | '/partners'
     | '/players'
+    | '/ikf360/admin'
+    | '/ikf360/dashboard'
+    | '/ikf360/intent'
+    | '/ikf360/upload'
+    | '/ikf360/'
+    | '/ikf360/admin/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -111,16 +180,29 @@ export interface FileRouteTypes {
     | '/parents'
     | '/partners'
     | '/players'
+    | '/ikf360/admin'
+    | '/ikf360/dashboard'
+    | '/ikf360/intent'
+    | '/ikf360/upload'
+    | '/ikf360'
+    | '/ikf360/admin/$id'
   id:
     | '__root__'
     | '/'
     | '/about'
     | '/coaches'
     | '/donate'
+    | '/ikf360'
     | '/initiatives'
     | '/parents'
     | '/partners'
     | '/players'
+    | '/ikf360/admin'
+    | '/ikf360/dashboard'
+    | '/ikf360/intent'
+    | '/ikf360/upload'
+    | '/ikf360/'
+    | '/ikf360/admin/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -128,6 +210,7 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   CoachesRoute: typeof CoachesRoute
   DonateRoute: typeof DonateRoute
+  Ikf360Route: typeof Ikf360RouteWithChildren
   InitiativesRoute: typeof InitiativesRoute
   ParentsRoute: typeof ParentsRoute
   PartnersRoute: typeof PartnersRoute
@@ -164,6 +247,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InitiativesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ikf360': {
+      id: '/ikf360'
+      path: '/ikf360'
+      fullPath: '/ikf360'
+      preLoaderRoute: typeof Ikf360RouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/donate': {
       id: '/donate'
       path: '/donate'
@@ -192,14 +282,88 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ikf360/': {
+      id: '/ikf360/'
+      path: '/'
+      fullPath: '/ikf360/'
+      preLoaderRoute: typeof Ikf360IndexRouteImport
+      parentRoute: typeof Ikf360Route
+    }
+    '/ikf360/upload': {
+      id: '/ikf360/upload'
+      path: '/upload'
+      fullPath: '/ikf360/upload'
+      preLoaderRoute: typeof Ikf360UploadRouteImport
+      parentRoute: typeof Ikf360Route
+    }
+    '/ikf360/intent': {
+      id: '/ikf360/intent'
+      path: '/intent'
+      fullPath: '/ikf360/intent'
+      preLoaderRoute: typeof Ikf360IntentRouteImport
+      parentRoute: typeof Ikf360Route
+    }
+    '/ikf360/dashboard': {
+      id: '/ikf360/dashboard'
+      path: '/dashboard'
+      fullPath: '/ikf360/dashboard'
+      preLoaderRoute: typeof Ikf360DashboardRouteImport
+      parentRoute: typeof Ikf360Route
+    }
+    '/ikf360/admin': {
+      id: '/ikf360/admin'
+      path: '/admin'
+      fullPath: '/ikf360/admin'
+      preLoaderRoute: typeof Ikf360AdminRouteImport
+      parentRoute: typeof Ikf360Route
+    }
+    '/ikf360/admin/$id': {
+      id: '/ikf360/admin/$id'
+      path: '/$id'
+      fullPath: '/ikf360/admin/$id'
+      preLoaderRoute: typeof Ikf360AdminIdRouteImport
+      parentRoute: typeof Ikf360AdminRoute
+    }
   }
 }
+
+interface Ikf360AdminRouteChildren {
+  Ikf360AdminIdRoute: typeof Ikf360AdminIdRoute
+}
+
+const Ikf360AdminRouteChildren: Ikf360AdminRouteChildren = {
+  Ikf360AdminIdRoute: Ikf360AdminIdRoute,
+}
+
+const Ikf360AdminRouteWithChildren = Ikf360AdminRoute._addFileChildren(
+  Ikf360AdminRouteChildren,
+)
+
+interface Ikf360RouteChildren {
+  Ikf360AdminRoute: typeof Ikf360AdminRouteWithChildren
+  Ikf360DashboardRoute: typeof Ikf360DashboardRoute
+  Ikf360IntentRoute: typeof Ikf360IntentRoute
+  Ikf360UploadRoute: typeof Ikf360UploadRoute
+  Ikf360IndexRoute: typeof Ikf360IndexRoute
+}
+
+const Ikf360RouteChildren: Ikf360RouteChildren = {
+  Ikf360AdminRoute: Ikf360AdminRouteWithChildren,
+  Ikf360DashboardRoute: Ikf360DashboardRoute,
+  Ikf360IntentRoute: Ikf360IntentRoute,
+  Ikf360UploadRoute: Ikf360UploadRoute,
+  Ikf360IndexRoute: Ikf360IndexRoute,
+}
+
+const Ikf360RouteWithChildren =
+  Ikf360Route._addFileChildren(Ikf360RouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   CoachesRoute: CoachesRoute,
   DonateRoute: DonateRoute,
+  Ikf360Route: Ikf360RouteWithChildren,
   InitiativesRoute: InitiativesRoute,
   ParentsRoute: ParentsRoute,
   PartnersRoute: PartnersRoute,
@@ -208,13 +372,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
