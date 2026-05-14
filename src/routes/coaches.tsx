@@ -21,7 +21,8 @@ function Coaches() {
       <PageHero eyebrow="For Coaches"
         title={<>You see them <span className="text-neon-strike not-italic">first</span>.</>}
         sub="Grassroots coaches are the most important scouts in Indian football. IKF gives you the certification, network, and pipeline to channel that talent."
-        image={img} />
+        image={img}
+        quote={{ text: "I've coached on broken pitches for 14 years. IKF was the first organisation to actually pick up the phone when I called about a player.", author: "Sandeep Rawat", role: "D-License coach, Dehradun" }} />
       <Section>
         <div className="grid md:grid-cols-3 gap-3">
           {tracks.map(t => (

@@ -22,7 +22,8 @@ function Parents() {
       <PageHero eyebrow="For Parents"
         title={<>Their <span className="text-neon-strike not-italic">future</span><br />is in safe hands.</>}
         sub="Sending a child into competitive sport is a leap of faith. IKF makes it a structured, safe, and education-first journey — built for parents who care."
-        image={img} />
+        image={img}
+        quote={{ text: "We were terrified the day she left for camp. A year on, she's stronger, sharper at school, and chasing something real.", author: "Sunita Devi", role: "Mother of an IKF scholar, Patna" }} />
       <Section>
         <h2 className="font-display text-5xl uppercase mb-12">Questions, answered.</h2>
         <div className="space-y-1">

@@ -1,7 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import img from "@/assets/naari-shakti.jpg";
 import { PageHero, Section } from "@/components/site/PageHero";
+import { Counter } from "@/components/site/Counter";
+import { ctaSoundProps } from "@/lib/sound";
 
 export const Route = createFileRoute("/donate")({
   head: () => ({ meta: [
@@ -18,15 +20,61 @@ const tiers = [
   { amt: 50000, t: "Adopt a City", b: "Underwrite an entire season of trials in one city. Recognition on all kit." },
 ];
 
+type Stats = {
+  month: string;
+  raisedThisMonth: number;
+  kitsDelivered: number;
+  trialsFunded: number;
+  rupeesPerKit: number;
+  lastDonor: string;
+  minutesAgo: number;
+};
+
 function Donate() {
   const [selected, setSelected] = useState(2500);
   const [custom, setCustom] = useState("");
+  const [stats, setStats] = useState<Stats | null>(null);
+
+  useEffect(() => {
+    fetch("/donate-stats.json").then(r => r.json()).then(setStats).catch(() => {});
+  }, []);
+
   return (
     <>
       <PageHero eyebrow="Donate"
         title={<>Fuel the <span className="text-neon-strike not-italic">grassroots</span>.</>}
         sub="100% of donations go to player kits, trials, camps, and academy scholarships. Operating costs are covered by our corporate partners — your money goes straight to the pitch."
         image={img} />
+
+      {/* Live impact ticker */}
+      {stats && (
+        <section className="border-y border-neon-strike/30 bg-pitch-green/15">
+          <div className="max-w-7xl mx-auto px-6 py-10 grid md:grid-cols-3 gap-6 items-end">
+            <div>
+              <div className="text-[10px] uppercase tracking-[0.3em] text-neon-strike font-bold mb-2">Live · {stats.month}</div>
+              <div className="font-display text-5xl md:text-6xl leading-none">
+                <Counter to={stats.raisedThisMonth} prefix="₹" />
+              </div>
+              <div className="text-chalk/60 text-xs uppercase tracking-widest mt-2">raised this month</div>
+            </div>
+            <div>
+              <div className="font-display text-5xl md:text-6xl leading-none text-neon-strike">
+                = <Counter to={stats.kitsDelivered} />
+              </div>
+              <div className="text-chalk/60 text-xs uppercase tracking-widest mt-2">kits delivered to players</div>
+            </div>
+            <div className="text-sm text-chalk/65">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="inline-block w-2 h-2 rounded-full bg-neon-strike animate-pulse" />
+                <span className="text-[10px] uppercase tracking-[0.3em] text-chalk/50 font-bold">Last donation</span>
+              </div>
+              <div className="font-display text-2xl">{stats.lastDonor}</div>
+              <div className="text-chalk/45 text-xs">{stats.minutesAgo} min ago · {stats.trialsFunded} trials funded this month</div>
+            </div>
+          </div>
+        </section>
+      )}
+
       <Section>
         <div className="grid lg:grid-cols-12 gap-10">
           <div className="lg:col-span-7">
@@ -56,7 +104,12 @@ function Donate() {
               <span>Total</span>
               <span className="font-display text-3xl text-neon-strike">₹{(custom ? Number(custom) || 0 : selected).toLocaleString("en-IN")}</span>
             </div>
-            <button className="mt-6 w-full bg-neon-strike text-pitch-black px-8 py-4 font-display text-2xl uppercase tracking-wide hover:scale-[1.01] transition-transform">
+            {stats && (
+              <div className="mt-2 text-xs text-chalk/55">
+                ≈ <span className="text-neon-strike font-bold">{Math.max(1, Math.floor((custom ? Number(custom) || 0 : selected) / stats.rupeesPerKit))}</span> player kit{Math.floor((custom ? Number(custom) || 0 : selected) / stats.rupeesPerKit) === 1 ? "" : "s"} delivered
+              </div>
+            )}
+            <button {...ctaSoundProps} className="cta-cursor mt-6 w-full bg-neon-strike text-pitch-black px-8 py-4 font-display text-2xl uppercase tracking-wide hover:scale-[1.01] transition-transform">
               Donate Now
             </button>
             <p className="mt-4 text-[10px] text-chalk/40 uppercase tracking-widest text-center">80G Tax Deductible · Registered Non-Profit</p>
