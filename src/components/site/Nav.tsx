@@ -49,6 +49,7 @@ export function Nav() {
           ))}
           <Link to="/parents" className="text-chalk/80 hover:text-neon-strike" onClick={() => setOpen(false)}>{t("nav", "parents")}</Link>
           <Link to="/partners" className="text-chalk/80 hover:text-neon-strike" onClick={() => setOpen(false)}>{t("nav", "partners")}</Link>
+          <Link to="/ikf360/admin" className="text-chalk/80 hover:text-neon-strike" onClick={() => setOpen(false)}>Admin</Link>
           <Link to="/donate" className="text-neon-strike" onClick={() => setOpen(false)}>{t("nav", "donate")}</Link>
         </div>
       )}
