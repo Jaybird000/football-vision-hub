@@ -29,6 +29,9 @@ export function Nav() {
         </div>
         <div className="flex items-center gap-3">
           <LangToggle />
+          <Link to="/ikf360/admin" className="hidden md:inline-flex items-center gap-1.5 border border-chalk/20 text-chalk/80 px-3 py-2 rounded-full font-bold text-[10px] uppercase tracking-widest hover:border-neon-strike hover:text-neon-strike transition-colors" activeProps={{ className: "border-neon-strike text-neon-strike" }}>
+            <span className="w-1.5 h-1.5 rounded-full bg-neon-strike" /> Admin
+          </Link>
           <Link to="/donate" className="hidden sm:inline-flex bg-chalk text-pitch-black px-5 py-2 rounded-full font-bold text-xs uppercase tracking-wider hover:bg-neon-strike transition-colors">
             {t("nav", "donate")}
           </Link>
@@ -46,6 +49,7 @@ export function Nav() {
           ))}
           <Link to="/parents" className="text-chalk/80 hover:text-neon-strike" onClick={() => setOpen(false)}>{t("nav", "parents")}</Link>
           <Link to="/partners" className="text-chalk/80 hover:text-neon-strike" onClick={() => setOpen(false)}>{t("nav", "partners")}</Link>
+          <Link to="/ikf360/admin" className="text-chalk/80 hover:text-neon-strike" onClick={() => setOpen(false)}>Admin</Link>
           <Link to="/donate" className="text-neon-strike" onClick={() => setOpen(false)}>{t("nav", "donate")}</Link>
         </div>
       )}
