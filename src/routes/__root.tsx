@@ -72,20 +72,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "India Khelo Football — From the Street to the Stadium" },
+      { name: "description", content: "India's largest grassroots football scouting platform. Free trials in 50+ cities, direct pathway to ISL academies." },
+      { property: "og:title", content: "India Khelo Football" },
+      { property: "og:description", content: "From the street to the stadium. India's grassroots football pipeline." },
       { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
-      {
-        rel: "stylesheet",
-        href: appCss,
-      },
+      { rel: "stylesheet", href: appCss },
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=Hind:wght@400;600;700&display=swap" },
     ],
   }),
   shellComponent: RootShell,
@@ -110,10 +108,15 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
-
   return (
     <QueryClientProvider client={queryClient}>
-      <Outlet />
+      <LanguageProvider>
+        <div className="flex min-h-screen flex-col bg-pitch-black text-chalk">
+          <Nav />
+          <main className="flex-1"><Outlet /></main>
+          <Footer />
+        </div>
+      </LanguageProvider>
     </QueryClientProvider>
   );
 }
