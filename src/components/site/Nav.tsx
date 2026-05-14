@@ -21,7 +21,7 @@ export function Nav() {
       <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
         <Link to="/" className="flex items-center"><Logo /></Link>
         <div className="hidden md:flex items-center gap-8 text-xs uppercase tracking-widest font-bold">
-          {links.filter(l => l.show !== false).map(l => (
+          {links.map(l => (
             <Link key={l.to} to={l.to} className="text-chalk/80 hover:text-neon-strike transition-colors" activeProps={{ className: "text-neon-strike" }}>
               {l.label}
             </Link>
@@ -39,7 +39,7 @@ export function Nav() {
       </div>
       {open && (
         <div className="md:hidden border-t border-chalk/10 bg-pitch-black px-6 py-6 flex flex-col gap-4 text-sm uppercase tracking-widest font-bold">
-          {links.filter(l => l.show !== false).map(l => (
+          {links.map(l => (
             <Link key={l.to} to={l.to} className="text-chalk/80 hover:text-neon-strike" onClick={() => setOpen(false)}>
               {l.label}
             </Link>
