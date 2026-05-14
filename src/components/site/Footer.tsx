@@ -26,7 +26,12 @@ export function Footer() {
           </div>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 pt-12 text-sm">
-          <div className="col-span-2"><Logo /></div>
+          <div className="col-span-2 flex flex-col gap-3">
+            <Logo size="lg" />
+            <p className="text-[10px] text-chalk/50 uppercase tracking-[0.25em] font-bold">
+              Powered by <span className="text-chalk/80">Sports Vision</span>
+            </p>
+          </div>
           <div>
             <h4 className="font-display text-lg uppercase mb-4 text-chalk/40">Pathway</h4>
             <ul className="space-y-2 text-chalk/70">
