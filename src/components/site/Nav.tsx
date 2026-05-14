@@ -9,13 +9,12 @@ export function Nav() {
   const { t } = useLang();
   const [open, setOpen] = useState(false);
 
-  const links = [
-    { to: "/", label: "Home", show: false },
+  const links: Array<{ to: "/players" | "/coaches" | "/initiatives" | "/about"; label: string }> = [
     { to: "/players", label: t("nav", "players") },
     { to: "/coaches", label: t("nav", "coaches") },
     { to: "/initiatives", label: t("nav", "initiatives") },
     { to: "/about", label: t("nav", "about") },
-  ] as const;
+  ];
 
   return (
     <nav className="sticky top-0 z-50 border-b border-chalk/10 bg-pitch-black/85 backdrop-blur-md">
