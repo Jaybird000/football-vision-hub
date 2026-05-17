@@ -70,6 +70,20 @@ function Overview() {
           <li>• Component patterns match shadcn conventions</li>
         </ul>
       </section>
+
+      <section className="ikf-card p-7">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-[18px] mb-1">Standalone mockup</h3>
+            <p className="text-[13px]" style={{ color: "var(--ikf-text-dim)" }}>
+              One self-contained HTML file with all 7 stages — paste into CodePen or JSFiddle.
+            </p>
+          </div>
+          <Link to="/codepen-export" className="ikf-btn-primary inline-flex items-center gap-2 text-[13px]">
+            Export to CodePen →
+          </Link>
+        </div>
+      </section>
     </div>
   );
 }
