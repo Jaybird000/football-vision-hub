@@ -350,12 +350,20 @@ render();`,
         <p className="text-[#8A96AC] text-sm leading-relaxed">
           One click opens CodePen with all mockup code pre-filled across HTML, CSS and JS panels.
         </p>
-        <button
-          onClick={openCodePen}
-          className="inline-flex items-center gap-2 bg-[#DFFF5E] text-[#0B1220] font-bold px-6 py-3 rounded-xl hover:-translate-y-px transition-transform text-sm cursor-pointer"
-        >
-          Open in CodePen →
-        </button>
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <button
+            onClick={openCodePen}
+            className="inline-flex items-center gap-2 bg-[#DFFF5E] text-[#0B1220] font-bold px-6 py-3 rounded-xl hover:-translate-y-px transition-transform text-sm cursor-pointer"
+          >
+            Open in CodePen →
+          </button>
+          <button
+            onClick={downloadHtml}
+            className="inline-flex items-center gap-2 bg-transparent text-[#EAF0F7] font-bold px-6 py-3 rounded-xl border border-[#243049] hover:border-[#DFFF5E] hover:-translate-y-px transition-all text-sm cursor-pointer"
+          >
+            ⬇ Download as HTML
+          </button>
+        </div>
         <p className="text-[#8A96AC] text-xs">
           Opens a new tab. CodePen auto-populates all three panels.
         </p>
@@ -367,4 +375,20 @@ render();`,
       </div>
     </div>
   );
+}
+
+function downloadHtml() {
+  fetch("/ikf360-mockup.html")
+    .then((r) => r.text())
+    .then((text) => {
+      const blob = new Blob([text], { type: "text/html" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "ikf360-mockup.html";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    });
 }
