@@ -1,0 +1,555 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>IKF Coaches Network — Mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap" rel="stylesheet" />
+<style>
+:root{
+  --pitch:#06080c; --pitch-2:#0c1118; --line:#1a2331; --line-2:#243049;
+  --chalk:#EAF0F7; --mute:#8a97aa;
+  --neon:#C6FF3D; --neon-2:#8ef000;
+  --saffron:#FF8A2A; --teal:#22D3EE; --magenta:#FF3D8A;
+  --r:14px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--pitch);color:var(--chalk);font-family:'Inter','Noto Sans Devanagari',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+img{max-width:100%;display:block}
+.wrap{max-width:1280px;margin:0 auto;padding:0 24px}
+.display{font-family:'Bebas Neue',sans-serif;letter-spacing:.02em;line-height:.95}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border:1px solid var(--line-2);border-radius:999px;font-size:11px;text-transform:uppercase;letter-spacing:.14em;color:var(--mute);background:rgba(255,255,255,.02)}
+.chip.neon{color:var(--neon);border-color:rgba(198,255,61,.35);background:rgba(198,255,61,.06)}
+.chip.saf{color:var(--saffron);border-color:rgba(255,138,42,.35);background:rgba(255,138,42,.06)}
+.chip.teal{color:var(--teal);border-color:rgba(34,211,238,.3);background:rgba(34,211,238,.06)}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:11px 18px;border-radius:999px;font-weight:700;font-size:13px;letter-spacing:.04em;cursor:pointer;border:1px solid transparent;transition:.2s}
+.btn.primary{background:var(--neon);color:#06080c}
+.btn.primary:hover{background:var(--neon-2)}
+.btn.ghost{background:transparent;border-color:var(--line-2);color:var(--chalk)}
+.btn.ghost:hover{border-color:var(--neon);color:var(--neon)}
+.btn.sm{padding:7px 12px;font-size:11px}
+
+/* ===== NAV ===== */
+.nav{position:sticky;top:0;z-index:50;background:rgba(6,8,12,.82);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.nav .inner{display:flex;align-items:center;justify-content:space-between;height:68px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.18em;font-size:12px;text-transform:uppercase}
+.logo .dot{width:10px;height:10px;border-radius:3px;background:var(--neon);box-shadow:0 0 18px var(--neon)}
+.nav-links{display:flex;gap:28px;font-size:12px;text-transform:uppercase;letter-spacing:.16em;color:var(--mute);font-weight:600}
+.nav-links a:hover,.nav-links a.active{color:var(--neon)}
+.nav-right{display:flex;align-items:center;gap:10px}
+.lang{display:flex;border:1px solid var(--line-2);border-radius:999px;padding:3px}
+.lang button{background:transparent;color:var(--mute);border:0;padding:5px 12px;border-radius:999px;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.1em}
+.lang button.on{background:var(--chalk);color:#06080c}
+
+/* ===== HERO ===== */
+.hero{position:relative;padding:90px 0 60px;overflow:hidden;border-bottom:1px solid var(--line)}
+.hero::before{content:"";position:absolute;inset:0;background:
+  radial-gradient(60% 60% at 18% 0%,rgba(198,255,61,.12),transparent 60%),
+  radial-gradient(50% 50% at 90% 30%,rgba(34,211,238,.10),transparent 60%);
+  pointer-events:none}
+.hero-grid{display:grid;grid-template-columns:1.3fr .9fr;gap:60px;align-items:end;position:relative}
+.eyebrow{display:inline-flex;gap:8px;align-items:center;font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--neon);margin-bottom:22px}
+.eyebrow .pulse{width:6px;height:6px;border-radius:50%;background:var(--neon);box-shadow:0 0 0 0 rgba(198,255,61,.6);animation:pulse 1.8s infinite}
+@keyframes pulse{70%{box-shadow:0 0 0 10px rgba(198,255,61,0)}100%{box-shadow:0 0 0 0 rgba(198,255,61,0)}}
+.h1{font-size:clamp(54px,8vw,108px);font-weight:400}
+.h1 em{font-style:normal;color:var(--neon)}
+.lede{margin-top:22px;color:var(--mute);font-size:17px;line-height:1.6;max-width:560px}
+.hero-cta{margin-top:30px;display:flex;gap:12px;flex-wrap:wrap}
+.hero-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:20px}
+.stat{border:1px solid var(--line);border-radius:var(--r);padding:22px;background:linear-gradient(180deg,rgba(255,255,255,.025),transparent)}
+.stat .n{font-family:'Bebas Neue';font-size:54px;color:var(--chalk);line-height:1}
+.stat .l{margin-top:6px;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--mute)}
+.stat .delta{color:var(--neon);font-weight:700;font-size:12px;margin-top:8px}
+
+/* ===== SECTION ===== */
+section{padding:72px 0;border-bottom:1px solid var(--line)}
+.sec-head{display:flex;justify-content:space-between;align-items:flex-end;gap:30px;margin-bottom:34px;flex-wrap:wrap}
+.sec-title{font-size:clamp(34px,4.6vw,58px);font-weight:400}
+.sec-sub{color:var(--mute);max-width:520px;font-size:15px;line-height:1.6}
+
+/* ===== APP LAYOUT (feed + sidebar) ===== */
+.app{display:grid;grid-template-columns:240px 1fr 320px;gap:28px}
+.side{position:sticky;top:84px;align-self:start}
+.side h4{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--mute);margin:0 0 12px}
+.side .item{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:10px;cursor:pointer;color:var(--mute);font-size:13px;font-weight:600}
+.side .item:hover{background:rgba(255,255,255,.03);color:var(--chalk)}
+.side .item.on{background:rgba(198,255,61,.08);color:var(--neon)}
+.side .item .c{font-size:11px;color:var(--mute)}
+.side .group{margin-bottom:26px}
+
+/* ===== COMPOSER ===== */
+.composer{border:1px solid var(--line);border-radius:var(--r);padding:16px;background:var(--pitch-2);margin-bottom:18px}
+.composer textarea{width:100%;background:transparent;border:0;color:var(--chalk);font:inherit;resize:none;outline:none;min-height:64px;font-size:15px}
+.composer .row{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line);padding-top:10px;margin-top:6px}
+.composer .tags{display:flex;gap:6px;flex-wrap:wrap}
+
+/* ===== THREADS ===== */
+.thread{border:1px solid var(--line);border-radius:var(--r);padding:20px;background:var(--pitch-2);margin-bottom:14px;transition:.2s}
+.thread:hover{border-color:var(--line-2);transform:translateY(-1px)}
+.thread .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.author{display:flex;gap:12px;align-items:center}
+.avatar{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font-family:'Bebas Neue';font-size:18px;color:#06080c;flex-shrink:0}
+.author .who{font-weight:700;font-size:14px}
+.author .meta{font-size:11px;color:var(--mute);letter-spacing:.06em;margin-top:2px}
+.thread h3{margin:6px 0 8px;font-size:19px;font-weight:700;line-height:1.35}
+.thread p{margin:0;color:var(--mute);line-height:1.6;font-size:14px}
+.thread .tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:14px}
+.thread .actions{display:flex;gap:18px;margin-top:14px;padding-top:14px;border-top:1px solid var(--line);color:var(--mute);font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase}
+.thread .actions span{cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.thread .actions span:hover{color:var(--neon)}
+.thread.pinned{border-color:rgba(198,255,61,.3);background:linear-gradient(180deg,rgba(198,255,61,.04),var(--pitch-2))}
+
+/* ===== RECOS SIDEBAR ===== */
+.panel{border:1px solid var(--line);border-radius:var(--r);padding:18px;background:var(--pitch-2);margin-bottom:18px}
+.panel h4{margin:0 0 14px;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--mute);display:flex;justify-content:space-between;align-items:center}
+.panel h4 .badge{background:var(--neon);color:#06080c;padding:2px 7px;border-radius:6px;font-size:9px;letter-spacing:.14em}
+.reco{display:flex;gap:12px;padding:12px 0;border-top:1px dashed var(--line)}
+.reco:first-of-type{border-top:0;padding-top:0}
+.reco .info{flex:1;min-width:0}
+.reco .name{font-weight:700;font-size:14px}
+.reco .role{font-size:11px;color:var(--mute);margin-top:2px;line-height:1.4}
+.reco .match{display:flex;gap:4px;margin-top:8px;flex-wrap:wrap}
+.reco .match span{font-size:9px;padding:3px 7px;border-radius:4px;background:rgba(255,255,255,.05);color:var(--mute);letter-spacing:.06em;text-transform:uppercase}
+.reco .score{text-align:right;flex-shrink:0}
+.reco .score .pct{font-family:'Bebas Neue';font-size:28px;color:var(--neon);line-height:1}
+.reco .score .label{font-size:9px;color:var(--mute);letter-spacing:.14em;text-transform:uppercase}
+.reco .refer{margin-top:8px;width:100%;background:transparent;border:1px solid var(--line-2);color:var(--chalk);padding:6px;border-radius:8px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
+.reco .refer:hover{border-color:var(--neon);color:var(--neon)}
+
+/* ===== REFERRAL FLOW VIS ===== */
+.flow{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:24px}
+.flow .node{border:1px solid var(--line);border-radius:var(--r);padding:18px;background:var(--pitch-2);position:relative}
+.flow .node .step{position:absolute;top:-10px;left:18px;background:var(--neon);color:#06080c;font-family:'Bebas Neue';font-size:14px;padding:2px 9px;border-radius:6px}
+.flow .node h5{margin:0 0 6px;font-size:14px}
+.flow .node p{margin:0;font-size:12px;color:var(--mute);line-height:1.5}
+
+/* ===== RESOURCES ===== */
+.res-tabs{display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap}
+.res-tabs button{background:transparent;border:1px solid var(--line-2);color:var(--mute);padding:10px 18px;border-radius:999px;cursor:pointer;font-weight:700;font-size:12px;letter-spacing:.1em;text-transform:uppercase}
+.res-tabs button.on{background:var(--chalk);color:#06080c;border-color:var(--chalk)}
+.res-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.res{border:1px solid var(--line);border-radius:var(--r);padding:22px;background:var(--pitch-2);position:relative;overflow:hidden;transition:.2s}
+.res::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:var(--accent,var(--neon))}
+.res:hover{transform:translateY(-3px);border-color:var(--line-2)}
+.res .src{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--mute);margin-bottom:10px}
+.res h5{margin:0 0 8px;font-size:17px;line-height:1.3}
+.res p{margin:0 0 14px;font-size:13px;color:var(--mute);line-height:1.55}
+.res .foot{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--mute);letter-spacing:.08em;text-transform:uppercase}
+.res .foot .go{color:var(--neon);font-weight:700}
+
+/* ===== FOOTER ===== */
+footer{padding:50px 0 40px;color:var(--mute);font-size:12px}
+.foot-grid{display:flex;justify-content:space-between;flex-wrap:wrap;gap:20px}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:1100px){
+  .app{grid-template-columns:1fr 300px}
+  .side.left{display:none}
+  .flow{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:780px){
+  .hero-grid{grid-template-columns:1fr;gap:40px}
+  .app{grid-template-columns:1fr}
+  .side.right{display:none}
+  .res-grid{grid-template-columns:1fr}
+  .nav-links{display:none}
+}
+
+/* lang */
+[data-lang="hi"] .en{display:none}
+[data-lang="en"] .hi{display:none}
+</style>
+</head>
+<body data-lang="en">
+
+<!-- NAV -->
+<header class="nav">
+  <div class="wrap inner">
+    <div class="logo"><span class="dot"></span> IKF · Coaches Network</div>
+    <nav class="nav-links">
+      <a class="active" href="#feed"><span class="en">Feed</span><span class="hi">फ़ीड</span></a>
+      <a href="#mentors"><span class="en">Mentors</span><span class="hi">मेंटर</span></a>
+      <a href="#referrals"><span class="en">Referrals</span><span class="hi">रेफ़रल</span></a>
+      <a href="#resources"><span class="en">Learn</span><span class="hi">सीखें</span></a>
+    </nav>
+    <div class="nav-right">
+      <div class="lang">
+        <button class="on" onclick="setLang('en',this)">EN</button>
+        <button onclick="setLang('hi',this)">हि</button>
+      </div>
+      <button class="btn primary">
+        <span class="en">Join Network</span><span class="hi">नेटवर्क जॉइन करें</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <div class="eyebrow"><span class="pulse"></span>
+        <span class="en">Built for Indian football coaches · Beta</span>
+        <span class="hi">भारतीय फ़ुटबॉल कोचों के लिए · बीटा</span>
+      </div>
+      <h1 class="display h1">
+        <span class="en">Talk shop.<br/>Trade <em>players</em>.<br/>Trade <em>knowledge</em>.</span>
+        <span class="hi">बात करें।<br/><em>खिलाड़ी</em> भेजें।<br/><em>ज्ञान</em> साझा करें।</span>
+      </h1>
+      <p class="lede">
+        <span class="en">A private network where AIFF-licensed coaches across India share field problems, refer players between clubs, states and leagues, and level up with free world-class learning.</span>
+        <span class="hi">एक निजी नेटवर्क जहाँ पूरे भारत के AIFF-लाइसेंस कोच मैदान की समस्याएँ साझा करते हैं, क्लबों, राज्यों और लीगों के बीच खिलाड़ी रेफ़र करते हैं, और मुफ़्त विश्व-स्तरीय शिक्षा से बेहतर बनते हैं।</span>
+      </p>
+      <div class="hero-cta">
+        <button class="btn primary">→ <span class="en">Request invite</span><span class="hi">निमंत्रण माँगें</span></button>
+        <button class="btn ghost"><span class="en">Watch 60-sec tour</span><span class="hi">60 सेकंड का टूर देखें</span></button>
+      </div>
+    </div>
+    <div class="hero-stats">
+      <div class="stat"><div class="n">1,427</div><div class="l">Verified coaches</div><div class="delta">▲ 89 this month</div></div>
+      <div class="stat"><div class="n">312</div><div class="l">Player referrals</div><div class="delta">▲ 27 this week</div></div>
+      <div class="stat"><div class="n">28</div><div class="l">States · UTs</div><div class="delta">All India</div></div>
+      <div class="stat"><div class="n">94<span style="font-size:24px">%</span></div><div class="l">Match confidence</div><div class="delta">AI-assisted</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- APP / FEED -->
+<section id="feed">
+  <div class="wrap">
+    <div class="sec-head">
+      <div>
+        <div class="chip neon">● <span class="en">Live feed</span><span class="hi">लाइव फ़ीड</span></div>
+        <h2 class="display sec-title" style="margin-top:14px">
+          <span class="en">The dressing room, online.</span>
+          <span class="hi">ड्रेसिंग रूम, ऑनलाइन।</span>
+        </h2>
+      </div>
+      <p class="sec-sub">
+        <span class="en">Pose challenges, get tactical second-opinions, and tag a peer in another state when you have a player who deserves a bigger stage.</span>
+        <span class="hi">समस्याएँ साझा करें, सामरिक राय लें, और जब किसी खिलाड़ी को बड़े मंच का हक़ हो तो दूसरे राज्य के साथी कोच को टैग करें।</span>
+      </p>
+    </div>
+
+    <div class="app">
+      <!-- LEFT NAV -->
+      <aside class="side left">
+        <div class="group">
+          <h4>Channels</h4>
+          <div class="item on">⚽ All<span class="c">2.1k</span></div>
+          <div class="item"># Grassroots<span class="c">412</span></div>
+          <div class="item"># Youth U-13/15<span class="c">388</span></div>
+          <div class="item"># Goalkeeping<span class="c">94</span></div>
+          <div class="item"># Women's<span class="c">156</span></div>
+          <div class="item"># Tactics<span class="c">220</span></div>
+          <div class="item"># S&amp;C<span class="c">88</span></div>
+          <div class="item"># Parents &amp; welfare<span class="c">71</span></div>
+        </div>
+        <div class="group">
+          <h4>My states</h4>
+          <div class="item">📍 Maharashtra</div>
+          <div class="item">📍 Goa</div>
+          <div class="item">📍 Karnataka</div>
+        </div>
+      </aside>
+
+      <!-- CENTER FEED -->
+      <main>
+        <div class="composer">
+          <textarea placeholder="Share a problem, a player, a question…  (e.g. ‘U-15 left-footer in Pune, ISL-level potential — anyone in Bengaluru youth setup?’)"></textarea>
+          <div class="row">
+            <div class="tags">
+              <span class="chip">+ Channel</span>
+              <span class="chip">+ State</span>
+              <span class="chip">+ Refer player</span>
+              <span class="chip">+ Attach video</span>
+            </div>
+            <button class="btn primary sm">Post</button>
+          </div>
+        </div>
+
+        <article class="thread pinned">
+          <div class="top">
+            <div class="author">
+              <div class="avatar" style="background:var(--neon)">SR</div>
+              <div><div class="who">Sandeep Rawat · <span style="color:var(--neon);font-weight:600">D-License</span></div>
+              <div class="meta">Dehradun · Uttarakhand · 14 yrs · 2h ago</div></div>
+            </div>
+            <span class="chip neon">📌 Pinned</span>
+          </div>
+          <h3><span class="en">Looking to refer a U-15 striker to an I-League youth setup — 38 goals this season</span>
+              <span class="hi">U-15 स्ट्राइकर के लिए I-League यूथ सेटअप ढूँढ रहा हूँ — इस सीज़न 38 गोल</span></h3>
+          <p><span class="en">Right-footed, plays as a 9, exceptional off-the-shoulder runs. Highlight reel attached. Parents are open to relocation if accommodation is sorted. Looking for serious academies in Bengaluru, Kolkata or Mumbai. DM for footage + Cooper test data.</span>
+             <span class="hi">दाएँ पैर का, नंबर 9, बेहतरीन ऑफ़-द-शोल्डर रनिंग। हाइलाइट रील संलग्न। आवास तय हो तो परिवार शिफ़्ट होने को तैयार है। बेंगलुरु, कोलकाता या मुंबई में गंभीर अकादमी चाहिए। फुटेज + कूपर टेस्ट डेटा के लिए DM करें।</span></p>
+          <div class="tags">
+            <span class="chip teal"># Referral</span><span class="chip"># Youth U-15</span><span class="chip">📍 Uttarakhand → All India</span>
+          </div>
+          <div class="actions">
+            <span>↗ 24 replies</span><span>★ 67 endorsements</span><span>🔁 12 reshares</span><span style="color:var(--neon)">⇢ Refer to your club</span>
+          </div>
+        </article>
+
+        <article class="thread">
+          <div class="top">
+            <div class="author">
+              <div class="avatar" style="background:var(--saffron)">PA</div>
+              <div><div class="who">Priya Anand · <span style="color:var(--saffron);font-weight:600">C-License</span></div>
+              <div class="meta">Imphal · Manipur · 9 yrs · 5h ago</div></div>
+            </div>
+          </div>
+          <h3>How are you handling menstrual-cycle load management in U-17 girls?</h3>
+          <p>Our state team has a major tournament in 6 weeks. Trying to build a periodised plan that respects cycle phases without making players feel singled out. Anyone with a template that worked? Especially keen to hear from coaches in Northeast where access to sports-science staff is limited.</p>
+          <div class="tags">
+            <span class="chip"># Women's</span><span class="chip"># S&amp;C</span><span class="chip"># Welfare</span>
+          </div>
+          <div class="actions"><span>↗ 41 replies</span><span>★ 112 endorsements</span><span>🔁 28 reshares</span><span>📌 Save</span></div>
+        </article>
+
+        <article class="thread">
+          <div class="top">
+            <div class="author">
+              <div class="avatar" style="background:var(--teal)">VK</div>
+              <div><div class="who">Vikram Kohli · <span style="color:var(--teal);font-weight:600">B-License</span></div>
+              <div class="meta">Ludhiana · Punjab · 11 yrs · yesterday</div></div>
+            </div>
+          </div>
+          <h3>3-2-2-3 build-up vs. low block — does it survive on a wet maidan pitch?</h3>
+          <p>Tried Pep's positional structure with my district U-18s last weekend. Beautiful in training. Collapsed against a deep 5-4-1 on a soft pitch. Looking for honest feedback from anyone who's adapted modern build-up shapes to Indian pitch realities (monsoon, uneven surfaces, refereeing).</p>
+          <div class="tags"><span class="chip"># Tactics</span><span class="chip"># Youth U-18</span></div>
+          <div class="actions"><span>↗ 19 replies</span><span>★ 54 endorsements</span><span>🔁 6 reshares</span></div>
+        </article>
+
+        <article class="thread">
+          <div class="top">
+            <div class="author">
+              <div class="avatar" style="background:var(--magenta)">MT</div>
+              <div><div class="who">Mohan Thapa · <span style="color:var(--magenta);font-weight:600">D-License</span></div>
+              <div class="meta">Gangtok · Sikkim · 6 yrs · 2d ago</div></div>
+            </div>
+          </div>
+          <h3>Parent demanding their U-12 plays only striker — how do you handle it without losing the kid?</h3>
+          <p>Talented player, but tactically I need them at 8. Father is convinced his son is "the next Sunil Chhetri." Looking for scripts/approaches that have worked for you in parent meetings. Bonus: any Hindi/regional-language resources on parent education I can share?</p>
+          <div class="tags"><span class="chip"># Parents</span><span class="chip"># Grassroots</span></div>
+          <div class="actions"><span>↗ 56 replies</span><span>★ 89 endorsements</span><span>🔁 14 reshares</span></div>
+        </article>
+      </main>
+
+      <!-- RIGHT: RECOMMENDED -->
+      <aside class="side right">
+        <div class="panel">
+          <h4><span>Recommended for you</span> <span class="badge">AI</span></h4>
+
+          <div class="reco">
+            <div class="avatar" style="background:var(--teal);width:36px;height:36px;font-size:14px">RN</div>
+            <div class="info">
+              <div class="name">Ravi Naik</div>
+              <div class="role">A-License · Margao FC youth · 18 yrs</div>
+              <div class="match">
+                <span>Goa</span><span>U-15</span><span>Striker dev</span><span>Hindi · Konkani</span>
+              </div>
+              <button class="refer">⇢ Refer a player</button>
+            </div>
+            <div class="score"><div class="pct">96</div><div class="label">Match</div></div>
+          </div>
+
+          <div class="reco">
+            <div class="avatar" style="background:var(--saffron);width:36px;height:36px;font-size:14px">AK</div>
+            <div class="info">
+              <div class="name">Anjali Kerketta</div>
+              <div class="role">B-License · Jharkhand state women's · 12 yrs</div>
+              <div class="match"><span>Jharkhand</span><span>Women's U-17</span><span>S&amp;C</span></div>
+              <button class="refer">⇢ Start a thread</button>
+            </div>
+            <div class="score"><div class="pct">91</div><div class="label">Match</div></div>
+          </div>
+
+          <div class="reco">
+            <div class="avatar" style="background:var(--magenta);width:36px;height:36px;font-size:14px">JD</div>
+            <div class="info">
+              <div class="name">Joaquim D'Souza</div>
+              <div class="role">Pro-License · Bengaluru FC scout · 22 yrs</div>
+              <div class="match"><span>Karnataka</span><span>Scouting</span><span>ISL pathway</span></div>
+              <button class="refer">⇢ Refer a player</button>
+            </div>
+            <div class="score"><div class="pct">88</div><div class="label">Match</div></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h4>Trending in your region</h4>
+          <div style="font-size:13px;line-height:1.7">
+            <div>🔥 <b>Monsoon training drills</b> — 47 posts</div>
+            <div>🔥 <b>I-League trials calendar</b> — 31 posts</div>
+            <div>🔥 <b>D → C upgrade in 2026</b> — 24 posts</div>
+            <div>🔥 <b>Heat-acclimatisation for U-13</b> — 18 posts</div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<!-- REFERRALS / MATCH ENGINE -->
+<section id="referrals">
+  <div class="wrap">
+    <div class="sec-head">
+      <div>
+        <div class="chip saf">⇢ <span class="en">Referral engine</span><span class="hi">रेफ़रल इंजन</span></div>
+        <h2 class="display sec-title" style="margin-top:14px">
+          <span class="en">How players move <em style="color:var(--saffron);font-style:normal">between states, clubs &amp; leagues.</em></span>
+          <span class="hi">खिलाड़ी कैसे जाते हैं <em style="color:var(--saffron);font-style:normal">राज्यों, क्लबों और लीगों के बीच।</em></span>
+        </h2>
+      </div>
+      <p class="sec-sub">
+        <span class="en">Every recommendation reuses the IKF360 scoring model — region, license level, age-group focus, specialization, language, experience — now extended for inter-state and inter-club referrals.</span>
+        <span class="hi">हर सिफ़ारिश IKF360 स्कोरिंग मॉडल का उपयोग करती है — क्षेत्र, लाइसेंस स्तर, आयु-वर्ग, विशेषज्ञता, भाषा, अनुभव — अब अंतर-राज्य और अंतर-क्लब रेफ़रल के लिए विस्तारित।</span>
+      </p>
+    </div>
+
+    <div class="flow">
+      <div class="node"><span class="step">01</span><h5>You spot the talent</h5><p>Tag the player in your post with age, position, club &amp; aspiration. Attach a 60-sec clip.</p></div>
+      <div class="node"><span class="step">02</span><h5>Engine matches coaches</h5><p>Ranks coaches by state, league, license, age-group and historic referral success.</p></div>
+      <div class="node"><span class="step">03</span><h5>Warm intro, not cold DM</h5><p>Both coaches consent. Player parent is auto-looped in. Welfare checklist required.</p></div>
+      <div class="node"><span class="step">04</span><h5>Trial → Track</h5><p>Outcome logged. Successful referrals raise both coaches' Network Trust score.</p></div>
+    </div>
+
+    <div style="margin-top:34px;display:grid;grid-template-columns:repeat(4,1fr);gap:14px">
+      <div class="stat"><div class="n" style="color:var(--saffron)">312</div><div class="l">Referrals YTD</div></div>
+      <div class="stat"><div class="n" style="color:var(--saffron)">71%</div><div class="l">Convert to trial</div></div>
+      <div class="stat"><div class="n" style="color:var(--saffron)">42</div><div class="l">Signed by I-League / ISL youth</div></div>
+      <div class="stat"><div class="n" style="color:var(--saffron)">19</div><div class="l">Cross-state moves</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- RESOURCES -->
+<section id="resources">
+  <div class="wrap">
+    <div class="sec-head">
+      <div>
+        <div class="chip neon">📚 <span class="en">Free learning hub</span><span class="hi">मुफ़्त शिक्षा केंद्र</span></div>
+        <h2 class="display sec-title" style="margin-top:14px">
+          <span class="en">Sharpen the craft.<br/>For free. Forever.</span>
+          <span class="hi">अपने कौशल को निखारें।<br/>मुफ़्त। हमेशा।</span>
+        </h2>
+      </div>
+      <p class="sec-sub">
+        <span class="en">Curated by IKF mentors. Verified for Indian coaches. Three tracks — education, international pathways, leadership.</span>
+        <span class="hi">IKF मेंटरों द्वारा चयनित। भारतीय कोचों के लिए सत्यापित। तीन ट्रैक — शिक्षा, अंतरराष्ट्रीय पथ, नेतृत्व।</span>
+      </p>
+    </div>
+
+    <div class="res-tabs">
+      <button class="on" onclick="resTab(event,'all')">All</button>
+      <button onclick="resTab(event,'edu')">🎓 Education</button>
+      <button onclick="resTab(event,'intl')">🌍 International requirements</button>
+      <button onclick="resTab(event,'lead')">⚡ Leadership</button>
+    </div>
+
+    <div class="res-grid">
+      <a class="res" style="--accent:var(--neon)" data-cat="edu" href="#">
+        <div class="src">FIFA Training Centre · Free</div>
+        <h5>The FIFA Coaching Manual — youth football</h5>
+        <p>Session plans, periodisation templates and video drills from the FIFA global curriculum. Downloadable PDFs.</p>
+        <div class="foot"><span>~ 8 hrs · self-paced</span><span class="go">Open →</span></div>
+      </a>
+      <a class="res" style="--accent:var(--saffron)" data-cat="edu" href="#">
+        <div class="src">AIFF e-Learning · Free</div>
+        <h5>Grassroots coach refresher (Hindi + English)</h5>
+        <p>The official AIFF grassroots module, with bilingual video lectures and downloadable session libraries.</p>
+        <div class="foot"><span>~ 12 hrs · certificate</span><span class="go">Open →</span></div>
+      </a>
+      <a class="res" style="--accent:var(--teal)" data-cat="edu" href="#">
+        <div class="src">The Coaches' Voice · Free tier</div>
+        <h5>Masterclass library — Guardiola, Klopp, Ancelotti</h5>
+        <p>Tactical breakdowns straight from elite managers. Most case studies are free; premium is optional.</p>
+        <div class="foot"><span>~ 20+ video essays</span><span class="go">Open →</span></div>
+      </a>
+
+      <a class="res" style="--accent:var(--saffron)" data-cat="intl" href="#">
+        <div class="src">AFC · Coach Education</div>
+        <h5>AFC license pathway — A, B, C explained</h5>
+        <p>The full Asian Football Confederation pathway, prerequisites, country quotas, and AIFF equivalency notes.</p>
+        <div class="foot"><span>Reference guide</span><span class="go">Open →</span></div>
+      </a>
+      <a class="res" style="--accent:var(--neon)" data-cat="intl" href="#">
+        <div class="src">UEFA · Open access</div>
+        <h5>UEFA C / B equivalency for non-EU coaches</h5>
+        <p>What an Indian D / C license maps to in Europe, and the bridging courses that unlock UEFA recognition.</p>
+        <div class="foot"><span>Reference guide</span><span class="go">Open →</span></div>
+      </a>
+      <a class="res" style="--accent:var(--magenta)" data-cat="intl" href="#">
+        <div class="src">FA Learning (England) · Free</div>
+        <h5>Safeguarding in football — internationally recognised</h5>
+        <p>Free cert accepted by most overseas academies. Mandatory if you want to coach abroad or at international camps.</p>
+        <div class="foot"><span>~ 3 hrs · certificate</span><span class="go">Open →</span></div>
+      </a>
+
+      <a class="res" style="--accent:var(--teal)" data-cat="lead" href="#">
+        <div class="src">Coursera · Audit free</div>
+        <h5>Yale — The Science of Well-Being for athletes</h5>
+        <p>Adapted reading list for coaches managing teenage players in high-pressure environments. Audit track is free.</p>
+        <div class="foot"><span>~ 19 hrs · audit free</span><span class="go">Open →</span></div>
+      </a>
+      <a class="res" style="--accent:var(--neon)" data-cat="lead" href="#">
+        <div class="src">edX · MIT Sloan</div>
+        <h5>Leading high-performance teams</h5>
+        <p>Frameworks for building culture, decision-making under pressure, and giving feedback that lifts performance.</p>
+        <div class="foot"><span>~ 6 weeks · audit free</span><span class="go">Open →</span></div>
+      </a>
+      <a class="res" style="--accent:var(--saffron)" data-cat="lead" href="#">
+        <div class="src">IKF Originals · Free</div>
+        <h5>Hindi podcast — &ldquo;Coach ki Kahaani&rdquo;</h5>
+        <p>Weekly 30-min conversations with India's most respected grassroots coaches. Lessons, mistakes, comebacks.</p>
+        <div class="foot"><span>Audio · weekly</span><span class="go">Listen →</span></div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section style="border-bottom:0">
+  <div class="wrap" style="text-align:center">
+    <h2 class="display" style="font-size:clamp(46px,7vw,90px)">
+      <span class="en">India's football future <em style="color:var(--neon);font-style:normal">is coached.</em></span>
+      <span class="hi">भारत के फ़ुटबॉल का भविष्य <em style="color:var(--neon);font-style:normal">कोचों के हाथों में है।</em></span>
+    </h2>
+    <p class="sec-sub" style="margin:18px auto 28px">
+      <span class="en">If you hold an AIFF D-license or above, the network is free for life. Request your invite today.</span>
+      <span class="hi">यदि आपके पास AIFF D-लाइसेंस या उससे ऊपर है, तो नेटवर्क आजीवन मुफ़्त है। आज ही निमंत्रण माँगें।</span>
+    </p>
+    <button class="btn primary" style="padding:16px 28px;font-size:14px">→ <span class="en">Request invite</span><span class="hi">निमंत्रण माँगें</span></button>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot-grid">
+    <div>© 2026 India Khelo Football · Coaches Network · Mockup v1</div>
+    <div>Built for Indian coaches · Made with the IKF community</div>
+  </div>
+</footer>
+
+<script>
+function setLang(l, btn){
+  document.body.dataset.lang = l;
+  document.querySelectorAll('.lang button').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+}
+function resTab(e, cat){
+  document.querySelectorAll('.res-tabs button').forEach(b=>b.classList.remove('on'));
+  e.currentTarget.classList.add('on');
+  document.querySelectorAll('.res').forEach(c=>{
+    c.style.display = (cat==='all' || c.dataset.cat===cat) ? '' : 'none';
+  });
+}
+document.querySelectorAll('.side .item').forEach(i=>i.addEventListener('click',()=>{
+  document.querySelectorAll('.side .item').forEach(x=>x.classList.remove('on'));
+  i.classList.add('on');
+}));
+</script>
+</body>
+</html>
