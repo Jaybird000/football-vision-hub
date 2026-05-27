@@ -12,6 +12,7 @@ import appCss from "../styles.css?url";
 import { LanguageProvider } from "@/lib/i18n";
 import { Nav } from "@/components/site/Nav";
 import { Footer } from "@/components/site/Footer";
+import { currentUser } from "@/server/auth";
 
 function NotFoundComponent() {
   return (
@@ -93,6 +94,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
   errorComponent: ErrorComponent,
+  loader: async ({ context }) => {
+    await context.queryClient.prefetchQuery({
+      queryKey: ["currentUser"],
+      queryFn: () => currentUser(),
+      staleTime: 60_000,
+    });
+  },
 });
 
 function RootShell({ children }: { children: React.ReactNode }) {

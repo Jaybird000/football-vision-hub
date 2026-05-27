@@ -9,14 +9,17 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SignupRouteImport } from './routes/signup'
 import { Route as PlayersRouteImport } from './routes/players'
 import { Route as PartnersRouteImport } from './routes/partners'
 import { Route as ParentsRouteImport } from './routes/parents'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as InitiativesRouteImport } from './routes/initiatives'
 import { Route as Ikf360RouteImport } from './routes/ikf360'
 import { Route as DonateRouteImport } from './routes/donate'
 import { Route as CodepenExportRouteImport } from './routes/codepen-export'
 import { Route as CoachesRouteImport } from './routes/coaches'
+import { Route as AdminLoginRouteImport } from './routes/admin-login'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as Ikf360IndexRouteImport } from './routes/ikf360.index'
@@ -24,8 +27,19 @@ import { Route as Ikf360UploadRouteImport } from './routes/ikf360.upload'
 import { Route as Ikf360IntentRouteImport } from './routes/ikf360.intent'
 import { Route as Ikf360DashboardRouteImport } from './routes/ikf360.dashboard'
 import { Route as Ikf360AdminRouteImport } from './routes/ikf360.admin'
+import { Route as Ikf360AdminTemplatesRouteImport } from './routes/ikf360.admin.templates'
+import { Route as Ikf360AdminProvidersRouteImport } from './routes/ikf360.admin.providers'
+import { Route as Ikf360AdminCellsRouteImport } from './routes/ikf360.admin.cells'
+import { Route as Ikf360AdminAxesRouteImport } from './routes/ikf360.admin.axes'
 import { Route as Ikf360AdminIdRouteImport } from './routes/ikf360.admin.$id'
+import { Route as ApiUploadsIdRouteImport } from './routes/api.uploads.$id'
+import { Route as Ikf360AdminProfilesIdRouteImport } from './routes/ikf360.admin.profiles.$id'
 
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PlayersRoute = PlayersRouteImport.update({
   id: '/players',
   path: '/players',
@@ -39,6 +53,11 @@ const PartnersRoute = PartnersRouteImport.update({
 const ParentsRoute = ParentsRouteImport.update({
   id: '/parents',
   path: '/parents',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const InitiativesRoute = InitiativesRouteImport.update({
@@ -64,6 +83,11 @@ const CodepenExportRoute = CodepenExportRouteImport.update({
 const CoachesRoute = CoachesRouteImport.update({
   id: '/coaches',
   path: '/coaches',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminLoginRoute = AdminLoginRouteImport.update({
+  id: '/admin-login',
+  path: '/admin-login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AboutRoute = AboutRouteImport.update({
@@ -101,137 +125,232 @@ const Ikf360AdminRoute = Ikf360AdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => Ikf360Route,
 } as any)
+const Ikf360AdminTemplatesRoute = Ikf360AdminTemplatesRouteImport.update({
+  id: '/templates',
+  path: '/templates',
+  getParentRoute: () => Ikf360AdminRoute,
+} as any)
+const Ikf360AdminProvidersRoute = Ikf360AdminProvidersRouteImport.update({
+  id: '/providers',
+  path: '/providers',
+  getParentRoute: () => Ikf360AdminRoute,
+} as any)
+const Ikf360AdminCellsRoute = Ikf360AdminCellsRouteImport.update({
+  id: '/cells',
+  path: '/cells',
+  getParentRoute: () => Ikf360AdminRoute,
+} as any)
+const Ikf360AdminAxesRoute = Ikf360AdminAxesRouteImport.update({
+  id: '/axes',
+  path: '/axes',
+  getParentRoute: () => Ikf360AdminRoute,
+} as any)
 const Ikf360AdminIdRoute = Ikf360AdminIdRouteImport.update({
   id: '/$id',
   path: '/$id',
+  getParentRoute: () => Ikf360AdminRoute,
+} as any)
+const ApiUploadsIdRoute = ApiUploadsIdRouteImport.update({
+  id: '/api/uploads/$id',
+  path: '/api/uploads/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Ikf360AdminProfilesIdRoute = Ikf360AdminProfilesIdRouteImport.update({
+  id: '/profiles/$id',
+  path: '/profiles/$id',
   getParentRoute: () => Ikf360AdminRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/admin-login': typeof AdminLoginRoute
   '/coaches': typeof CoachesRoute
   '/codepen-export': typeof CodepenExportRoute
   '/donate': typeof DonateRoute
   '/ikf360': typeof Ikf360RouteWithChildren
   '/initiatives': typeof InitiativesRoute
+  '/login': typeof LoginRoute
   '/parents': typeof ParentsRoute
   '/partners': typeof PartnersRoute
   '/players': typeof PlayersRoute
+  '/signup': typeof SignupRoute
   '/ikf360/admin': typeof Ikf360AdminRouteWithChildren
   '/ikf360/dashboard': typeof Ikf360DashboardRoute
   '/ikf360/intent': typeof Ikf360IntentRoute
   '/ikf360/upload': typeof Ikf360UploadRoute
   '/ikf360/': typeof Ikf360IndexRoute
+  '/api/uploads/$id': typeof ApiUploadsIdRoute
   '/ikf360/admin/$id': typeof Ikf360AdminIdRoute
+  '/ikf360/admin/axes': typeof Ikf360AdminAxesRoute
+  '/ikf360/admin/cells': typeof Ikf360AdminCellsRoute
+  '/ikf360/admin/providers': typeof Ikf360AdminProvidersRoute
+  '/ikf360/admin/templates': typeof Ikf360AdminTemplatesRoute
+  '/ikf360/admin/profiles/$id': typeof Ikf360AdminProfilesIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/admin-login': typeof AdminLoginRoute
   '/coaches': typeof CoachesRoute
   '/codepen-export': typeof CodepenExportRoute
   '/donate': typeof DonateRoute
   '/initiatives': typeof InitiativesRoute
+  '/login': typeof LoginRoute
   '/parents': typeof ParentsRoute
   '/partners': typeof PartnersRoute
   '/players': typeof PlayersRoute
+  '/signup': typeof SignupRoute
   '/ikf360/admin': typeof Ikf360AdminRouteWithChildren
   '/ikf360/dashboard': typeof Ikf360DashboardRoute
   '/ikf360/intent': typeof Ikf360IntentRoute
   '/ikf360/upload': typeof Ikf360UploadRoute
   '/ikf360': typeof Ikf360IndexRoute
+  '/api/uploads/$id': typeof ApiUploadsIdRoute
   '/ikf360/admin/$id': typeof Ikf360AdminIdRoute
+  '/ikf360/admin/axes': typeof Ikf360AdminAxesRoute
+  '/ikf360/admin/cells': typeof Ikf360AdminCellsRoute
+  '/ikf360/admin/providers': typeof Ikf360AdminProvidersRoute
+  '/ikf360/admin/templates': typeof Ikf360AdminTemplatesRoute
+  '/ikf360/admin/profiles/$id': typeof Ikf360AdminProfilesIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/admin-login': typeof AdminLoginRoute
   '/coaches': typeof CoachesRoute
   '/codepen-export': typeof CodepenExportRoute
   '/donate': typeof DonateRoute
   '/ikf360': typeof Ikf360RouteWithChildren
   '/initiatives': typeof InitiativesRoute
+  '/login': typeof LoginRoute
   '/parents': typeof ParentsRoute
   '/partners': typeof PartnersRoute
   '/players': typeof PlayersRoute
+  '/signup': typeof SignupRoute
   '/ikf360/admin': typeof Ikf360AdminRouteWithChildren
   '/ikf360/dashboard': typeof Ikf360DashboardRoute
   '/ikf360/intent': typeof Ikf360IntentRoute
   '/ikf360/upload': typeof Ikf360UploadRoute
   '/ikf360/': typeof Ikf360IndexRoute
+  '/api/uploads/$id': typeof ApiUploadsIdRoute
   '/ikf360/admin/$id': typeof Ikf360AdminIdRoute
+  '/ikf360/admin/axes': typeof Ikf360AdminAxesRoute
+  '/ikf360/admin/cells': typeof Ikf360AdminCellsRoute
+  '/ikf360/admin/providers': typeof Ikf360AdminProvidersRoute
+  '/ikf360/admin/templates': typeof Ikf360AdminTemplatesRoute
+  '/ikf360/admin/profiles/$id': typeof Ikf360AdminProfilesIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/about'
+    | '/admin-login'
     | '/coaches'
     | '/codepen-export'
     | '/donate'
     | '/ikf360'
     | '/initiatives'
+    | '/login'
     | '/parents'
     | '/partners'
     | '/players'
+    | '/signup'
     | '/ikf360/admin'
     | '/ikf360/dashboard'
     | '/ikf360/intent'
     | '/ikf360/upload'
     | '/ikf360/'
+    | '/api/uploads/$id'
     | '/ikf360/admin/$id'
+    | '/ikf360/admin/axes'
+    | '/ikf360/admin/cells'
+    | '/ikf360/admin/providers'
+    | '/ikf360/admin/templates'
+    | '/ikf360/admin/profiles/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/about'
+    | '/admin-login'
     | '/coaches'
     | '/codepen-export'
     | '/donate'
     | '/initiatives'
+    | '/login'
     | '/parents'
     | '/partners'
     | '/players'
+    | '/signup'
     | '/ikf360/admin'
     | '/ikf360/dashboard'
     | '/ikf360/intent'
     | '/ikf360/upload'
     | '/ikf360'
+    | '/api/uploads/$id'
     | '/ikf360/admin/$id'
+    | '/ikf360/admin/axes'
+    | '/ikf360/admin/cells'
+    | '/ikf360/admin/providers'
+    | '/ikf360/admin/templates'
+    | '/ikf360/admin/profiles/$id'
   id:
     | '__root__'
     | '/'
     | '/about'
+    | '/admin-login'
     | '/coaches'
     | '/codepen-export'
     | '/donate'
     | '/ikf360'
     | '/initiatives'
+    | '/login'
     | '/parents'
     | '/partners'
     | '/players'
+    | '/signup'
     | '/ikf360/admin'
     | '/ikf360/dashboard'
     | '/ikf360/intent'
     | '/ikf360/upload'
     | '/ikf360/'
+    | '/api/uploads/$id'
     | '/ikf360/admin/$id'
+    | '/ikf360/admin/axes'
+    | '/ikf360/admin/cells'
+    | '/ikf360/admin/providers'
+    | '/ikf360/admin/templates'
+    | '/ikf360/admin/profiles/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
+  AdminLoginRoute: typeof AdminLoginRoute
   CoachesRoute: typeof CoachesRoute
   CodepenExportRoute: typeof CodepenExportRoute
   DonateRoute: typeof DonateRoute
   Ikf360Route: typeof Ikf360RouteWithChildren
   InitiativesRoute: typeof InitiativesRoute
+  LoginRoute: typeof LoginRoute
   ParentsRoute: typeof ParentsRoute
   PartnersRoute: typeof PartnersRoute
   PlayersRoute: typeof PlayersRoute
+  SignupRoute: typeof SignupRoute
+  ApiUploadsIdRoute: typeof ApiUploadsIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/players': {
       id: '/players'
       path: '/players'
@@ -251,6 +370,13 @@ declare module '@tanstack/react-router' {
       path: '/parents'
       fullPath: '/parents'
       preLoaderRoute: typeof ParentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/initiatives': {
@@ -286,6 +412,13 @@ declare module '@tanstack/react-router' {
       path: '/coaches'
       fullPath: '/coaches'
       preLoaderRoute: typeof CoachesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin-login': {
+      id: '/admin-login'
+      path: '/admin-login'
+      fullPath: '/admin-login'
+      preLoaderRoute: typeof AdminLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/about': {
@@ -337,6 +470,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Ikf360AdminRouteImport
       parentRoute: typeof Ikf360Route
     }
+    '/ikf360/admin/templates': {
+      id: '/ikf360/admin/templates'
+      path: '/templates'
+      fullPath: '/ikf360/admin/templates'
+      preLoaderRoute: typeof Ikf360AdminTemplatesRouteImport
+      parentRoute: typeof Ikf360AdminRoute
+    }
+    '/ikf360/admin/providers': {
+      id: '/ikf360/admin/providers'
+      path: '/providers'
+      fullPath: '/ikf360/admin/providers'
+      preLoaderRoute: typeof Ikf360AdminProvidersRouteImport
+      parentRoute: typeof Ikf360AdminRoute
+    }
+    '/ikf360/admin/cells': {
+      id: '/ikf360/admin/cells'
+      path: '/cells'
+      fullPath: '/ikf360/admin/cells'
+      preLoaderRoute: typeof Ikf360AdminCellsRouteImport
+      parentRoute: typeof Ikf360AdminRoute
+    }
+    '/ikf360/admin/axes': {
+      id: '/ikf360/admin/axes'
+      path: '/axes'
+      fullPath: '/ikf360/admin/axes'
+      preLoaderRoute: typeof Ikf360AdminAxesRouteImport
+      parentRoute: typeof Ikf360AdminRoute
+    }
     '/ikf360/admin/$id': {
       id: '/ikf360/admin/$id'
       path: '/$id'
@@ -344,15 +505,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Ikf360AdminIdRouteImport
       parentRoute: typeof Ikf360AdminRoute
     }
+    '/api/uploads/$id': {
+      id: '/api/uploads/$id'
+      path: '/api/uploads/$id'
+      fullPath: '/api/uploads/$id'
+      preLoaderRoute: typeof ApiUploadsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ikf360/admin/profiles/$id': {
+      id: '/ikf360/admin/profiles/$id'
+      path: '/profiles/$id'
+      fullPath: '/ikf360/admin/profiles/$id'
+      preLoaderRoute: typeof Ikf360AdminProfilesIdRouteImport
+      parentRoute: typeof Ikf360AdminRoute
+    }
   }
 }
 
 interface Ikf360AdminRouteChildren {
   Ikf360AdminIdRoute: typeof Ikf360AdminIdRoute
+  Ikf360AdminAxesRoute: typeof Ikf360AdminAxesRoute
+  Ikf360AdminCellsRoute: typeof Ikf360AdminCellsRoute
+  Ikf360AdminProvidersRoute: typeof Ikf360AdminProvidersRoute
+  Ikf360AdminTemplatesRoute: typeof Ikf360AdminTemplatesRoute
+  Ikf360AdminProfilesIdRoute: typeof Ikf360AdminProfilesIdRoute
 }
 
 const Ikf360AdminRouteChildren: Ikf360AdminRouteChildren = {
   Ikf360AdminIdRoute: Ikf360AdminIdRoute,
+  Ikf360AdminAxesRoute: Ikf360AdminAxesRoute,
+  Ikf360AdminCellsRoute: Ikf360AdminCellsRoute,
+  Ikf360AdminProvidersRoute: Ikf360AdminProvidersRoute,
+  Ikf360AdminTemplatesRoute: Ikf360AdminTemplatesRoute,
+  Ikf360AdminProfilesIdRoute: Ikf360AdminProfilesIdRoute,
 }
 
 const Ikf360AdminRouteWithChildren = Ikf360AdminRoute._addFileChildren(
@@ -381,14 +566,18 @@ const Ikf360RouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
+  AdminLoginRoute: AdminLoginRoute,
   CoachesRoute: CoachesRoute,
   CodepenExportRoute: CodepenExportRoute,
   DonateRoute: DonateRoute,
   Ikf360Route: Ikf360RouteWithChildren,
   InitiativesRoute: InitiativesRoute,
+  LoginRoute: LoginRoute,
   ParentsRoute: ParentsRoute,
   PartnersRoute: PartnersRoute,
   PlayersRoute: PlayersRoute,
+  SignupRoute: SignupRoute,
+  ApiUploadsIdRoute: ApiUploadsIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

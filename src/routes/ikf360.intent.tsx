@@ -1,30 +1,56 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useMemo } from "react";
-import { ArrowRight, Check, Mail, Phone } from "lucide-react";
-import { INTENT_QUESTIONS, scoreReadiness, READINESS_META } from "@/lib/ikf360-data";
+import { ArrowRight, Check, Mail, Phone, Loader2 } from "lucide-react";
+import { INTENT_QUESTIONS, scoreReadiness, READINESS_META, type Readiness } from "@/lib/ikf360-data";
+import { submitIntent } from "@/server/intent";
 
 export const Route = createFileRoute("/ikf360/intent")({
   component: IntentForm,
 });
 
-type Step = "details" | "questions" | "done";
+type Step = "details" | "questions" | "submitting" | "done";
 
 function IntentForm() {
   const [step, setStep] = useState<Step>("details");
   const [details, setDetails] = useState({ parent: "", email: "", phone: "", child: "", age: "", gender: "Boy" });
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [qIdx, setQIdx] = useState(0);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [serverResult, setServerResult] = useState<{ id: string; readiness: Readiness } | null>(null);
 
   const q = INTENT_QUESTIONS[qIdx];
   const progress = useMemo(() => Math.round((Object.keys(answers).length / INTENT_QUESTIONS.length) * 100), [answers]);
-  const readiness = useMemo(() => scoreReadiness(answers), [answers]);
+  const readiness = serverResult?.readiness ?? scoreReadiness(answers);
   const detailsValid = details.parent && details.email && details.child && details.age;
 
-  function answer(score: number) {
+  async function answer(score: number) {
     const next = { ...answers, [q.id]: score };
     setAnswers(next);
-    if (qIdx < INTENT_QUESTIONS.length - 1) setQIdx(qIdx + 1);
-    else setStep("done");
+    if (qIdx < INTENT_QUESTIONS.length - 1) {
+      setQIdx(qIdx + 1);
+      return;
+    }
+    setStep("submitting");
+    setSubmitError(null);
+    try {
+      const result = await submitIntent({
+        data: {
+          parentName: details.parent.trim(),
+          parentEmail: details.email.trim(),
+          parentPhone: details.phone.trim(),
+          childName: details.child.trim(),
+          childAge: parseInt(details.age, 10),
+          childGender: details.gender as "Boy" | "Girl" | "Other",
+          answers: next,
+        },
+      });
+      setServerResult(result);
+      setStep("done");
+    } catch (err) {
+      console.error(err);
+      setSubmitError(err instanceof Error ? err.message : "Something went wrong saving your responses.");
+      setStep("questions");
+    }
   }
 
   return (
@@ -92,6 +118,11 @@ function IntentForm() {
             {q.section === "child" ? "About your child" : q.section === "parent" ? "About your role" : "Your hopes"}
           </div>
           <h2 className="text-[28px] leading-tight mb-7">{q.q}</h2>
+          {submitError && (
+            <div className="mb-5 p-4 rounded-lg text-[13px]" style={{ background: "rgba(220, 38, 38, 0.08)", color: "#dc2626", border: "1px solid rgba(220, 38, 38, 0.2)" }}>
+              {submitError}
+            </div>
+          )}
           <div className="space-y-3">
             {q.options.map(o => (
               <button key={o.label} onClick={() => answer(o.score)}
@@ -104,6 +135,13 @@ function IntentForm() {
           {qIdx > 0 && (
             <button onClick={() => setQIdx(qIdx - 1)} className="mt-6 text-[13px]" style={{ color: "var(--ikf-text-dim)" }}>← Previous question</button>
           )}
+        </div>
+      )}
+
+      {step === "submitting" && (
+        <div className="animate-fade-up flex flex-col items-center justify-center py-20 text-center">
+          <Loader2 size={28} className="animate-spin mb-4" style={{ color: "var(--ikf-brand)" }} />
+          <div className="text-[15px]" style={{ color: "var(--ikf-text-dim)" }}>Saving your responses…</div>
         </div>
       )}
 
