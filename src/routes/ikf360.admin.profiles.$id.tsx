@@ -1,9 +1,10 @@
-import { createFileRoute, redirect, Link } from "@tanstack/react-router";
+import { createFileRoute, redirect, Link, useRouter } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, useMemo } from "react";
-import { ArrowLeft, Loader2, Check, FileText, ExternalLink } from "lucide-react";
+import { ArrowLeft, Loader2, Check, FileText, ExternalLink, CheckCircle2, XCircle, Clock } from "lucide-react";
 import { currentUser } from "@/server/auth";
 import { listAxes, getAdminProfileDetail, getProfileCategorisation, scoreProfile } from "@/server/stage3";
+import { setUploadStatus } from "@/server/stage2";
 
 export const Route = createFileRoute("/ikf360/admin/profiles/$id")({
   beforeLoad: async () => {
@@ -24,11 +25,18 @@ function ProfileScorePage() {
   const { profile, axes, categorisation: initialCat } = Route.useLoaderData();
   const params = Route.useParams();
   const qc = useQueryClient();
+  const router = useRouter();
 
   const { data: categorisation = initialCat } = useQuery({
     queryKey: ["admin", "profile-cat", params.id],
     queryFn: () => getProfileCategorisation({ data: { profileId: params.id } }),
     initialData: initialCat,
+  });
+
+  const review = useMutation({
+    mutationFn: ({ uploadId, status }: { uploadId: string; status: "verified" | "rejected" }) =>
+      setUploadStatus({ data: { uploadId, status } }),
+    onSuccess: () => router.invalidate(),
   });
 
   const initialSelections = useMemo(() => {
@@ -88,27 +96,58 @@ function ProfileScorePage() {
             <div className="text-[13px]" style={{ color: "var(--ikf-text-dim)" }}>No uploads yet.</div>
           ) : (
             <ul className="space-y-2">
-              {profile.uploads.map(u => (
-                <li key={u.id} className="rounded-lg p-3 flex items-center justify-between gap-3" style={{ background: "var(--ikf-surface-2)" }}>
-                  <div className="min-w-0">
-                    <div className="font-semibold text-[13px] truncate">{u.assessmentTitle}</div>
-                    <div className="flex items-center gap-1.5 text-[11px] mt-0.5" style={{ color: "var(--ikf-text-dim)" }}>
-                      <FileText size={11} />
-                      {u.fileName} · {new Date(u.uploadedAt).toLocaleDateString()}
+              {profile.uploads.map(u => {
+                const isPending = review.isPending && review.variables?.uploadId === u.id;
+                const pendingStatus = isPending ? review.variables?.status : undefined;
+                const status = pendingStatus ?? u.status;
+                return (
+                  <li key={u.id} className="rounded-lg p-3 space-y-2.5" style={{ background: "var(--ikf-surface-2)" }}>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-semibold text-[13px]">{u.assessmentTitle}</span>
+                          <UploadStatusBadge status={status} />
+                        </div>
+                        <div className="flex items-center gap-1.5 text-[11px] mt-1" style={{ color: "var(--ikf-text-dim)" }}>
+                          <FileText size={11} />
+                          {u.fileName} · {new Date(u.uploadedAt).toLocaleDateString()}
+                        </div>
+                      </div>
+                      <a
+                        href={`/api/uploads/${u.id}?inline=1`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-[12px] font-semibold shrink-0"
+                        style={{ color: "var(--ikf-brand)" }}
+                      >
+                        Open <ExternalLink size={11} />
+                      </a>
                     </div>
-                  </div>
-                  <a
-                    href={`/api/uploads/${u.id}?inline=1`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-[12px] font-semibold"
-                    style={{ color: "var(--ikf-brand)" }}
-                  >
-                    Open <ExternalLink size={11} />
-                  </a>
-                </li>
-              ))}
+                    <div className="flex items-center gap-2">
+                      <ReviewButton
+                        kind="verify"
+                        active={status === "verified"}
+                        loading={isPending && pendingStatus === "verified"}
+                        disabled={review.isPending}
+                        onClick={() => review.mutate({ uploadId: u.id, status: "verified" })}
+                      />
+                      <ReviewButton
+                        kind="reject"
+                        active={status === "rejected"}
+                        loading={isPending && pendingStatus === "rejected"}
+                        disabled={review.isPending}
+                        onClick={() => review.mutate({ uploadId: u.id, status: "rejected" })}
+                      />
+                    </div>
+                  </li>
+                );
+              })}
             </ul>
+          )}
+          {review.error && (
+            <div className="mt-3 p-3 rounded-lg text-[12px]" style={{ background: "rgba(220,38,38,0.08)", color: "#dc2626", border: "1px solid rgba(220,38,38,0.2)" }}>
+              {review.error instanceof Error ? review.error.message : "Review action failed."}
+            </div>
           )}
         </section>
 
@@ -192,5 +231,53 @@ function ProfileScorePage() {
         </section>
       </div>
     </div>
+  );
+}
+
+function UploadStatusBadge({ status }: { status: string }) {
+  const config =
+    status === "verified"
+      ? { label: "Verified", icon: CheckCircle2, bg: "rgba(34,197,94,0.12)", color: "#22c55e" }
+      : status === "rejected"
+      ? { label: "Rejected", icon: XCircle, bg: "rgba(220,38,38,0.12)", color: "#dc2626" }
+      : { label: "Pending review", icon: Clock, bg: "rgba(160,160,160,0.12)", color: "#9ca3af" };
+  const Icon = config.icon;
+  return (
+    <span
+      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] uppercase tracking-[0.12em] font-bold"
+      style={{ background: config.bg, color: config.color }}
+    >
+      <Icon size={10} /> {config.label}
+    </span>
+  );
+}
+
+function ReviewButton({
+  kind, active, loading, disabled, onClick,
+}: {
+  kind: "verify" | "reject";
+  active: boolean;
+  loading: boolean;
+  disabled: boolean;
+  onClick: () => void;
+}) {
+  const isVerify = kind === "verify";
+  const label = isVerify ? "Verify" : "Reject";
+  const Icon = isVerify ? CheckCircle2 : XCircle;
+  const tint = isVerify ? "#22c55e" : "#dc2626";
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled || active}
+      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold border disabled:cursor-not-allowed"
+      style={{
+        borderColor: active ? tint : "var(--ikf-border)",
+        background: active ? `${tint}1a` : "transparent",
+        color: active ? tint : "var(--ikf-text)",
+        opacity: disabled && !active ? 0.5 : 1,
+      }}
+    >
+      {loading ? <Loader2 size={11} className="animate-spin" /> : <Icon size={11} />} {label}
+    </button>
   );
 }

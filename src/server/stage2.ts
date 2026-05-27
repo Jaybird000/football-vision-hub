@@ -3,6 +3,7 @@ import { getCookie } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { sql } from "./db";
 import { storeFile, deleteFile, readStoredFile, ALLOWED_MIME, MAX_FILE_SIZE } from "./storage";
+import { sendAdvisorReadyToScore } from "./email";
 
 type Role = "parent" | "advisor" | "admin";
 
@@ -198,6 +199,36 @@ export const uploadAssessment = createServerFn({ method: "POST" })
       row = ins[0];
     }
 
+    // Stage 2 → advisor "ready to score" notification.
+    // Only check on fresh inserts (re-uploads don't change the uploaded set).
+    // Idempotent via parent_child_profiles.notified_advisor_min_dataset_at — the
+    // conditional UPDATE returns a row only on the first transition.
+    if (existing.length === 0) {
+      const [reqRows, uploadedRows] = await Promise.all([
+        sql<{ key: string }[]>`SELECT key FROM assessment_templates WHERE required = true`,
+        sql<{ assessment_key: string }[]>`SELECT DISTINCT assessment_key FROM assessment_uploads WHERE profile_id = ${user.profileId}`,
+      ]);
+      const requiredSet = new Set(reqRows.map(r => r.key));
+      const uploadedSet = new Set(uploadedRows.map(u => u.assessment_key));
+      const allRequired = requiredSet.size > 0 && [...requiredSet].every(k => uploadedSet.has(k));
+      if (allRequired) {
+        const claimed = await sql<{ id: string; parent_name: string; child_name: string }[]>`
+          UPDATE parent_child_profiles
+          SET notified_advisor_min_dataset_at = now()
+          WHERE id = ${user.profileId} AND notified_advisor_min_dataset_at IS NULL
+          RETURNING id, parent_name, child_name
+        `;
+        if (claimed.length > 0) {
+          const p = claimed[0];
+          void sendAdvisorReadyToScore({
+            profileId: p.id,
+            parentName: p.parent_name,
+            childName: p.child_name,
+          }).catch(err => console.error("[stage2] advisor ready-to-score send failed:", err));
+        }
+      }
+    }
+
     return {
       id: row.id,
       assessmentKey: row.assessment_key,
@@ -207,6 +238,28 @@ export const uploadAssessment = createServerFn({ method: "POST" })
       status: row.status as UploadRecord["status"],
       uploadedAt: row.uploaded_at.toISOString(),
     };
+  });
+
+const SetStatusInput = z.object({
+  uploadId: z.string().uuid(),
+  status: z.enum(["verified", "rejected"]),
+});
+
+export const setUploadStatus = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => SetStatusInput.parse(data))
+  .handler(async ({ data }): Promise<{ ok: true }> => {
+    const user = await getSessionUser();
+    if (!user || (user.role !== "admin" && user.role !== "advisor")) {
+      throw new Error("Admin or advisor only.");
+    }
+    await sql`
+      UPDATE assessment_uploads
+      SET status = ${data.status},
+          reviewed_at = now(),
+          reviewed_by = ${user.id}
+      WHERE id = ${data.uploadId}
+    `;
+    return { ok: true };
   });
 
 const DeleteInput = z.object({ uploadId: z.string().uuid() });

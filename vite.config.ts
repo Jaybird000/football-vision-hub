@@ -26,6 +26,9 @@ export default defineConfig({
       prerender: {
         enabled: true,
         crawlLinks: true,
+        // /ikf360/* is the logged-in product surface — every loader needs a session
+        // and/or a DB query. Prerendering returns 500s; the routes are noindex anyway.
+        filter: (page) => !page.path.startsWith("/ikf360"),
       },
     }),
     viteReact(),

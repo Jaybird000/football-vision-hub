@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { getCookie } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { sql } from "./db";
+import { sendParentRecommendationReady } from "./email";
 
 type Role = "parent" | "advisor" | "admin";
 
@@ -308,6 +309,27 @@ export const scoreProfile = createServerFn({ method: "POST" })
 
     // Bump profile to stage 3
     await sql`UPDATE parent_child_profiles SET stage = 3, updated_at = now() WHERE id = ${data.profileId}`;
+
+    // Stage 3 → parent "your recommendation is ready" email.
+    // Only when the cell is actually published (otherwise the parent would land on
+    // placeholder copy). Fires on every fresh score AND re-score, which matches the
+    // brief: parents should be notified of material changes to their categorisation.
+    if (cell?.is_published) {
+      const profileRows = await sql<{ parent_email: string; parent_name: string; child_name: string }[]>`
+        SELECT parent_email, parent_name, child_name
+        FROM parent_child_profiles WHERE id = ${data.profileId} LIMIT 1
+      `;
+      const p = profileRows[0];
+      if (p) {
+        void sendParentRecommendationReady({
+          to: p.parent_email,
+          parentName: p.parent_name,
+          childName: p.child_name,
+          cellTitle,
+          advisorName: user.fullName,
+        }).catch(err => console.error("[stage3] parent recommendation-ready send failed:", err));
+      }
+    }
 
     return { id: rows[0].id, cellKey };
   });

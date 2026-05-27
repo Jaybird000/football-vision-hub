@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Calendar, Sparkles, ArrowRight, Clock, MessageCircle } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 import { getMyCategorisation } from "@/server/stage3";
 import { getMyStage2 } from "@/server/stage2";
 
@@ -98,10 +99,26 @@ function ParentDashboard() {
           <h3 className="text-[15px] uppercase tracking-[0.12em] font-bold">Your recommendation</h3>
         </div>
         <div
-          className="text-[14px] leading-relaxed whitespace-pre-wrap"
+          className="ikf-prose text-[14px] leading-relaxed"
           style={{ color: "var(--ikf-text)" }}
         >
-          {cat.recommendationMd}
+          <ReactMarkdown
+            components={{
+              h1: ({ children }) => <h1 className="text-[20px] font-bold mt-5 first:mt-0 mb-2">{children}</h1>,
+              h2: ({ children }) => <h2 className="text-[16px] font-bold mt-4 first:mt-0 mb-2">{children}</h2>,
+              h3: ({ children }) => <h3 className="text-[14px] font-bold uppercase tracking-[0.08em] mt-4 first:mt-0 mb-1.5" style={{ color: "var(--ikf-text-dim)" }}>{children}</h3>,
+              p: ({ children }) => <p className="mb-3 last:mb-0">{children}</p>,
+              ul: ({ children }) => <ul className="list-disc pl-5 mb-3 last:mb-0 space-y-1">{children}</ul>,
+              ol: ({ children }) => <ol className="list-decimal pl-5 mb-3 last:mb-0 space-y-1">{children}</ol>,
+              li: ({ children }) => <li>{children}</li>,
+              strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+              em: ({ children }) => <em className="italic">{children}</em>,
+              a: ({ href, children }) => <a href={href} target="_blank" rel="noopener noreferrer" className="underline" style={{ color: "var(--ikf-brand)" }}>{children}</a>,
+              code: ({ children }) => <code className="px-1 py-0.5 rounded text-[12px]" style={{ background: "var(--ikf-surface-2)" }}>{children}</code>,
+            }}
+          >
+            {cat.recommendationMd}
+          </ReactMarkdown>
         </div>
       </div>
 

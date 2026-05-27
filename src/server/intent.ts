@@ -3,6 +3,7 @@ import { getCookie } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { sql } from "./db";
 import { scoreReadiness, INTENT_QUESTIONS } from "@/lib/ikf360-data";
+import { sendParentIntentAck, sendAdvisorNewIntent } from "./email";
 
 const validQuestionIds = new Set(INTENT_QUESTIONS.map(q => q.id));
 
@@ -60,6 +61,22 @@ export const submitIntent = createServerFn({ method: "POST" })
         WHERE id = ${userId}
       `;
     }
+
+    // Fire-and-forget: never block the parent's form submission on email delivery.
+    void sendParentIntentAck({
+      to: data.parentEmail,
+      parentName: data.parentName,
+      childName: data.childName,
+    }).catch(err => console.error("[intent] parent ack send failed:", err));
+    void sendAdvisorNewIntent({
+      profileId,
+      parentName: data.parentName,
+      parentEmail: data.parentEmail,
+      parentPhone: phone,
+      childName: data.childName,
+      childAge: data.childAge,
+      readiness,
+    }).catch(err => console.error("[intent] advisor notify send failed:", err));
 
     return { id: profileId, readiness };
   });

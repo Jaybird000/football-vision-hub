@@ -5,7 +5,7 @@ export const Route = createFileRoute("/ikf360")({
   head: () => ({
     meta: [
       { title: "IKF 360 Platform" },
-      { name: "description", content: "IKF Career 360 — the parent-first platform for your child's football journey." },
+      { name: "description", content: "IKF Pathway 360 — the parent-first platform for your child's football journey." },
       { name: "robots", content: "noindex, nofollow" },
     ],
   }),
