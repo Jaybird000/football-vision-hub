@@ -181,3 +181,70 @@ export async function sendParentRecommendationReady(args: {
   `);
   await sendEmail({ to: args.to, subject, html, text });
 }
+
+// ---------- Cron: advisor "review due" (6-month cycle approaching) ----------
+
+export async function sendAdvisorReviewDue(args: {
+  profileId: string;
+  parentName: string;
+  childName: string;
+  validUntil: Date;
+  daysRemaining: number;
+}): Promise<void> {
+  if (!ADVISOR_EMAIL) {
+    console.warn("[email] ADVISOR_EMAIL not set; skipping advisor review-due notification.");
+    return;
+  }
+  const profileUrl = `${APP_BASE_URL}/ikf360/admin/profiles/${args.profileId}`;
+  const dueOn = args.validUntil.toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" });
+  const subject = `Review due in ${args.daysRemaining} days — ${args.childName}`;
+  const text = [
+    `${args.childName}'s 6-month categorisation review is approaching.`,
+    ``,
+    `Child:     ${args.childName}`,
+    `Parent:    ${args.parentName}`,
+    `Due by:    ${dueOn} (${args.daysRemaining} days remaining)`,
+    ``,
+    `Open profile: ${profileUrl}`,
+    ``,
+    `Re-engage the parent, refresh the assessment data if anything has changed, and re-score the profile.`,
+  ].join("\n");
+  const html = shell(`
+    <p style="margin:0 0 12px;font-weight:600;">Review due — ${args.childName}</p>
+    <p style="margin:0 0 16px;">The 6-month categorisation review for <strong>${args.childName}</strong> is due in <strong>${args.daysRemaining} days</strong> (by ${dueOn}). ${args.parentName} should be re-engaged to refresh assessment data and re-score the profile.</p>
+    <p style="margin:0;"><a href="${profileUrl}" style="display:inline-block;padding:10px 16px;background:#dfff5e;color:#0B1220;text-decoration:none;border-radius:6px;font-weight:600;font-size:13px;">Open profile</a></p>
+  `);
+  await sendEmail({ to: ADVISOR_EMAIL, subject, html, text });
+}
+
+// ---------- Cron: parent Stage 2 re-engagement nudge ----------
+
+export async function sendParentStage2Nudge(args: {
+  to: string;
+  parentName: string;
+  childName: string;
+  daysSinceIntent: number;
+}): Promise<void> {
+  const fn = firstName(args.parentName);
+  const uploadUrl = `${APP_BASE_URL}/ikf360/upload`;
+  const subject = `${args.childName}'s pathway is waiting on a few uploads`;
+  const text = [
+    `Hi ${fn},`,
+    ``,
+    `It's been ${args.daysSinceIntent} days since you completed the Parent SOP for ${args.childName}. The next step is uploading the assessment reports so an IKF advisor can build a recommendation.`,
+    ``,
+    `If you've run into anything that's making it hard to gather them, your advisor would rather hear about it than have you stuck. Reply to this email and we'll work through it together.`,
+    ``,
+    `Open the upload portal: ${uploadUrl}`,
+    ``,
+    `— The IKF Pathway 360 team`,
+  ].join("\n");
+  const html = shell(`
+    <p style="margin:0 0 12px;">Hi ${fn},</p>
+    <p style="margin:0 0 16px;">It's been ${args.daysSinceIntent} days since you completed the Parent SOP for <strong>${args.childName}</strong>. The next step is uploading the assessment reports so an IKF advisor can build a recommendation.</p>
+    <p style="margin:0 0 16px;">If you've run into anything that's making it hard to gather them, your advisor would rather hear about it than have you stuck. Reply to this email and we'll work through it together.</p>
+    <p style="margin:0 0 16px;"><a href="${uploadUrl}" style="display:inline-block;padding:10px 16px;background:#dfff5e;color:#0B1220;text-decoration:none;border-radius:6px;font-weight:600;font-size:13px;">Open upload portal</a></p>
+    <p style="margin:0;">— The IKF Pathway 360 team</p>
+  `);
+  await sendEmail({ to: args.to, subject, html, text });
+}

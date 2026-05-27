@@ -35,6 +35,8 @@ import { Route as Ikf360AdminCellsRouteImport } from './routes/ikf360.admin.cell
 import { Route as Ikf360AdminAxesRouteImport } from './routes/ikf360.admin.axes'
 import { Route as Ikf360AdminIdRouteImport } from './routes/ikf360.admin.$id'
 import { Route as ApiUploadsIdRouteImport } from './routes/api.uploads.$id'
+import { Route as ApiCronStage2NudgeRouteImport } from './routes/api.cron.stage2-nudge'
+import { Route as ApiCronReviewRemindersRouteImport } from './routes/api.cron.review-reminders'
 import { Route as Ikf360AdminProfilesIdRouteImport } from './routes/ikf360.admin.profiles.$id'
 
 const SignupRoute = SignupRouteImport.update({
@@ -167,6 +169,16 @@ const ApiUploadsIdRoute = ApiUploadsIdRouteImport.update({
   path: '/api/uploads/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiCronStage2NudgeRoute = ApiCronStage2NudgeRouteImport.update({
+  id: '/api/cron/stage2-nudge',
+  path: '/api/cron/stage2-nudge',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCronReviewRemindersRoute = ApiCronReviewRemindersRouteImport.update({
+  id: '/api/cron/review-reminders',
+  path: '/api/cron/review-reminders',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const Ikf360AdminProfilesIdRoute = Ikf360AdminProfilesIdRouteImport.update({
   id: '/profiles/$id',
   path: '/profiles/$id',
@@ -194,6 +206,8 @@ export interface FileRoutesByFullPath {
   '/ikf360/support': typeof Ikf360SupportRoute
   '/ikf360/upload': typeof Ikf360UploadRoute
   '/ikf360/': typeof Ikf360IndexRoute
+  '/api/cron/review-reminders': typeof ApiCronReviewRemindersRoute
+  '/api/cron/stage2-nudge': typeof ApiCronStage2NudgeRoute
   '/api/uploads/$id': typeof ApiUploadsIdRoute
   '/ikf360/admin/$id': typeof Ikf360AdminIdRoute
   '/ikf360/admin/axes': typeof Ikf360AdminAxesRoute
@@ -222,6 +236,8 @@ export interface FileRoutesByTo {
   '/ikf360/support': typeof Ikf360SupportRoute
   '/ikf360/upload': typeof Ikf360UploadRoute
   '/ikf360': typeof Ikf360IndexRoute
+  '/api/cron/review-reminders': typeof ApiCronReviewRemindersRoute
+  '/api/cron/stage2-nudge': typeof ApiCronStage2NudgeRoute
   '/api/uploads/$id': typeof ApiUploadsIdRoute
   '/ikf360/admin/$id': typeof Ikf360AdminIdRoute
   '/ikf360/admin/axes': typeof Ikf360AdminAxesRoute
@@ -252,6 +268,8 @@ export interface FileRoutesById {
   '/ikf360/support': typeof Ikf360SupportRoute
   '/ikf360/upload': typeof Ikf360UploadRoute
   '/ikf360/': typeof Ikf360IndexRoute
+  '/api/cron/review-reminders': typeof ApiCronReviewRemindersRoute
+  '/api/cron/stage2-nudge': typeof ApiCronStage2NudgeRoute
   '/api/uploads/$id': typeof ApiUploadsIdRoute
   '/ikf360/admin/$id': typeof Ikf360AdminIdRoute
   '/ikf360/admin/axes': typeof Ikf360AdminAxesRoute
@@ -283,6 +301,8 @@ export interface FileRouteTypes {
     | '/ikf360/support'
     | '/ikf360/upload'
     | '/ikf360/'
+    | '/api/cron/review-reminders'
+    | '/api/cron/stage2-nudge'
     | '/api/uploads/$id'
     | '/ikf360/admin/$id'
     | '/ikf360/admin/axes'
@@ -311,6 +331,8 @@ export interface FileRouteTypes {
     | '/ikf360/support'
     | '/ikf360/upload'
     | '/ikf360'
+    | '/api/cron/review-reminders'
+    | '/api/cron/stage2-nudge'
     | '/api/uploads/$id'
     | '/ikf360/admin/$id'
     | '/ikf360/admin/axes'
@@ -340,6 +362,8 @@ export interface FileRouteTypes {
     | '/ikf360/support'
     | '/ikf360/upload'
     | '/ikf360/'
+    | '/api/cron/review-reminders'
+    | '/api/cron/stage2-nudge'
     | '/api/uploads/$id'
     | '/ikf360/admin/$id'
     | '/ikf360/admin/axes'
@@ -364,6 +388,8 @@ export interface RootRouteChildren {
   PlayersRoute: typeof PlayersRoute
   PrivacyRoute: typeof PrivacyRoute
   SignupRoute: typeof SignupRoute
+  ApiCronReviewRemindersRoute: typeof ApiCronReviewRemindersRoute
+  ApiCronStage2NudgeRoute: typeof ApiCronStage2NudgeRoute
   ApiUploadsIdRoute: typeof ApiUploadsIdRoute
 }
 
@@ -551,6 +577,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiUploadsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/cron/stage2-nudge': {
+      id: '/api/cron/stage2-nudge'
+      path: '/api/cron/stage2-nudge'
+      fullPath: '/api/cron/stage2-nudge'
+      preLoaderRoute: typeof ApiCronStage2NudgeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/cron/review-reminders': {
+      id: '/api/cron/review-reminders'
+      path: '/api/cron/review-reminders'
+      fullPath: '/api/cron/review-reminders'
+      preLoaderRoute: typeof ApiCronReviewRemindersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/ikf360/admin/profiles/$id': {
       id: '/ikf360/admin/profiles/$id'
       path: '/profiles/$id'
@@ -619,6 +659,8 @@ const rootRouteChildren: RootRouteChildren = {
   PlayersRoute: PlayersRoute,
   PrivacyRoute: PrivacyRoute,
   SignupRoute: SignupRoute,
+  ApiCronReviewRemindersRoute: ApiCronReviewRemindersRoute,
+  ApiCronStage2NudgeRoute: ApiCronStage2NudgeRoute,
   ApiUploadsIdRoute: ApiUploadsIdRoute,
 }
 export const routeTree = rootRouteImport
