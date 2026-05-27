@@ -71,7 +71,7 @@ function IntentForm() {
       {step === "details" && (
         <div className="space-y-8 animate-fade-up">
           <header>
-            <h1 className="text-[34px] leading-tight">Welcome. Let's start with you.</h1>
+            <h1 className="text-[26px] sm:text-[34px] leading-tight">Welcome. Let's start with you.</h1>
             <p className="mt-3 text-[15px] leading-relaxed" style={{ color: "var(--ikf-text-dim)" }}>
               This isn't a registration form. It's the start of a conversation between you and IKF about your child's journey. Takes about 4 minutes.
             </p>
@@ -117,7 +117,7 @@ function IntentForm() {
           <div className="text-[11px] uppercase tracking-[0.18em] mb-3" style={{ color: "var(--ikf-brand)" }}>
             {q.section === "child" ? "About your child" : q.section === "parent" ? "About your role" : "Your hopes"}
           </div>
-          <h2 className="text-[28px] leading-tight mb-7">{q.q}</h2>
+          <h2 className="text-[22px] sm:text-[28px] leading-tight mb-7">{q.q}</h2>
           {submitError && (
             <div className="mb-5 p-4 rounded-lg text-[13px]" style={{ background: "rgba(220, 38, 38, 0.08)", color: "#dc2626", border: "1px solid rgba(220, 38, 38, 0.2)" }}>
               {submitError}
@@ -151,7 +151,7 @@ function IntentForm() {
             <div className="w-16 h-16 rounded-full inline-flex items-center justify-center mb-5" style={{ background: "var(--ikf-brand)", color: "#0B1220" }}>
               <Check size={28} strokeWidth={3} />
             </div>
-            <h1 className="text-[32px] leading-tight">Thank you, {details.parent.split(" ")[0] || "parent"}.</h1>
+            <h1 className="text-[26px] sm:text-[32px] leading-tight">Thank you, {details.parent.split(" ")[0] || "parent"}.</h1>
             <p className="mt-3 text-[15px] leading-relaxed max-w-md mx-auto" style={{ color: "var(--ikf-text-dim)" }}>
               We've received your responses. An IKF advisor will reach out within 24 hours to start the conversation.
             </p>

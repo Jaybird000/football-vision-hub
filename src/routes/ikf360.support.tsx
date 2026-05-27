@@ -37,7 +37,7 @@ function ParentSupport() {
 
       <header className="space-y-4 max-w-2xl">
         <div className="ikf-chip" style={{ background: "var(--ikf-surface)", color: "var(--ikf-brand)" }}>Parent Support Track</div>
-        <h1 className="text-[44px] leading-[1.05] tracking-tight">You are not doing this alone.</h1>
+        <h1 className="text-[32px] sm:text-[44px] leading-[1.05] tracking-tight">You are not doing this alone.</h1>
         <p className="text-[16px] leading-relaxed" style={{ color: "var(--ikf-text-dim)" }}>
           The three stages of IKF Pathway 360 give your child a structured path. The Parent Support Track is a parallel space — for you,
           not your child. A place to learn from other parents, ask hard questions, and find footing when the journey gets uncertain.

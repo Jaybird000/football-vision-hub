@@ -37,7 +37,7 @@ function UploadPortal() {
       <div className="max-w-2xl mx-auto py-10">
         <div className="ikf-card p-8 text-center space-y-4">
           <AlertCircle size={40} className="mx-auto" style={{ color: "var(--ikf-brand)" }} />
-          <h1 className="text-[28px] leading-tight">Complete the Parent SOP first</h1>
+          <h1 className="text-[22px] sm:text-[28px] leading-tight">Complete the Parent SOP first</h1>
           <p className="text-[14px]" style={{ color: "var(--ikf-text-dim)" }}>
             Stage 2 unlocks automatically as soon as you've finished Stage 1.
           </p>
@@ -82,7 +82,7 @@ function Portal({ state, onChanged }: { state: Stage2State; onChanged: () => voi
       </div>
 
       <header className="mb-8">
-        <h1 className="text-[34px] leading-tight">Upload your child's reports</h1>
+        <h1 className="text-[26px] sm:text-[34px] leading-tight">Upload your child's reports</h1>
         <p className="mt-3 text-[15px] leading-relaxed" style={{ color: "var(--ikf-text-dim)" }}>
           {state.childName ? `For ${state.childName}. ` : ""}IKF doesn't conduct these assessments — pick a recommended provider, get the report, then upload the PDF/DOC/JPG here. Re-uploads overwrite the previous version.
         </p>

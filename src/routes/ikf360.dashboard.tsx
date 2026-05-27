@@ -147,7 +147,7 @@ function Header({ childName }: { childName: string | null }) {
       <div className="text-[11px] uppercase tracking-[0.16em] mb-2" style={{ color: "var(--ikf-text-dim)" }}>
         Stage 3 of 3 — Recommendation
       </div>
-      <h1 className="text-[34px] leading-tight">{childName ? `${childName}'s pathway` : "Your pathway"}</h1>
+      <h1 className="text-[26px] sm:text-[34px] leading-tight">{childName ? `${childName}'s pathway` : "Your pathway"}</h1>
     </div>
   );
 }
@@ -156,7 +156,7 @@ function EmptyCard({ title, body, to, cta }: { title: string; body: string; to: 
   return (
     <div className="max-w-2xl mx-auto py-10">
       <div className="ikf-card p-8 text-center space-y-4">
-        <h1 className="text-[28px] leading-tight">{title}</h1>
+        <h1 className="text-[22px] sm:text-[28px] leading-tight">{title}</h1>
         <p className="text-[14px]" style={{ color: "var(--ikf-text-dim)" }}>{body}</p>
         <Link to={to} className="ikf-btn-primary inline-flex items-center gap-2">
           {cta} <ArrowRight size={16} />
