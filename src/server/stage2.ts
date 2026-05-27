@@ -4,6 +4,7 @@ import { z } from "zod";
 import { sql } from "./db";
 import { storeFile, deleteFile, readStoredFile, ALLOWED_MIME, MAX_FILE_SIZE } from "./storage";
 import { sendAdvisorReadyToScore } from "./email";
+import { logAudit } from "./audit";
 
 type Role = "parent" | "advisor" | "admin";
 
@@ -199,6 +200,19 @@ export const uploadAssessment = createServerFn({ method: "POST" })
       row = ins[0];
     }
 
+    await logAudit({
+      action: existing.length > 0 ? "upload.replace" : "upload.create",
+      entityType: "upload",
+      entityId: row.id,
+      payload: {
+        profileId: user.profileId,
+        assessmentKey: data.key,
+        fileName: data.file.name,
+        fileSize: Number(stored.size),
+        mimeType: data.file.type,
+      },
+    });
+
     // Stage 2 → advisor "ready to score" notification.
     // Only check on fresh inserts (re-uploads don't change the uploaded set).
     // Idempotent via parent_child_profiles.notified_advisor_min_dataset_at — the
@@ -259,6 +273,12 @@ export const setUploadStatus = createServerFn({ method: "POST" })
           reviewed_by = ${user.id}
       WHERE id = ${data.uploadId}
     `;
+    await logAudit({
+      action: "upload.review",
+      entityType: "upload",
+      entityId: data.uploadId,
+      payload: { status: data.status },
+    });
     return { ok: true };
   });
 
@@ -281,5 +301,11 @@ export const deleteUpload = createServerFn({ method: "POST" })
     }
     await sql`DELETE FROM assessment_uploads WHERE id = ${upload.id}`;
     await deleteFile(upload.file_path);
+    await logAudit({
+      action: "upload.delete",
+      entityType: "upload",
+      entityId: data.uploadId,
+      payload: { profileId: upload.profile_id },
+    });
     return { ok: true };
   });

@@ -3,6 +3,7 @@ import { getCookie } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { sql } from "./db";
 import { sendParentRecommendationReady } from "./email";
+import { logAudit } from "./audit";
 
 type Role = "parent" | "advisor" | "admin";
 
@@ -245,6 +246,17 @@ export const upsertCell = createServerFn({ method: "POST" })
             updated_at = now()
       RETURNING id
     `;
+    await logAudit({
+      action: "cell.upsert",
+      entityType: "cell",
+      entityId: rows[0].id,
+      payload: {
+        cellKey: data.cellKey,
+        isPublished: data.isPublished,
+        titleLength: data.title.length,
+        mdLength: data.recommendationMd.length,
+      },
+    });
     return { id: rows[0].id };
   });
 
@@ -309,6 +321,19 @@ export const scoreProfile = createServerFn({ method: "POST" })
 
     // Bump profile to stage 3
     await sql`UPDATE parent_child_profiles SET stage = 3, updated_at = now() WHERE id = ${data.profileId}`;
+
+    await logAudit({
+      action: "categorisation.create",
+      entityType: "categorisation",
+      entityId: rows[0].id,
+      payload: {
+        profileId: data.profileId,
+        cellKey,
+        selections: data.selections,
+        hasAdvisorNotes: data.advisorNotes.length > 0,
+        validForDays: data.validForDays,
+      },
+    });
 
     // Stage 3 → parent "your recommendation is ready" email.
     // Only when the cell is actually published (otherwise the parent would land on

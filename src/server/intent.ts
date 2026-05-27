@@ -4,6 +4,7 @@ import { z } from "zod";
 import { sql } from "./db";
 import { scoreReadiness, INTENT_QUESTIONS } from "@/lib/ikf360-data";
 import { sendParentIntentAck, sendAdvisorNewIntent } from "./email";
+import { logAudit } from "./audit";
 
 const validQuestionIds = new Set(INTENT_QUESTIONS.map(q => q.id));
 
@@ -61,6 +62,13 @@ export const submitIntent = createServerFn({ method: "POST" })
         WHERE id = ${userId}
       `;
     }
+
+    await logAudit({
+      action: "profile.create",
+      entityType: "profile",
+      entityId: profileId,
+      payload: { readiness, childName: data.childName, parentEmail: data.parentEmail },
+    });
 
     // Fire-and-forget: never block the parent's form submission on email delivery.
     void sendParentIntentAck({
