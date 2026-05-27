@@ -1,7 +1,7 @@
 import { createFileRoute, redirect, Link, useRouter } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState, useMemo } from "react";
-import { ArrowLeft, Loader2, Check, FileText, ExternalLink, CheckCircle2, XCircle, Clock } from "lucide-react";
+import { useState, useMemo, useEffect } from "react";
+import { ArrowLeft, Loader2, Check, FileText, ExternalLink, CheckCircle2, XCircle, Clock, Eye, X } from "lucide-react";
 import { currentUser } from "@/server/auth";
 import { listAxes, getAdminProfileDetail, getProfileCategorisation, scoreProfile } from "@/server/stage3";
 import { setUploadStatus } from "@/server/stage2";
@@ -49,6 +49,19 @@ function ProfileScorePage() {
 
   const [selections, setSelections] = useState<Record<string, string>>(initialSelections);
   const [advisorNotes, setAdvisorNotes] = useState(categorisation?.advisorNotes ?? "");
+  const [preview, setPreview] = useState<{ id: string; title: string; fileName: string; mimeType: string } | null>(null);
+
+  useEffect(() => {
+    if (!preview) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setPreview(null); };
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [preview]);
 
   const score = useMutation({
     mutationFn: () => scoreProfile({
@@ -123,7 +136,14 @@ function ProfileScorePage() {
                         Open <ExternalLink size={11} />
                       </a>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <button
+                        onClick={() => setPreview({ id: u.id, title: u.assessmentTitle, fileName: u.fileName, mimeType: u.mimeType })}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold border"
+                        style={{ borderColor: "var(--ikf-brand)", color: "var(--ikf-brand)", background: "rgba(223,255,94,0.06)" }}
+                      >
+                        <Eye size={11} /> Preview
+                      </button>
                       <ReviewButton
                         kind="verify"
                         active={status === "verified"}
@@ -229,6 +249,92 @@ function ProfileScorePage() {
             </div>
           )}
         </section>
+      </div>
+
+      {preview && <PreviewModal preview={preview} onClose={() => setPreview(null)} />}
+    </div>
+  );
+}
+
+function PreviewModal({
+  preview,
+  onClose,
+}: {
+  preview: { id: string; title: string; fileName: string; mimeType: string };
+  onClose: () => void;
+}) {
+  const fileUrl = `/api/uploads/${preview.id}?inline=1`;
+  const isPdf = preview.mimeType === "application/pdf";
+  const isImage = preview.mimeType.startsWith("image/");
+  const canEmbed = isPdf || isImage;
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Preview ${preview.title}`}
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-8"
+      style={{ background: "rgba(0, 0, 0, 0.75)" }}
+      onClick={onClose}
+    >
+      <div
+        className="relative w-full max-w-5xl h-full max-h-[90vh] rounded-lg overflow-hidden flex flex-col"
+        style={{ background: "var(--ikf-bg)", border: "1px solid var(--ikf-border)" }}
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between gap-4 px-5 py-3 border-b shrink-0" style={{ borderColor: "var(--ikf-border)", background: "var(--ikf-surface-2)" }}>
+          <div className="min-w-0">
+            <div className="font-semibold text-[14px] truncate">{preview.title}</div>
+            <div className="text-[11px] truncate" style={{ color: "var(--ikf-text-dim)" }}>{preview.fileName}</div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <a
+              href={fileUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-[12px] font-semibold px-2.5 py-1 rounded-md"
+              style={{ color: "var(--ikf-brand)" }}
+            >
+              Open in new tab <ExternalLink size={11} />
+            </a>
+            <button
+              onClick={onClose}
+              aria-label="Close preview"
+              className="inline-flex items-center justify-center w-8 h-8 rounded-md"
+              style={{ background: "var(--ikf-surface)", color: "var(--ikf-text)" }}
+            >
+              <X size={16} />
+            </button>
+          </div>
+        </div>
+        <div className="flex-1 min-h-0" style={{ background: "#111" }}>
+          {canEmbed ? (
+            isImage ? (
+              <div className="w-full h-full flex items-center justify-center overflow-auto">
+                <img src={fileUrl} alt={preview.fileName} className="max-w-full max-h-full object-contain" />
+              </div>
+            ) : (
+              <iframe
+                src={fileUrl}
+                title={preview.title}
+                className="w-full h-full border-0"
+              />
+            )
+          ) : (
+            <div className="w-full h-full flex flex-col items-center justify-center text-center px-6 gap-3" style={{ color: "var(--ikf-text-dim)" }}>
+              <FileText size={36} style={{ color: "var(--ikf-brand)" }} />
+              <div className="text-[14px]">In-browser preview isn't supported for <code>{preview.mimeType}</code>.</div>
+              <a
+                href={fileUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="ikf-btn-primary inline-flex items-center gap-2 text-[13px]"
+              >
+                Open in new tab <ExternalLink size={12} />
+              </a>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

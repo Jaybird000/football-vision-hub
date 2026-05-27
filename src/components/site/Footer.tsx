@@ -28,26 +28,41 @@ export function Footer() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 pt-12 text-sm">
           <div className="col-span-2 flex flex-col gap-3">
             <Logo size="lg" />
-            <p className="text-[10px] text-chalk/50 uppercase tracking-[0.25em] font-bold">
-              Powered by <span className="text-chalk/80">Sports Vision</span>
-            </p>
-            <a
-              href="https://www.sportsvision.ai/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-block mt-1 opacity-90 hover:opacity-100 transition-opacity"
-              aria-label="Sports Vision"
-            >
-              <img
-                src="/SV_02_White.png"
-                alt="Sports Vision"
-                className="h-14 md:h-16 w-auto object-contain"
-                draggable={false}
-              />
-            </a>
+            <div className="mt-2 flex flex-wrap items-end gap-x-12 gap-y-6">
+              <div className="flex flex-col gap-2">
+                <p className="text-xs text-chalk uppercase tracking-[0.25em] font-bold">
+                  Powered by
+                </p>
+                <a
+                  href="https://www.sportsvision.ai/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-block opacity-90 hover:opacity-100 transition-opacity"
+                  aria-label="Sports Vision"
+                >
+                  <img
+                    src="/SV_01_white.png"
+                    alt="Sports Vision"
+                    className="h-10 md:h-12 w-auto object-contain"
+                    draggable={false}
+                  />
+                </a>
+              </div>
+              <div className="flex flex-col gap-2">
+                <p className="text-xs text-chalk uppercase tracking-[0.25em] font-bold">
+                  Digital Partner
+                </p>
+                <img
+                  src="/firstkick.png"
+                  alt="Firstkick"
+                  className="h-12 md:h-14 w-auto object-contain"
+                  draggable={false}
+                />
+              </div>
+            </div>
           </div>
           <div>
-            <h4 className="font-display text-lg uppercase mb-4 text-chalk/40">Pathway</h4>
+            <h4 className="font-display text-xl uppercase mb-4 text-chalk font-bold tracking-wider">Pathway</h4>
             <ul className="space-y-2 text-chalk/70">
               <li><Link to="/players" className="hover:text-neon-strike">Players</Link></li>
               <li><Link to="/parents" className="hover:text-neon-strike">Parents</Link></li>
@@ -56,7 +71,7 @@ export function Footer() {
             </ul>
           </div>
           <div>
-            <h4 className="font-display text-lg uppercase mb-4 text-chalk/40">Org</h4>
+            <h4 className="font-display text-xl uppercase mb-4 text-chalk font-bold tracking-wider">Org</h4>
             <ul className="space-y-2 text-chalk/70">
               <li><Link to="/about" className="hover:text-neon-strike">About</Link></li>
               <li><Link to="/initiatives" className="hover:text-neon-strike">Initiatives</Link></li>
