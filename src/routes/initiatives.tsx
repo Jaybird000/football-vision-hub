@@ -12,28 +12,30 @@ export const Route = createFileRoute("/initiatives")({
 
 function Initiatives() {
   const items = [
-    { t: "Khelo Talent Hunt", tag: "Flagship", b: "Open city-round trials feeding zonal camps and a national final. The funnel that starts every IKF journey — free for girls and underprivileged players." },
-    { t: "Naari Shakti", tag: "Women's Football", b: "Dedicated trials and pathway support for girls — no registration fee at any stage." },
-    { t: "IKF Academies", tag: "Residential", b: "Residential training environments combining schooling with year-round football development." },
-    { t: "Coach Education", tag: "Capacity Building", b: "Structured coach-development programs for grassroots coaches in tier-2 and tier-3 cities." },
-    { t: "Rural Outreach", tag: "Last Mile", b: "On-the-ground trial drives, equipment support and village-level coaching clinics in underserved geographies." },
-    { t: "Para-Football", tag: "Inclusion", b: "Adapted training and competitive trials for differently-abled players." },
+    { t: "IKF Trials", tag: "Flagship", b: "Open city-round trials feeding zonal camps and a national final — the funnel that starts every IKF journey.", href: "https://indiakhelofootball.com/IkfTrials" },
+    { t: "Project Naari Shakti", tag: "Women's Football", b: "Dedicated trials and pathway support for girls across India.", href: "https://indiakhelofootball.com/naari_shakti" },
+    { t: "Scout on Wheel", tag: "Mobile Scouting", b: "A travelling scouting unit that takes the IKF pathway directly to communities.", href: "https://indiakhelofootball.com/scouts_on_wheels" },
+    { t: "North East Rising", tag: "Regional", b: "Focused football scouting and development across India's North-East.", href: "https://indiakhelofootball.com/north_east_rising" },
+    { t: "IKF Pathway 360", tag: "Pathway", b: "The end-to-end IKF talent, parent and coach engagement pathway.", href: "https://indiakhelofootball.com/ikf360vision" },
+    { t: "IKF Scouting Certification", tag: "Capacity Building", b: "Structured certification programme for scouts working inside the IKF pathway.", href: "https://indiakhelofootball.com/scoutingcertification" },
+    { t: "Global Pathways", tag: "International", b: "Connections between Indian talent and international clubs and academies.", href: "https://indiakhelofootball.com/international-clubs-academies" },
   ];
   return (
     <>
       <PageHero eyebrow="Initiatives"
-        title={<>Many <span className="text-neon-strike not-italic">programs</span>. One pipeline.</>}
+        title={<>Many <span className="text-neon-strike not-italic mx-[0.1em]">programs</span>. One pipeline.</>}
         sub="Every IKF initiative feeds the same pathway — from a kid touching a ball for the first time, to a player signing a professional contract."
         image={img} />
       <Section>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
           {items.map(it => (
-            <article key={it.t} className="bg-pitch-green/10 border border-chalk/10 p-8 hover:border-neon-strike transition-colors flex flex-col">
+            <a key={it.t} href={it.href} target="_blank" rel="noopener noreferrer"
+              className="group bg-pitch-green/10 border border-chalk/10 p-8 hover:border-neon-strike transition-colors flex flex-col">
               <span className="text-[10px] font-bold uppercase tracking-widest text-neon-strike">{it.tag}</span>
               <h3 className="font-display text-3xl uppercase mt-3">{it.t}</h3>
               <p className="mt-4 text-chalk/70 text-sm leading-relaxed flex-1">{it.b}</p>
-              <span className="mt-6 text-xs uppercase tracking-widest font-bold text-chalk/60 hover:text-neon-strike">Learn more →</span>
-            </article>
+              <span className="mt-6 text-xs uppercase tracking-widest font-bold text-chalk/60 group-hover:text-neon-strike">Learn more →</span>
+            </a>
           ))}
         </div>
       </Section>

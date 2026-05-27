@@ -42,7 +42,7 @@ function Donate() {
   return (
     <>
       <PageHero eyebrow="Donate"
-        title={<>Fuel the <span className="text-neon-strike not-italic">grassroots</span>.</>}
+        title={<>Fuel the <span className="text-neon-strike not-italic mx-[0.1em]">grassroots</span>.</>}
         sub="100% of donations go to player kits, trials, camps, and academy scholarships. Operating costs are covered by our corporate partners — your money goes straight to the pitch."
         image={img} />
 
@@ -93,7 +93,7 @@ function Donate() {
               })}
             </div>
           </div>
-          <aside className="lg:col-span-5 bg-pitch-black border border-chalk/15 p-8 self-start sticky top-28">
+          <aside className="lg:col-span-5 bg-pitch-black border border-chalk/15 p-8 lg:self-start lg:sticky lg:top-28">
             <h3 className="font-display text-3xl uppercase">Your donation</h3>
             <div className="mt-6">
               <label className="text-xs uppercase tracking-widest text-chalk/60 font-bold">Custom amount (₹)</label>

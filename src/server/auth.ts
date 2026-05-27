@@ -19,6 +19,7 @@ export type AuthUser = {
   email: string;
   fullName: string;
   role: Role;
+  profileId: string | null;
 };
 
 function normalizeEmail(email: string): string {
@@ -91,7 +92,7 @@ export const signup = createServerFn({ method: "POST" })
     const token = await createSession(user.id);
     writeSessionCookie(token);
 
-    return { id: user.id, email: user.email, fullName: user.full_name, role: user.role };
+    return { id: user.id, email: user.email, fullName: user.full_name, role: user.role, profileId: null };
   });
 
 export const login = createServerFn({ method: "POST" })
@@ -99,8 +100,8 @@ export const login = createServerFn({ method: "POST" })
   .handler(async ({ data }): Promise<AuthUser> => {
     const email = normalizeEmail(data.email);
 
-    const rows = await sql<{ id: string; email: string; full_name: string; role: Role; password_hash: string }[]>`
-      SELECT id, email, full_name, role, password_hash
+    const rows = await sql<{ id: string; email: string; full_name: string; role: Role; password_hash: string; profile_id: string | null }[]>`
+      SELECT id, email, full_name, role, password_hash, profile_id
       FROM users WHERE email = ${email} LIMIT 1
     `;
     if (rows.length === 0) {
@@ -115,34 +116,7 @@ export const login = createServerFn({ method: "POST" })
     const token = await createSession(user.id);
     writeSessionCookie(token);
 
-    return { id: user.id, email: user.email, fullName: user.full_name, role: user.role };
-  });
-
-export const adminLogin = createServerFn({ method: "POST" })
-  .inputValidator((data: unknown) => LoginInput.parse(data))
-  .handler(async ({ data }): Promise<AuthUser> => {
-    const email = normalizeEmail(data.email);
-
-    const rows = await sql<{ id: string; email: string; full_name: string; role: Role; password_hash: string }[]>`
-      SELECT id, email, full_name, role, password_hash
-      FROM users WHERE email = ${email} LIMIT 1
-    `;
-    if (rows.length === 0) {
-      throw new Error("Incorrect email or password.");
-    }
-    const user = rows[0];
-    const ok = await verifyPassword(data.password, user.password_hash);
-    if (!ok) {
-      throw new Error("Incorrect email or password.");
-    }
-    if (user.role !== "admin" && user.role !== "advisor") {
-      throw new Error("This account doesn't have admin access.");
-    }
-
-    const token = await createSession(user.id);
-    writeSessionCookie(token);
-
-    return { id: user.id, email: user.email, fullName: user.full_name, role: user.role };
+    return { id: user.id, email: user.email, fullName: user.full_name, role: user.role, profileId: user.profile_id };
   });
 
 export const logout = createServerFn({ method: "POST" }).handler(async () => {
@@ -158,8 +132,8 @@ export const currentUser = createServerFn({ method: "GET" }).handler(async (): P
   const token = getCookie(SESSION_COOKIE);
   if (!token) return null;
 
-  const rows = await sql<{ id: string; email: string; full_name: string; role: Role }[]>`
-    SELECT u.id, u.email, u.full_name, u.role
+  const rows = await sql<{ id: string; email: string; full_name: string; role: Role; profile_id: string | null }[]>`
+    SELECT u.id, u.email, u.full_name, u.role, u.profile_id
     FROM sessions s
     JOIN users u ON u.id = s.user_id
     WHERE s.token = ${token} AND s.expires_at > now()
@@ -167,5 +141,5 @@ export const currentUser = createServerFn({ method: "GET" }).handler(async (): P
   `;
   if (rows.length === 0) return null;
   const u = rows[0];
-  return { id: u.id, email: u.email, fullName: u.full_name, role: u.role };
+  return { id: u.id, email: u.email, fullName: u.full_name, role: u.role, profileId: u.profile_id };
 });

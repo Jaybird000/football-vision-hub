@@ -16,11 +16,11 @@ export function StatsWall() {
   return (
     <section className="py-24 md:py-32 bg-pitch-black">
       <div className="max-w-7xl mx-auto px-6">
-        <h2 className="font-display text-5xl md:text-6xl uppercase mb-16 leading-[0.9]">{t("home", "statsTitle")}</h2>
+        <h2 className="font-display text-4xl md:text-6xl uppercase mb-12 md:mb-16 leading-[0.9]">{t("home", "statsTitle")}</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-chalk/10">
           {stats.map(s => (
-            <div key={s.en} className="bg-pitch-black p-8 md:p-10">
-              <div className={`font-display text-6xl md:text-7xl mb-2 leading-none ${s.accent ? "text-neon-strike" : "text-chalk"}`}>
+            <div key={s.en} className="bg-pitch-black p-5 md:p-10">
+              <div className={`font-display text-4xl sm:text-5xl md:text-7xl mb-2 leading-none ${s.accent ? "text-neon-strike" : "text-chalk"}`}>
                 {s.fixed ? s.fixed : (
                   <Counter to={s.to} prefix={s.prefix} suffix={s.suffix} format={s.format} />
                 )}

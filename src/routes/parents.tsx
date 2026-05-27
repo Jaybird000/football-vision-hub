@@ -20,12 +20,12 @@ function Parents() {
   return (
     <>
       <PageHero eyebrow="For Parents"
-        title={<>Their <span className="text-neon-strike not-italic">future</span><br />is in safe hands.</>}
+        title={<>Their <span className="text-neon-strike not-italic mx-[0.1em]">future</span><br />is in safe hands.</>}
         sub="Sending a child into competitive sport is a leap of faith. IKF makes it a structured, safe, and education-first journey — built for parents who care."
         image={img}
         quote={{ text: "We were terrified the day she left for camp. A year on, she's stronger, sharper at school, and chasing something real.", author: "Sunita Devi", role: "Mother of an IKF scholar, Patna" }} />
       <Section>
-        <h2 className="font-display text-5xl uppercase mb-12">Questions, answered.</h2>
+        <h2 className="font-display text-4xl md:text-5xl uppercase mb-10 md:mb-12">Questions, answered.</h2>
         <div className="space-y-1">
           {faqs.map((f, i) => (
             <details key={i} className="group bg-pitch-green/10 border border-chalk/10 p-6 open:bg-pitch-green/20">

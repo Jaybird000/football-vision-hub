@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { ArrowRight, Loader2 } from "lucide-react";
 import { signup } from "@/server/auth";
@@ -9,6 +10,7 @@ export const Route = createFileRoute("/signup")({
 
 function SignupPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [form, setForm] = useState({ fullName: "", email: "", password: "" });
   const [consent, setConsent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -26,7 +28,7 @@ function SignupPage() {
     setSubmitting(true);
     setError(null);
     try {
-      await signup({
+      const result = await signup({
         data: {
           fullName: form.fullName.trim(),
           email: form.email.trim(),
@@ -34,6 +36,7 @@ function SignupPage() {
           consent: true,
         },
       });
+      queryClient.setQueryData(["currentUser"], result);
       router.invalidate();
       router.navigate({ to: "/ikf360/intent" });
     } catch (err) {

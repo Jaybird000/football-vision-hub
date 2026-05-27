@@ -10,7 +10,7 @@ export const Route = createFileRoute("/ikf360/admin/profiles/$id")({
   beforeLoad: async () => {
     const user = await currentUser();
     if (!user || (user.role !== "admin" && user.role !== "advisor")) {
-      throw redirect({ to: "/admin-login" });
+      throw redirect({ to: "/login" });
     }
   },
   loader: async ({ params }) => ({

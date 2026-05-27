@@ -1,12 +1,88 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useMemo } from "react";
-import { ArrowRight, Check, Mail, Phone, Loader2 } from "lucide-react";
+import { ArrowRight, Check, Mail, Phone, Loader2, CheckCircle2 } from "lucide-react";
 import { INTENT_QUESTIONS, scoreReadiness, READINESS_META, type Readiness } from "@/lib/ikf360-data";
-import { submitIntent } from "@/server/intent";
+import { submitIntent, getMyIntent, type MyIntent } from "@/server/intent";
 
 export const Route = createFileRoute("/ikf360/intent")({
-  component: IntentForm,
+  loader: async () => ({ existing: await getMyIntent() }),
+  component: IntentRoute,
 });
+
+function IntentRoute() {
+  const { existing } = Route.useLoaderData();
+  return existing ? <AlreadySubmitted intent={existing} /> : <IntentForm />;
+}
+
+function AlreadySubmitted({ intent }: { intent: MyIntent }) {
+  const meta = READINESS_META[intent.readiness];
+  const submittedDate = new Date(intent.submittedAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
+  return (
+    <div className="max-w-2xl mx-auto animate-fade-up space-y-8">
+      <div className="mb-2">
+        <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.16em] mb-2" style={{ color: "var(--ikf-text-dim)" }}>
+          <span>Stage 1 of 3 — Intent</span>
+          <span style={{ color: "var(--ikf-brand)" }}>Complete</span>
+        </div>
+        <div className="h-1 rounded-full overflow-hidden" style={{ background: "var(--ikf-surface-2)" }}>
+          <div className="h-full" style={{ width: "100%", background: "var(--ikf-brand)" }} />
+        </div>
+      </div>
+
+      <header className="flex items-start gap-4">
+        <div className="w-12 h-12 rounded-full inline-flex items-center justify-center shrink-0" style={{ background: "var(--ikf-brand)", color: "#0B1220" }}>
+          <CheckCircle2 size={24} strokeWidth={2.5} />
+        </div>
+        <div>
+          <h1 className="text-[26px] sm:text-[30px] leading-tight">You've already completed Stage 1.</h1>
+          <p className="mt-2 text-[14px]" style={{ color: "var(--ikf-text-dim)" }}>
+            Submitted on {submittedDate}. Below are the details we have on file.
+          </p>
+        </div>
+      </header>
+
+      <div className="ikf-card p-7">
+        <div className="flex items-center justify-between mb-5">
+          <div className="text-[11px] uppercase tracking-[0.16em]" style={{ color: "var(--ikf-text-dim)" }}>Your submitted details</div>
+          <span className="ikf-chip" style={{ background: meta.bg, color: meta.color }}>{meta.label}</span>
+        </div>
+        <dl className="grid sm:grid-cols-2 gap-x-8 gap-y-4 text-[14px]">
+          <DetailRow label="Parent" value={intent.parentName} />
+          <DetailRow label="Child" value={intent.childName} />
+          <DetailRow label="Email" value={intent.parentEmail} />
+          <DetailRow label="Phone" value={intent.parentPhone || "—"} />
+          <DetailRow label="Child's age" value={`${intent.childAge}`} />
+          <DetailRow label="Gender" value={intent.childGender} />
+        </dl>
+      </div>
+
+      <div className="ikf-card p-5 flex items-start gap-3" style={{ background: "var(--ikf-surface-2)" }}>
+        <Mail size={16} className="mt-0.5 shrink-0" style={{ color: "var(--ikf-brand)" }} />
+        <p className="text-[13px] leading-relaxed" style={{ color: "var(--ikf-text-dim)" }}>
+          Need to update something? Reach your IKF advisor — they'll edit the file on your behalf.
+        </p>
+      </div>
+
+      <div className="flex flex-wrap gap-3">
+        <Link to="/ikf360/upload" className="ikf-btn-primary inline-flex items-center gap-2">
+          Continue to Stage 2 — Upload Portal <ArrowRight size={16} />
+        </Link>
+        <Link to="/ikf360/dashboard" className="ikf-btn-ghost inline-flex items-center gap-2">
+          View dashboard
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+function DetailRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <dt className="text-[11px] font-semibold uppercase tracking-[0.12em] mb-1" style={{ color: "var(--ikf-text-dim)" }}>{label}</dt>
+      <dd className="text-[15px]">{value}</dd>
+    </div>
+  );
+}
 
 type Step = "details" | "questions" | "submitting" | "done";
 

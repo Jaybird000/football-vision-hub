@@ -9,7 +9,7 @@ export const Route = createFileRoute("/ikf360/admin")({
   beforeLoad: async () => {
     const user = await currentUser();
     if (!user || (user.role !== "admin" && user.role !== "advisor")) {
-      throw redirect({ to: "/admin-login" });
+      throw redirect({ to: "/login" });
     }
   },
   loader: async () => ({ initial: await listAdminProfiles() }),
@@ -72,15 +72,21 @@ function AdminList() {
 
       <section className="ikf-card p-4 flex flex-wrap gap-3 items-center">
         <div className="relative flex-1 min-w-[220px]">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "var(--ikf-text-dim)" }} />
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: "var(--ikf-text-dim)" }} />
           <input
-            className="ikf-input pl-9"
+            className="ikf-input"
+            style={{ paddingLeft: 36 }}
             placeholder="Search by child, parent, email"
             value={q}
             onChange={e => setQ(e.target.value)}
           />
         </div>
-        <select className="ikf-input w-auto" value={readiness} onChange={e => setReadiness(e.target.value as typeof readiness)}>
+        <select
+          className="ikf-input"
+          style={{ width: "auto", minWidth: 180 }}
+          value={readiness}
+          onChange={e => setReadiness(e.target.value as typeof readiness)}
+        >
           <option value="all">All readiness</option>
           <option value="high">High</option>
           <option value="medium">Medium</option>

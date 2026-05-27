@@ -1,37 +1,86 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, ClipboardList, Upload, LayoutDashboard, Users, MessagesSquare } from "lucide-react";
+import { ArrowRight, ClipboardList, Upload, LayoutDashboard, MessagesSquare, CheckCircle2 } from "lucide-react";
+import { getMyIntent } from "@/server/intent";
 
 export const Route = createFileRoute("/ikf360/")({
+  loader: async () => ({ existing: await getMyIntent() }),
   component: Overview,
 });
 
 const stages = [
-  { to: "/ikf360/intent", num: "01", title: "Parent SOP", desc: "Parent enters. 8 questions surface intent and readiness.", icon: ClipboardList, role: "Parent view" },
-  { to: "/ikf360/upload", num: "02", title: "Upload Portal", desc: "9 third-party assessments uploaded into one profile.", icon: Upload, role: "Parent view" },
-  { to: "/ikf360/dashboard", num: "03", title: "Parent Dashboard", desc: "Categorisation, recommendation, advisor and journey timeline.", icon: LayoutDashboard, role: "Parent view" },
-  { to: "/ikf360/admin", num: "04", title: "Advisor Console", desc: "Profile list, scoring interface, recommendation issuer.", icon: Users, role: "Admin view" },
+  { to: "/ikf360/intent", num: "01", title: "Parent SOP", desc: "8 quick questions about your child and your hopes — surfaces where we should start.", icon: ClipboardList },
+  { to: "/ikf360/upload", num: "02", title: "Upload Portal", desc: "Upload third-party assessments and reports into one profile.", icon: Upload },
+  { to: "/ikf360/dashboard", num: "03", title: "Parent Dashboard", desc: "See your child's categorisation, recommendation, advisor and journey timeline.", icon: LayoutDashboard },
 ] as const;
 
 function Overview() {
+  const { existing } = Route.useLoaderData();
+  const hasStarted = !!existing;
+  const firstName = existing?.parentName.split(" ")[0];
+
   return (
     <div className="space-y-12">
       <header className="space-y-4 max-w-3xl">
-        <div className="ikf-chip" style={{ background: "var(--ikf-surface)", color: "var(--ikf-brand)" }}>Mockup walkthrough</div>
-        <h1 className="text-[44px] leading-[1.05] tracking-tight">
-          A complete clickable mockup of the<br />
-          <span style={{ color: "var(--ikf-brand)" }}>IKF 360 Platform.</span>
+        <h1 className="text-[40px] sm:text-[44px] leading-[1.05] tracking-tight">
+          {hasStarted ? `Welcome back${firstName ? `, ${firstName}` : ""}.` : "Welcome to your child's IKF journey."}
+          <br />
+          <span style={{ color: "var(--ikf-brand)" }}>
+            {hasStarted ? "Pick up where you left off." : "Let's begin."}
+          </span>
         </h1>
         <p className="text-[16px] leading-relaxed" style={{ color: "var(--ikf-text-dim)" }}>
-          Five surfaces, seeded with demo families, designed to be walked through end-to-end.
-          Theme tokens live in one CSS block (<code style={{ color: "var(--ikf-brand)" }}>.ikf360-theme</code>) — change 8 variables to re-skin everything.
+          {hasStarted
+            ? "Your Stage 1 details are saved. Continue to Stage 2 to upload assessment reports, or revisit the details you've already shared."
+            : "Three stages. The first takes about four minutes — eight questions about you and your child. Click below to start."}
         </p>
       </header>
 
-      <section className="grid md:grid-cols-2 gap-5">
+      <section className="ikf-card p-6 sm:p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-5" style={{ background: "var(--ikf-surface-2)", borderColor: "var(--ikf-brand)" }}>
+        <div className="flex items-start gap-4">
+          {hasStarted ? (
+            <CheckCircle2 size={28} className="mt-0.5 shrink-0" style={{ color: "var(--ikf-brand)" }} />
+          ) : (
+            <ClipboardList size={28} className="mt-0.5 shrink-0" style={{ color: "var(--ikf-brand)" }} />
+          )}
+          <div>
+            <div className="text-[11px] uppercase tracking-[0.18em]" style={{ color: "var(--ikf-brand)" }}>
+              {hasStarted ? "Stage 1 complete" : "Start here · Stage 1"}
+            </div>
+            <h2 className="mt-1 text-[20px] sm:text-[22px]">
+              {hasStarted ? "Your Parent SOP is on file" : "Begin with the Parent SOP"}
+            </h2>
+          </div>
+        </div>
+        {hasStarted ? (
+          <div className="flex flex-wrap gap-3 lg:shrink-0">
+            <Link
+              to="/ikf360/intent"
+              className="ikf-btn-ghost inline-flex items-center gap-2 whitespace-nowrap"
+            >
+              View details
+            </Link>
+            <Link
+              to="/ikf360/upload"
+              className="ikf-btn-primary inline-flex items-center gap-2 whitespace-nowrap"
+            >
+              Continue to Stage 2 <ArrowRight size={16} />
+            </Link>
+          </div>
+        ) : (
+          <Link
+            to="/ikf360/intent"
+            className="ikf-btn-primary inline-flex items-center gap-2 whitespace-nowrap self-start lg:self-auto"
+          >
+            Let's get started <ArrowRight size={16} />
+          </Link>
+        )}
+      </section>
+
+      <section className="grid md:grid-cols-3 gap-5">
         {stages.map(s => (
           <Link key={s.to} to={s.to} className="ikf-card p-7 group hover:border-[var(--ikf-brand)] transition-colors block">
             <div className="flex items-start justify-between">
-              <div className="text-[12px] uppercase tracking-[0.18em]" style={{ color: "var(--ikf-text-dim)" }}>{s.role}</div>
+              <div className="text-[12px] uppercase tracking-[0.18em]" style={{ color: "var(--ikf-text-dim)" }}>Stage {s.num}</div>
               <s.icon size={20} style={{ color: "var(--ikf-brand)" }} />
             </div>
             <div className="mt-6 flex items-baseline gap-4">
@@ -72,44 +121,6 @@ function Overview() {
         </Link>
       </section>
 
-      <section className="ikf-card p-8 grid md:grid-cols-3 gap-8">
-        {[
-          { k: "4", l: "Demo families seeded across stages" },
-          { k: "9", l: "Third-party assessments mapped" },
-          { k: "5×3", l: "Dimension × category matrix wired" },
-        ].map(s => (
-          <div key={s.l}>
-            <div className="text-[44px] font-black leading-none" style={{ color: "var(--ikf-brand)" }}>{s.k}</div>
-            <div className="mt-2 text-[13px]" style={{ color: "var(--ikf-text-dim)" }}>{s.l}</div>
-          </div>
-        ))}
-      </section>
-
-      <section className="ikf-card p-7">
-        <h3 className="text-[18px] mb-4">Production-ready notes</h3>
-        <ul className="grid md:grid-cols-2 gap-x-8 gap-y-2 text-[13px]" style={{ color: "var(--ikf-text-dim)" }}>
-          <li>• Mobile-first layouts at every breakpoint</li>
-          <li>• All colors reference 8 CSS variables</li>
-          <li>• Mock data isolated in <code>src/lib/ikf360-data.ts</code></li>
-          <li>• Routes file-based — drop-in for TanStack Start</li>
-          <li>• Form scoring logic lives in pure functions</li>
-          <li>• Component patterns match shadcn conventions</li>
-        </ul>
-      </section>
-
-      <section className="ikf-card p-7">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-[18px] mb-1">Standalone mockup</h3>
-            <p className="text-[13px]" style={{ color: "var(--ikf-text-dim)" }}>
-              One self-contained HTML file with all 7 stages — paste into CodePen or JSFiddle.
-            </p>
-          </div>
-          <Link to="/codepen-export" className="ikf-btn-primary inline-flex items-center gap-2 text-[13px]">
-            Export to CodePen →
-          </Link>
-        </div>
-      </section>
     </div>
   );
 }

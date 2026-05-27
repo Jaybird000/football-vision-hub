@@ -37,13 +37,13 @@ export function Pathway() {
     <section ref={wrapRef} className="relative bg-pitch-green/10 border-y border-chalk/5" style={{ height: `${stages.length * 90}vh` }}>
       <div className="sticky top-0 h-screen flex items-center overflow-hidden">
         <div className="max-w-7xl mx-auto px-6 w-full grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-center">
-          {/* Left: title + stage list */}
+          {/* Left: title + stage list (desktop) / compact title (mobile) */}
           <div className="lg:col-span-5">
             <span className="text-neon-strike font-bold text-xs uppercase tracking-[0.3em]">{t("home", "pipelineEyebrow")}</span>
-            <h2 className="font-display text-5xl md:text-6xl uppercase mt-4 leading-[0.9]">{t("home", "pipelineTitle")}</h2>
-            <p className="mt-4 text-chalk/60 text-sm max-w-md">Scroll to walk the path — from a kid on a maidan to a contract in the Indian Super League.</p>
+            <h2 className="font-display text-4xl md:text-5xl lg:text-6xl uppercase mt-3 lg:mt-4 leading-[0.9]">{t("home", "pipelineTitle")}</h2>
+            <p className="hidden lg:block mt-4 text-chalk/60 text-sm max-w-md">Scroll to walk the path — from a kid on a maidan to a contract in the Indian Super League.</p>
 
-            <ol className="mt-10 space-y-3">
+            <ol className="hidden lg:block mt-10 space-y-3">
               {stages.map((s, i) => {
                 const isActive = i === active;
                 const isPast = i < active;
@@ -62,30 +62,22 @@ export function Pathway() {
           </div>
 
           {/* Right: animated active stage card */}
-          <div className="lg:col-span-7 relative">
-            {/* Vertical track */}
-            <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-chalk/10 hidden lg:block">
-              <div
-                className="absolute top-0 left-0 w-full bg-neon-strike transition-[height] duration-700 ease-out"
-                style={{ height: `${((active + 1) / stages.length) * 100}%` }}
-              />
-            </div>
-
-            <div className="pl-6 md:pl-12 lg:pl-20 relative min-h-[360px]">
+          <div className="lg:col-span-7">
+            <div className="relative min-h-[340px] md:min-h-[420px]">
               {stages.map((s, i) => (
                 <article
                   key={s.num}
                   aria-hidden={i !== active}
-                  className={`absolute inset-0 transition-all duration-700 ease-out ${i === active ? "opacity-100 translate-y-0" : i < active ? "opacity-0 -translate-y-6 pointer-events-none" : "opacity-0 translate-y-6 pointer-events-none"}`}
+                  className={`absolute inset-0 ml-0 md:ml-8 lg:ml-16 p-6 md:p-10 bg-pitch-black/40 border-l-4 border-neon-strike/40 transition-all duration-700 ease-out ${i === active ? "opacity-100 translate-y-0" : i < active ? "opacity-0 -translate-y-6 pointer-events-none" : "opacity-0 translate-y-6 pointer-events-none"}`}
                 >
                   <div className="flex items-baseline gap-6 mb-6">
-                    <span className="font-display text-[6rem] md:text-[9rem] leading-[0.8] text-neon-strike/80">{s.num}</span>
+                    <span className="font-display text-[5rem] md:text-[8rem] leading-[0.8] text-neon-strike/80">{s.num}</span>
                     <span className="font-display uppercase tracking-widest text-chalk/40 text-xs">Stage {s.num} of 0{stages.length}</span>
                   </div>
                   <h3 className="font-display text-4xl md:text-6xl uppercase leading-[0.95]">
                     {lang === "hi" ? s.hi : s.en}
                   </h3>
-                  <p className="mt-6 text-chalk/75 text-lg leading-relaxed max-w-xl">
+                  <p className="mt-6 text-chalk/75 text-base md:text-lg leading-relaxed max-w-xl">
                     {lang === "hi" ? s.body_hi : s.body_en}
                   </p>
                 </article>

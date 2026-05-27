@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { ArrowRight, Loader2 } from "lucide-react";
 import { login } from "@/server/auth";
@@ -9,6 +10,7 @@ export const Route = createFileRoute("/login")({
 
 function LoginPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [form, setForm] = useState({ email: "", password: "" });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -21,14 +23,18 @@ function LoginPage() {
     setSubmitting(true);
     setError(null);
     try {
-      await login({
+      const result = await login({
         data: {
           email: form.email.trim(),
           password: form.password,
         },
       });
+      queryClient.setQueryData(["currentUser"], result);
       router.invalidate();
-      router.navigate({ to: "/ikf360" });
+      const destination = (result.role === "admin" || result.role === "advisor")
+        ? "/ikf360/admin"
+        : "/ikf360";
+      router.navigate({ to: destination });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not sign you in.");
       setSubmitting(false);

@@ -21,7 +21,7 @@ function Players() {
   return (
     <>
       <PageHero eyebrow="For Players"
-        title={<>Your <span className="text-neon-strike not-italic">talent</span><br />deserves a stage.</>}
+        title={<>Your <span className="text-neon-strike not-italic mx-[0.1em]">talent</span><br />deserves a stage.</>}
         sub="If you can play, we'll find you. IKF runs open city-round trials nationwide — free for girls and underprivileged players, otherwise a one-time ₹125 registration. Show up — the rest is on us."
         image={img}
         quote={{ text: "I played barefoot in Imphal till IKF gave me boots. Eight months later I signed with an I-League academy.", author: "Lalrinpuia H.", role: "Age 16, Mizoram" }} />
@@ -29,13 +29,13 @@ function Players() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
           <div>
             <span className="text-neon-strike font-bold text-xs uppercase tracking-widest">How it works</span>
-            <h2 className="font-display text-5xl uppercase mt-3 leading-tight">Four steps. Merit-only.</h2>
+            <h2 className="font-display text-4xl md:text-5xl uppercase mt-3 leading-tight">Four steps. Merit-only.</h2>
             <p className="mt-6 text-chalk/70 leading-relaxed">No agent. No federation politics. A one-time ₹125 city-round registration (free for girls and underprivileged children) — every stage after that is fully funded. The IKF pathway is the most transparent route from a maidan to a professional contract in India.</p>
             <Link to="/donate" className="inline-block mt-8 bg-neon-strike text-pitch-black px-8 py-4 font-display text-2xl uppercase tracking-wide">Register Interest</Link>
           </div>
           <div className="space-y-1">
-            {steps.map((s, i) => (
-              <div key={s.n} className={`p-6 border-l-4 ${i === 0 ? "border-neon-strike bg-pitch-green/10" : "border-chalk/10"}`}>
+            {steps.map(s => (
+              <div key={s.n} className="p-6 border-l-4 border-chalk/15 hover:border-neon-strike hover:bg-pitch-green/5 transition-colors">
                 <div className="flex gap-6 items-start">
                   <span className="font-display text-4xl text-chalk/30">{s.n}</span>
                   <div>

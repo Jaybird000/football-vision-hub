@@ -1,7 +1,7 @@
 import { Link, useLocation, useRouter } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { Menu, X, LogOut, Shield, User } from "lucide-react";
+import { Menu, X, LogOut, User } from "lucide-react";
 import { Logo } from "./Logo";
 import { LangToggle } from "./LangToggle";
 import { useLang } from "@/lib/i18n";
@@ -38,7 +38,7 @@ export function Nav() {
   });
 
   const isAdmin = user?.role === "admin" || user?.role === "advisor";
-  const activeTabs = isAdminArea && isAdmin ? ADMIN_TABS : PARENT_TABS;
+  const activeTabs = isAdmin ? ADMIN_TABS : PARENT_TABS;
 
   async function handleLogout() {
     await logout({});
@@ -69,14 +69,6 @@ export function Nav() {
 
         {isIkf360 ? (
           <div className="hidden md:flex items-center gap-1 flex-wrap">
-            {isAdminArea && (
-              <span
-                className="inline-flex items-center gap-1.5 mr-2 px-2.5 py-1 rounded-full text-[10px] uppercase tracking-[0.14em] font-bold"
-                style={{ background: "rgba(223,255,94,0.12)", color: "var(--ikf-brand)" }}
-              >
-                <Shield size={11} /> Admin
-              </span>
-            )}
             {activeTabs.map(tab => {
               const active = loc.pathname === tab.to || (tab.to !== "/ikf360" && tab.to !== "/ikf360/admin" && loc.pathname.startsWith(tab.to)) || (tab.to === "/ikf360/admin" && loc.pathname === "/ikf360/admin");
               return (
@@ -116,6 +108,15 @@ export function Nav() {
           )}
           {user ? (
             <div className="hidden md:flex items-center gap-2">
+              {!isIkf360 && (
+                <Link
+                  to={isAdmin ? "/ikf360/admin" : "/ikf360"}
+                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full border border-neon-strike/40 text-neon-strike font-bold text-[10px] uppercase tracking-widest hover:bg-neon-strike hover:text-pitch-black transition-colors"
+                  title={isAdmin ? "Open admin console" : "Open my portal"}
+                >
+                  {isAdmin ? "Admin console" : "My portal"} →
+                </Link>
+              )}
               <div
                 className="inline-flex items-center gap-2 px-3 py-2 rounded-full text-[11px] font-bold uppercase tracking-widest"
                 style={
@@ -149,18 +150,9 @@ export function Nav() {
             )
           )}
           {!isIkf360 && (
-            <>
-              <Link
-                to="/admin-login"
-                className="hidden md:inline-flex items-center gap-1.5 border border-chalk/20 text-chalk/80 px-3 py-2 rounded-full font-bold text-[10px] uppercase tracking-widest hover:border-neon-strike hover:text-neon-strike transition-colors"
-                activeProps={{ className: "border-neon-strike text-neon-strike" }}
-              >
-                <span className="w-1.5 h-1.5 rounded-full bg-neon-strike" /> Admin
-              </Link>
-              <Link to="/donate" className="hidden sm:inline-flex bg-chalk text-pitch-black px-5 py-2 rounded-full font-bold text-xs uppercase tracking-wider hover:bg-neon-strike transition-colors">
-                {t("nav", "donate")}
-              </Link>
-            </>
+            <Link to="/donate" className="hidden sm:inline-flex bg-chalk text-pitch-black px-5 py-2 rounded-full font-bold text-xs uppercase tracking-wider hover:bg-neon-strike transition-colors">
+              {t("nav", "donate")}
+            </Link>
           )}
           <button onClick={() => setOpen(!open)} className="md:hidden text-chalk p-2" aria-label="menu">
             {open ? <X size={20} /> : <Menu size={20} />}
@@ -191,6 +183,15 @@ export function Nav() {
 
           {user ? (
             <>
+              {!isIkf360 && (
+                <Link
+                  to={isAdmin ? "/ikf360/admin" : "/ikf360"}
+                  className="text-neon-strike"
+                  onClick={() => setOpen(false)}
+                >
+                  {isAdmin ? "Admin console →" : "My portal →"}
+                </Link>
+              )}
               <div className="text-chalk/80">{user.fullName} · {user.role}</div>
               <button onClick={handleLogout} className="text-left text-chalk/80 hover:text-neon-strike inline-flex items-center gap-2">
                 <LogOut size={14} /> Log out
@@ -203,10 +204,7 @@ export function Nav() {
           )}
 
           {!isIkf360 && (
-            <>
-              <Link to="/admin-login" className="text-chalk/80 hover:text-neon-strike" onClick={() => setOpen(false)}>Admin</Link>
-              <Link to="/donate" className="text-neon-strike" onClick={() => setOpen(false)}>{t("nav", "donate")}</Link>
-            </>
+            <Link to="/donate" className="text-neon-strike" onClick={() => setOpen(false)}>{t("nav", "donate")}</Link>
           )}
         </div>
       )}

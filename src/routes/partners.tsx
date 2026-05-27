@@ -14,7 +14,7 @@ function Partners() {
   return (
     <>
       <PageHero eyebrow="For Partners"
-        title={<>Build the next <span className="text-neon-strike not-italic">India</span>.</>}
+        title={<>Build the next <span className="text-neon-strike not-italic mx-[0.1em]">India</span>.</>}
         sub="Brands, corporates, and federations: partner with IKF to fund, scale, and shape the most ambitious grassroots sports programme in India."
         image={img}
         quote={{ text: "Our CSR rupees finally feel like they hit the pitch. The IKF impact dashboard tells us exactly which kid wore which kit.", author: "Ritika Menon", role: "Head of CSR, Partner Brand" }} />

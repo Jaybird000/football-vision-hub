@@ -14,7 +14,7 @@ function About() {
   return (
     <>
       <PageHero eyebrow="About"
-        title={<>We're not a <span className="text-neon-strike not-italic">federation</span>.<br />We're a fix.</>}
+        title={<>We're not a <span className="text-neon-strike not-italic mx-[0.1em]">federation</span>.<br />We're a fix.</>}
         sub="IKF was founded in 2015 because Indian football's biggest problem wasn't talent — it was the pipeline. We built one."
         image={img} />
       <Section>
@@ -31,7 +31,7 @@ function About() {
             <h3 className="font-display text-2xl uppercase">By the numbers</h3>
             <dl className="mt-6 space-y-4">
               {[["50K+", "Lives engaged"],["2015", "Founded"],["₹125","One-time city registration"],["FREE","For girls & underprivileged"],["₹0","Charged to clubs"]].map(([v,l]) => (
-                <div key={l} className="flex justify-between border-b border-chalk/10 pb-2">
+                <div key={l} className="flex flex-col-reverse sm:flex-row sm:justify-between sm:items-baseline gap-1 border-b border-chalk/10 pb-2">
                   <dt className="text-chalk/60 text-sm uppercase tracking-widest">{l}</dt>
                   <dd className="font-display text-2xl text-neon-strike">{v}</dd>
                 </div>

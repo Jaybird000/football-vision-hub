@@ -31,6 +31,20 @@ export function Footer() {
             <p className="text-[10px] text-chalk/50 uppercase tracking-[0.25em] font-bold">
               Powered by <span className="text-chalk/80">Sports Vision</span>
             </p>
+            <a
+              href="https://www.sportsvision.ai/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block mt-1 opacity-90 hover:opacity-100 transition-opacity"
+              aria-label="Sports Vision"
+            >
+              <img
+                src="/SV_02_White.png"
+                alt="Sports Vision"
+                className="h-14 md:h-16 w-auto object-contain"
+                draggable={false}
+              />
+            </a>
           </div>
           <div>
             <h4 className="font-display text-lg uppercase mb-4 text-chalk/40">Pathway</h4>

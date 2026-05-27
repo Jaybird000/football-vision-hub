@@ -20,7 +20,6 @@ import { Route as Ikf360RouteImport } from './routes/ikf360'
 import { Route as DonateRouteImport } from './routes/donate'
 import { Route as CodepenExportRouteImport } from './routes/codepen-export'
 import { Route as CoachesRouteImport } from './routes/coaches'
-import { Route as AdminLoginRouteImport } from './routes/admin-login'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as Ikf360IndexRouteImport } from './routes/ikf360.index'
@@ -92,11 +91,6 @@ const CodepenExportRoute = CodepenExportRouteImport.update({
 const CoachesRoute = CoachesRouteImport.update({
   id: '/coaches',
   path: '/coaches',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminLoginRoute = AdminLoginRouteImport.update({
-  id: '/admin-login',
-  path: '/admin-login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AboutRoute = AboutRouteImport.update({
@@ -188,7 +182,6 @@ const Ikf360AdminProfilesIdRoute = Ikf360AdminProfilesIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/admin-login': typeof AdminLoginRoute
   '/coaches': typeof CoachesRoute
   '/codepen-export': typeof CodepenExportRoute
   '/donate': typeof DonateRoute
@@ -219,7 +212,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/admin-login': typeof AdminLoginRoute
   '/coaches': typeof CoachesRoute
   '/codepen-export': typeof CodepenExportRoute
   '/donate': typeof DonateRoute
@@ -250,7 +242,6 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/admin-login': typeof AdminLoginRoute
   '/coaches': typeof CoachesRoute
   '/codepen-export': typeof CodepenExportRoute
   '/donate': typeof DonateRoute
@@ -283,7 +274,6 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/about'
-    | '/admin-login'
     | '/coaches'
     | '/codepen-export'
     | '/donate'
@@ -314,7 +304,6 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/about'
-    | '/admin-login'
     | '/coaches'
     | '/codepen-export'
     | '/donate'
@@ -344,7 +333,6 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/about'
-    | '/admin-login'
     | '/coaches'
     | '/codepen-export'
     | '/donate'
@@ -376,7 +364,6 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
-  AdminLoginRoute: typeof AdminLoginRoute
   CoachesRoute: typeof CoachesRoute
   CodepenExportRoute: typeof CodepenExportRoute
   DonateRoute: typeof DonateRoute
@@ -470,13 +457,6 @@ declare module '@tanstack/react-router' {
       path: '/coaches'
       fullPath: '/coaches'
       preLoaderRoute: typeof CoachesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin-login': {
-      id: '/admin-login'
-      path: '/admin-login'
-      fullPath: '/admin-login'
-      preLoaderRoute: typeof AdminLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/about': {
@@ -647,7 +627,6 @@ const Ikf360RouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
-  AdminLoginRoute: AdminLoginRoute,
   CoachesRoute: CoachesRoute,
   CodepenExportRoute: CodepenExportRoute,
   DonateRoute: DonateRoute,

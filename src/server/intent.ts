@@ -34,6 +34,56 @@ async function getSessionUserId(): Promise<string | null> {
   return rows[0]?.user_id ?? null;
 }
 
+export type MyIntent = {
+  profileId: string;
+  parentName: string;
+  parentEmail: string;
+  parentPhone: string | null;
+  childName: string;
+  childAge: number;
+  childGender: "Boy" | "Girl" | "Other";
+  readiness: "high" | "medium" | "forming";
+  submittedAt: string;
+};
+
+export const getMyIntent = createServerFn({ method: "GET" }).handler(async (): Promise<MyIntent | null> => {
+  const userId = await getSessionUserId();
+  if (!userId) return null;
+
+  const rows = await sql<{
+    id: string;
+    parent_name: string;
+    parent_email: string;
+    parent_phone: string | null;
+    child_name: string;
+    child_age: number;
+    child_gender: "Boy" | "Girl" | "Other";
+    readiness: "high" | "medium" | "forming";
+    created_at: Date;
+  }[]>`
+    SELECT p.id, p.parent_name, p.parent_email, p.parent_phone,
+           p.child_name, p.child_age, p.child_gender,
+           p.readiness, p.created_at
+    FROM users u
+    JOIN parent_child_profiles p ON p.id = u.profile_id
+    WHERE u.id = ${userId}
+    LIMIT 1
+  `;
+  if (rows.length === 0) return null;
+  const r = rows[0];
+  return {
+    profileId: r.id,
+    parentName: r.parent_name,
+    parentEmail: r.parent_email,
+    parentPhone: r.parent_phone,
+    childName: r.child_name,
+    childAge: r.child_age,
+    childGender: r.child_gender,
+    readiness: r.readiness,
+    submittedAt: r.created_at.toISOString(),
+  };
+});
+
 export const submitIntent = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => SubmitIntentInput.parse(data))
   .handler(async ({ data }): Promise<SubmitIntentResult> => {

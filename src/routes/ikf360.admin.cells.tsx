@@ -9,7 +9,7 @@ export const Route = createFileRoute("/ikf360/admin/cells")({
   beforeLoad: async () => {
     const user = await currentUser();
     if (!user || (user.role !== "admin" && user.role !== "advisor")) {
-      throw redirect({ to: "/admin-login" });
+      throw redirect({ to: "/login" });
     }
   },
   loader: async () => ({ initial: await listCells() }),

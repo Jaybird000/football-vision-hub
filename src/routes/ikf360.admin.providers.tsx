@@ -15,7 +15,7 @@ export const Route = createFileRoute("/ikf360/admin/providers")({
   beforeLoad: async () => {
     const user = await currentUser();
     if (!user || (user.role !== "admin" && user.role !== "advisor")) {
-      throw redirect({ to: "/admin-login" });
+      throw redirect({ to: "/login" });
     }
   },
   loader: async () => ({

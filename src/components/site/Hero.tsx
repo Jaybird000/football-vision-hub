@@ -32,7 +32,7 @@ export function Hero() {
         </span>
         <h1 className="font-display uppercase italic leading-[0.85] tracking-tighter text-[clamp(3.5rem,11vw,12rem)]">
           <SplitReveal text={`${line1} `} />
-          <SplitReveal text={street} className="text-neon-strike not-italic" delay={(line1.length + 1) * 0.025} />
+          <SplitReveal text={street} className="text-neon-strike not-italic mx-[0.1em]" delay={(line1.length + 1) * 0.025} />
           <br />
           {line2 && <SplitReveal text={`${line2} `} delay={0.4} />}
           <span className="underline decoration-neon-strike decoration-[6px] underline-offset-[12px]">
