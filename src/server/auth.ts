@@ -8,6 +8,10 @@ import { hashPassword, verifyPassword } from "./password";
 const SESSION_COOKIE = "ikf_session";
 const SESSION_TTL_DAYS = 30;
 
+// Bumped when the privacy policy materially changes. Stored on users.consent_version
+// at signup so we can later detect users who agreed to an older policy.
+export const CURRENT_CONSENT_VERSION = "2026-05-26";
+
 type Role = "parent" | "advisor" | "admin";
 
 export type AuthUser = {
@@ -55,6 +59,7 @@ const SignupInput = z.object({
   fullName: z.string().trim().min(1).max(120),
   email: z.string().trim().email().max(160),
   password: z.string().min(8).max(200),
+  consent: z.literal(true, { errorMap: () => ({ message: "You must accept the privacy policy to create an account." }) }),
 });
 
 const LoginInput = z.object({
@@ -77,8 +82,8 @@ export const signup = createServerFn({ method: "POST" })
     const passwordHash = await hashPassword(data.password);
 
     const rows = await sql<{ id: string; email: string; full_name: string; role: Role }[]>`
-      INSERT INTO users (email, password_hash, full_name, role)
-      VALUES (${email}, ${passwordHash}, ${data.fullName}, 'parent')
+      INSERT INTO users (email, password_hash, full_name, role, consented_at, consent_version)
+      VALUES (${email}, ${passwordHash}, ${data.fullName}, 'parent', now(), ${CURRENT_CONSENT_VERSION})
       RETURNING id, email, full_name, role
     `;
     const user = rows[0];

@@ -10,13 +10,15 @@ export const Route = createFileRoute("/signup")({
 function SignupPage() {
   const router = useRouter();
   const [form, setForm] = useState({ fullName: "", email: "", password: "" });
+  const [consent, setConsent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const valid =
     form.fullName.trim().length > 0 &&
     /\S+@\S+\.\S+/.test(form.email) &&
-    form.password.length >= 8;
+    form.password.length >= 8 &&
+    consent;
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -29,6 +31,7 @@ function SignupPage() {
           fullName: form.fullName.trim(),
           email: form.email.trim(),
           password: form.password,
+          consent: true,
         },
       });
       router.invalidate();
@@ -110,6 +113,23 @@ function SignupPage() {
                 />
               </Field>
             </div>
+
+            <label className="flex items-start gap-3 cursor-pointer text-[13px] leading-relaxed">
+              <input
+                type="checkbox"
+                checked={consent}
+                onChange={(e) => setConsent(e.target.checked)}
+                className="mt-1 shrink-0"
+                required
+              />
+              <span style={{ color: "var(--ikf-text-dim)" }}>
+                I have read and agree to the{" "}
+                <Link to="/privacy" target="_blank" className="underline" style={{ color: "var(--ikf-brand)" }}>
+                  IKF Pathway 360 privacy policy
+                </Link>
+                . I understand that what I share about my child will be held by IKF and used only to guide their pathway.
+              </span>
+            </label>
 
             <button
               type="submit"

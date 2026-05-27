@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignupRouteImport } from './routes/signup'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PlayersRouteImport } from './routes/players'
 import { Route as PartnersRouteImport } from './routes/partners'
 import { Route as ParentsRouteImport } from './routes/parents'
@@ -38,6 +39,11 @@ import { Route as Ikf360AdminProfilesIdRouteImport } from './routes/ikf360.admin
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PlayersRoute = PlayersRouteImport.update({
@@ -174,6 +180,7 @@ export interface FileRoutesByFullPath {
   '/parents': typeof ParentsRoute
   '/partners': typeof PartnersRoute
   '/players': typeof PlayersRoute
+  '/privacy': typeof PrivacyRoute
   '/signup': typeof SignupRoute
   '/ikf360/admin': typeof Ikf360AdminRouteWithChildren
   '/ikf360/dashboard': typeof Ikf360DashboardRoute
@@ -200,6 +207,7 @@ export interface FileRoutesByTo {
   '/parents': typeof ParentsRoute
   '/partners': typeof PartnersRoute
   '/players': typeof PlayersRoute
+  '/privacy': typeof PrivacyRoute
   '/signup': typeof SignupRoute
   '/ikf360/admin': typeof Ikf360AdminRouteWithChildren
   '/ikf360/dashboard': typeof Ikf360DashboardRoute
@@ -228,6 +236,7 @@ export interface FileRoutesById {
   '/parents': typeof ParentsRoute
   '/partners': typeof PartnersRoute
   '/players': typeof PlayersRoute
+  '/privacy': typeof PrivacyRoute
   '/signup': typeof SignupRoute
   '/ikf360/admin': typeof Ikf360AdminRouteWithChildren
   '/ikf360/dashboard': typeof Ikf360DashboardRoute
@@ -257,6 +266,7 @@ export interface FileRouteTypes {
     | '/parents'
     | '/partners'
     | '/players'
+    | '/privacy'
     | '/signup'
     | '/ikf360/admin'
     | '/ikf360/dashboard'
@@ -283,6 +293,7 @@ export interface FileRouteTypes {
     | '/parents'
     | '/partners'
     | '/players'
+    | '/privacy'
     | '/signup'
     | '/ikf360/admin'
     | '/ikf360/dashboard'
@@ -310,6 +321,7 @@ export interface FileRouteTypes {
     | '/parents'
     | '/partners'
     | '/players'
+    | '/privacy'
     | '/signup'
     | '/ikf360/admin'
     | '/ikf360/dashboard'
@@ -338,6 +350,7 @@ export interface RootRouteChildren {
   ParentsRoute: typeof ParentsRoute
   PartnersRoute: typeof PartnersRoute
   PlayersRoute: typeof PlayersRoute
+  PrivacyRoute: typeof PrivacyRoute
   SignupRoute: typeof SignupRoute
   ApiUploadsIdRoute: typeof ApiUploadsIdRoute
 }
@@ -349,6 +362,13 @@ declare module '@tanstack/react-router' {
       path: '/signup'
       fullPath: '/signup'
       preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/players': {
@@ -576,6 +596,7 @@ const rootRouteChildren: RootRouteChildren = {
   ParentsRoute: ParentsRoute,
   PartnersRoute: PartnersRoute,
   PlayersRoute: PlayersRoute,
+  PrivacyRoute: PrivacyRoute,
   SignupRoute: SignupRoute,
   ApiUploadsIdRoute: ApiUploadsIdRoute,
 }
