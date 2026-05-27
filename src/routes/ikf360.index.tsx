@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, ClipboardList, Upload, LayoutDashboard, Users } from "lucide-react";
+import { ArrowRight, ClipboardList, Upload, LayoutDashboard, Users, MessagesSquare } from "lucide-react";
 
 export const Route = createFileRoute("/ikf360/")({
   component: Overview,
@@ -44,6 +44,32 @@ function Overview() {
             </div>
           </Link>
         ))}
+      </section>
+
+      <section>
+        <div className="text-[12px] uppercase tracking-[0.18em] mb-3" style={{ color: "var(--ikf-text-dim)" }}>
+          Outside the stage flow
+        </div>
+        <Link
+          to="/ikf360/support"
+          className="ikf-card p-7 group hover:border-[var(--ikf-brand)] transition-colors block"
+          style={{ borderColor: "var(--ikf-brand)", borderStyle: "dashed" }}
+        >
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1">
+              <div className="text-[12px] uppercase tracking-[0.18em]" style={{ color: "var(--ikf-brand)" }}>Parent community</div>
+              <h3 className="mt-3 text-[22px]">Parent Support Track</h3>
+              <p className="mt-2 text-[14px] leading-relaxed max-w-2xl" style={{ color: "var(--ikf-text-dim)" }}>
+                A parallel space for parents in the network — circles, advisor office hours, peer mentors, and a curated library.
+                Not part of the 3-stage flow; available alongside it.
+              </p>
+              <div className="mt-5 inline-flex items-center gap-2 text-[13px] font-semibold group-hover:gap-3 transition-all">
+                Open <ArrowRight size={14} />
+              </div>
+            </div>
+            <MessagesSquare size={28} style={{ color: "var(--ikf-brand)" }} className="shrink-0" />
+          </div>
+        </Link>
       </section>
 
       <section className="ikf-card p-8 grid md:grid-cols-3 gap-8">

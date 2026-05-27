@@ -25,6 +25,7 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as Ikf360IndexRouteImport } from './routes/ikf360.index'
 import { Route as Ikf360UploadRouteImport } from './routes/ikf360.upload'
+import { Route as Ikf360SupportRouteImport } from './routes/ikf360.support'
 import { Route as Ikf360IntentRouteImport } from './routes/ikf360.intent'
 import { Route as Ikf360DashboardRouteImport } from './routes/ikf360.dashboard'
 import { Route as Ikf360AdminRouteImport } from './routes/ikf360.admin'
@@ -116,6 +117,11 @@ const Ikf360UploadRoute = Ikf360UploadRouteImport.update({
   path: '/upload',
   getParentRoute: () => Ikf360Route,
 } as any)
+const Ikf360SupportRoute = Ikf360SupportRouteImport.update({
+  id: '/support',
+  path: '/support',
+  getParentRoute: () => Ikf360Route,
+} as any)
 const Ikf360IntentRoute = Ikf360IntentRouteImport.update({
   id: '/intent',
   path: '/intent',
@@ -185,6 +191,7 @@ export interface FileRoutesByFullPath {
   '/ikf360/admin': typeof Ikf360AdminRouteWithChildren
   '/ikf360/dashboard': typeof Ikf360DashboardRoute
   '/ikf360/intent': typeof Ikf360IntentRoute
+  '/ikf360/support': typeof Ikf360SupportRoute
   '/ikf360/upload': typeof Ikf360UploadRoute
   '/ikf360/': typeof Ikf360IndexRoute
   '/api/uploads/$id': typeof ApiUploadsIdRoute
@@ -212,6 +219,7 @@ export interface FileRoutesByTo {
   '/ikf360/admin': typeof Ikf360AdminRouteWithChildren
   '/ikf360/dashboard': typeof Ikf360DashboardRoute
   '/ikf360/intent': typeof Ikf360IntentRoute
+  '/ikf360/support': typeof Ikf360SupportRoute
   '/ikf360/upload': typeof Ikf360UploadRoute
   '/ikf360': typeof Ikf360IndexRoute
   '/api/uploads/$id': typeof ApiUploadsIdRoute
@@ -241,6 +249,7 @@ export interface FileRoutesById {
   '/ikf360/admin': typeof Ikf360AdminRouteWithChildren
   '/ikf360/dashboard': typeof Ikf360DashboardRoute
   '/ikf360/intent': typeof Ikf360IntentRoute
+  '/ikf360/support': typeof Ikf360SupportRoute
   '/ikf360/upload': typeof Ikf360UploadRoute
   '/ikf360/': typeof Ikf360IndexRoute
   '/api/uploads/$id': typeof ApiUploadsIdRoute
@@ -271,6 +280,7 @@ export interface FileRouteTypes {
     | '/ikf360/admin'
     | '/ikf360/dashboard'
     | '/ikf360/intent'
+    | '/ikf360/support'
     | '/ikf360/upload'
     | '/ikf360/'
     | '/api/uploads/$id'
@@ -298,6 +308,7 @@ export interface FileRouteTypes {
     | '/ikf360/admin'
     | '/ikf360/dashboard'
     | '/ikf360/intent'
+    | '/ikf360/support'
     | '/ikf360/upload'
     | '/ikf360'
     | '/api/uploads/$id'
@@ -326,6 +337,7 @@ export interface FileRouteTypes {
     | '/ikf360/admin'
     | '/ikf360/dashboard'
     | '/ikf360/intent'
+    | '/ikf360/support'
     | '/ikf360/upload'
     | '/ikf360/'
     | '/api/uploads/$id'
@@ -469,6 +481,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Ikf360UploadRouteImport
       parentRoute: typeof Ikf360Route
     }
+    '/ikf360/support': {
+      id: '/ikf360/support'
+      path: '/support'
+      fullPath: '/ikf360/support'
+      preLoaderRoute: typeof Ikf360SupportRouteImport
+      parentRoute: typeof Ikf360Route
+    }
     '/ikf360/intent': {
       id: '/ikf360/intent'
       path: '/intent'
@@ -568,6 +587,7 @@ interface Ikf360RouteChildren {
   Ikf360AdminRoute: typeof Ikf360AdminRouteWithChildren
   Ikf360DashboardRoute: typeof Ikf360DashboardRoute
   Ikf360IntentRoute: typeof Ikf360IntentRoute
+  Ikf360SupportRoute: typeof Ikf360SupportRoute
   Ikf360UploadRoute: typeof Ikf360UploadRoute
   Ikf360IndexRoute: typeof Ikf360IndexRoute
 }
@@ -576,6 +596,7 @@ const Ikf360RouteChildren: Ikf360RouteChildren = {
   Ikf360AdminRoute: Ikf360AdminRouteWithChildren,
   Ikf360DashboardRoute: Ikf360DashboardRoute,
   Ikf360IntentRoute: Ikf360IntentRoute,
+  Ikf360SupportRoute: Ikf360SupportRoute,
   Ikf360UploadRoute: Ikf360UploadRoute,
   Ikf360IndexRoute: Ikf360IndexRoute,
 }
