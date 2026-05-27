@@ -1,24 +1,25 @@
 # Platform status — all 3 stages
 
-_Last updated: 2026-05-27 (Cloudflare deploy pivot — Phase 1 done: R2 + SMTP2GO HTTP API)_
+_Last updated: 2026-05-27 (Cloudflare pivot — Phase 1 + Phase 2 done; Phase 3 scaffolded, deploy pending)_
 
 ## Local environment — credentials
 
 > ⚠️ These are **local development credentials only**. Do not reuse for production.
 > The `.env` file is **tracked in git** (commit `c76d8a0`) — dev DB config travels with the repo. Local-only secrets (SMTP passwords, DATABASE_URL overrides) belong in `.env.local`, which is auto-gitignored via the `*.local` rule.
 
-### Postgres (local)
+### Local DB — SQLite (better-sqlite3) since Phase 2
 
-The app expects a Postgres reachable at `localhost:5432` with the credentials below. How you provision it (Docker, native installer, WSL, etc.) is up to your machine setup.
+Phase 2 of the Cloudflare migration replaced PostgreSQL with **SQLite** (via `better-sqlite3` for local dev; D1 binding for prod Workers — same SQL on both). No external DB process to run.
 
 | Field | Value |
 |---|---|
-| Host | `localhost` |
-| Port | `5432` |
-| Database | `ikf_360` |
-| User | `ikf_360_owner` |
-| Password | `localdev` |
-| DSN | `postgresql://ikf_360_owner:localdev@localhost:5432/ikf_360` |
+| File path | `db/local.sqlite` (relative to repo root) |
+| Override | `DATABASE_PATH` env var |
+| Schema | Same 12 tables as before; rewritten for SQLite syntax in `db/migrations/000{1..9}_*.sql` |
+| Apply migrations | `node scripts/apply-migrations.mjs` (idempotent — tracks applied set in `_migrations` table) |
+| Seed admin | `node scripts/seed-admin.mjs` (interactive prompts) |
+
+The `db/local.sqlite` file is gitignored. Wiping it (e.g. for a fresh test) and re-running the two scripts above brings you back to a working state.
 
 ### Test users (app login)
 
@@ -38,27 +39,27 @@ Interactive prompt-based script:
 node --env-file=.env scripts/seed-admin.mjs
 ```
 
-Or insert directly in SQL (password must be `scrypt$16384$<salt>$<hash>` — use `src/server/password.ts:hashPassword`).
+Or insert directly via the SQL shim — password hashes are now `pbkdf2$<iterations>$<salt_b64>$<hash_b64>` (see `src/server/password.ts`).
 
-### Remote DB (svapp.us) — not currently used
+### Remote DB (svapp.us) — abandoned
 
-A second Postgres exists at `db.svapp.us:5432` (database `ikf_360_2`, role `ikf_360_2_owner`), provisioned during this session. Behind a Cloudflare Tunnel (`cfargotunnel.com`) — **port 5432 is not directly reachable**. Requires `cloudflared access tcp --hostname db.svapp.us --url localhost:5432` running locally, after completing the browser auth flow. Not used in dev right now; reserved for whenever a non-local DB is needed.
+Two Postgres databases were provisioned at `db.svapp.us` during the May 2026 session (`ikf_360` and `ikf_360_2`). Both are behind a Cloudflare Tunnel and neither is in use post-Cloudflare-pivot. **Rotate or revoke their passwords** — the original `ikf_360_owner` credential lived in the tracked `.env` file (commit `c76d8a0`) before being removed on 2026-05-27, so it's permanently in public git history.
 
 ### Migrations applied to dev DB
-
-Manual via `psql $DATABASE_URL -f db/migrations/<file>.sql` — no runner script. Apply in order: `0001_*.sql` → `0009_seed_cell_drafts.sql`. All 9 migrations are already applied to the Docker local DB as of 2026-05-26.
 
 | # | File | What it adds |
 |---|---|---|
 | 0001 | `parent_child_profiles.sql` | Stage 1 profile table |
 | 0002 | `users_and_sessions.sql` | Auth |
 | 0003 | `stage2.sql` | Templates, providers, uploads |
-| 0004 | `stage3.sql` | Axes, values, cells, categorisations (+ seeds the 2 axes × 3 values from Concept Doc) |
+| 0004 | `stage3.sql` | Axes, values, cells, categorisations (+ seeds 2 axes × 3 values from Concept Doc) |
 | 0005 | `email_notification_flags.sql` | `notified_advisor_min_dataset_at` |
 | 0006 | `audit_log.sql` | `audit_log` table |
 | 0007 | `user_consent.sql` | `consented_at` + `consent_version` |
 | 0008 | `cron_flags.sql` | `last_review_reminder_at` + `notified_stage2_nudge_at` |
-| 0009 | `seed_cell_drafts.sql` | 9 draft cell recommendations (is_published=false — Phani to review/publish) |
+| 0009 | `seed_cell_drafts.sql` | 9 draft cell recommendations (is_published=0 — Phani to review/publish) |
+
+Phase 2 rewrote all 9 from PostgreSQL syntax to SQLite. The `sql` shim in `src/server/db.ts` rewrites the dialect on-the-fly (`now()` → `(strftime(...))`, `= true/false` → `= 1/0`) so the 15 call sites in `src/server/*.ts` didn't need to change. JSON columns are `TEXT`; the shim auto-parses on read and `sql.json(v)` wraps writes.
 
 ### Local-only env (`.env.local`)
 
@@ -183,19 +184,19 @@ Cron schedule lives in `vercel.json` (`/api/cron/review-reminders` 09:00 UTC, `/
 | Phase | What | Status |
 |---|---|---|
 | **Phase 1** | R2 for uploads + SMTP2GO HTTP API for email (replace TCP-dependent libs that won't run on Workers) | ✓ done 2026-05-27 |
-| **Phase 2** | Postgres → Cloudflare D1 (SQLite) — rewrite 9 migrations + every SQL query in `src/server/`. Replace `postgres` package with `@cloudflare/d1`. Refactor `password.ts` from Node `scrypt` → Web Crypto `PBKDF2`. Replace `randomBytes` with `crypto.getRandomValues`. | pending — next session |
-| **Phase 3** | TanStack Start build target → Workers via `@cloudflare/vite-plugin`. Restore `wrangler.toml` with R2 + D1 bindings + Workers Cron Triggers (replacing `vercel.json` crons). `wrangler deploy`. | pending — after Phase 2 |
+| **Phase 2** | Postgres → SQLite — 9 migrations rewritten, `db.ts` shim over `better-sqlite3` (Workers will swap to D1 binding), `password.ts` → Web Crypto PBKDF2, `randomBytes` → `crypto.getRandomValues`. Smoke-verified end-to-end (`scripts/smoke-sqlite.ts`). | ✓ done 2026-05-27 |
+| **Phase 3 scaffolding** | `wrangler.toml` declares D1 + R2 bindings + cron triggers + secret names. `src/server/db-d1.ts` shows the D1-binding version of the SQL shim — same `sql` API, swap path documented in-file. | ✓ done 2026-05-27 |
+| **Phase 3 live (remaining)** | Wire `@cloudflare/vite-plugin` in `vite.config.ts`; write Workers `fetch` entry that stashes `env` for the SQL shim and R2 client to pick up; move 2 cron HTTP routes → Workers `scheduled()` handler; `wrangler d1 create ikf-pathway --location apac` + `wrangler d1 migrations apply ikf-pathway --remote`; `wrangler deploy`. | pending — needs its own session |
 
 ## What to do next — outstanding work
 
 In rough priority order:
 
-1. **Fill in `.env.local` with the real credentials** — generate the SMTP2GO HTTP API key and the R2 S3 access key/secret, paste into `.env.local`. Until done, all uploads will fail with "R2 storage not configured" and all emails will be console-log no-ops.
+1. **Rotate exposed credentials.** The OLD `db.svapp.us` Postgres password was committed in tracked `.env` line 10 from `c76d8a0` until `2026-05-27`, so it's permanently in public git history. The SMTP2GO HTTP API key, CF_TOKEN, and R2 token credentials were all pasted into chat during the same session — chat history may be retained. Concrete rotations: (a) revoke or rotate the `ikf_360_owner` and `ikf_360_2_owner` svapp.us passwords (or just delete those databases), (b) regenerate the SMTP2GO HTTP API key + the R2 S3 token in their respective dashboards, (c) regenerate `cfut_…` CF API tokens. Paste fresh values into `.env.local`. Code reads from env; nothing to change in code.
 2. **Phani reviews and publishes the 9 draft cells** at `/ikf360/admin/cells`. Drafts are in DB; content is mine, voice should be his.
-3. **Phase 2 of Cloudflare migration** — D1 schema rewrite + driver swap + crypto refactor. Substantial (~3-4 hrs).
-4. **Phase 3 of Cloudflare migration** — Workers build target + `wrangler.toml` + Cron Triggers + deploy. (~2-3 hrs after Phase 2.)
-5. **Physical mobile device test** — code is responsive but never tested on an actual phone. Run through signup → intent → upload → dashboard on iOS and Android at 320px / 360px / 414px widths.
-6. **Per-profile advisor routing** — currently all advisor mail goes to `ADVISOR_EMAIL` (single inbox). `parent_child_profiles.advisor_id` column exists but is unused. Blocked on the decision item below.
+3. **Phase 3 live (Workers deploy)** — the scaffold is in place; remaining work in the table above. ~2-3 hrs of careful integration with `wrangler dev` for verification. Needs its own session.
+4. **Physical mobile device test** — code is responsive but never tested on an actual phone. Run through signup → intent → upload → dashboard on iOS and Android at 320px / 360px / 414px widths.
+5. **Per-profile advisor routing** — currently all advisor mail goes to `ADVISOR_EMAIL` (single inbox). `parent_child_profiles.advisor_id` column exists but is unused. Blocked on the decision item below.
 
 ## Decision items still open (need a human decision, not engineering)
 
@@ -205,4 +206,4 @@ In rough priority order:
 
 ## One-line summary
 
-All 3 stages live with end-to-end notification loops (6 templates via SMTP2GO HTTP), R2 for file uploads, audit logging, consent, mobile-responsive copy, 9 draft cells, and 2 daily crons. **Remaining work for first deploy: real credentials in `.env.local` + Phase 2/3 of the Cloudflare migration (D1 + Workers deploy).**
+All 3 stages live with end-to-end notification loops (6 templates via SMTP2GO HTTP), R2 for file uploads, SQLite (D1-ready) for data, PBKDF2 password hashing, audit logging, consent, mobile-responsive copy, 9 draft cells, and 2 daily crons. **Remaining for first deploy: credential rotation post-leak-audit + Phase 3 live (Workers entry + cron migration + `wrangler deploy`).**
