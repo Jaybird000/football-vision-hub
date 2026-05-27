@@ -5,7 +5,7 @@ _Last updated: 2026-05-26 (after pilot-readiness session, ~10 commits)_
 ## Local environment — credentials
 
 > ⚠️ These are **local development credentials only**. Do not reuse for production.
-> The `.env` file is **tracked in git** (commit `c76d8a0`) — dev DB config travels with the repo. Local-only secrets (Resend keys, DATABASE_URL overrides) belong in `.env.local`, which is auto-gitignored via the `*.local` rule.
+> The `.env` file is **tracked in git** (commit `c76d8a0`) — dev DB config travels with the repo. Local-only secrets (SMTP passwords, DATABASE_URL overrides) belong in `.env.local`, which is auto-gitignored via the `*.local` rule.
 
 ### Postgres (local)
 
@@ -65,13 +65,17 @@ Manual via `psql $DATABASE_URL -f db/migrations/<file>.sql` — no runner script
 Gitignored via `*.local`. Holds:
 
 ```
-RESEND_API_KEY=re_***
-EMAIL_FROM=IKF Pathway 360 <onboarding@resend.dev>
+SMTP_HOST=smtp.yourprovider.com
+SMTP_PORT=587
+SMTP_USER=apikey-or-username
+SMTP_PASS=your-smtp-password
+SMTP_SECURE=false
+EMAIL_FROM=IKF Pathway 360 <pathway@indiakhelofootball.com>
 ADVISOR_EMAIL=developer@vizworld.app
 APP_BASE_URL=http://localhost:5173
 ```
 
-`EMAIL_FROM` uses Resend's sandbox sender — works without DNS verification but only delivers to the Resend account owner (developer@vizworld.app). Real recipients require verifying a sending domain.
+Email send goes through nodemailer + SMTP. Any provider works (your own MTA, Gmail SMTP with app password, Postmark/Mailgun/SES via their SMTP relay, etc.). `EMAIL_FROM` must be an address you're authorised to send as on that SMTP server.
 
 ---
 
@@ -155,7 +159,7 @@ Still unbuilt; need a product decision before engineering:
 
 ## Email infrastructure
 
-Six templates total, all in `src/server/email.ts`. Sends are no-op + console-log when `RESEND_API_KEY` / `EMAIL_FROM` are unset, so dev keeps working without credentials.
+Six templates total, all in `src/server/email.ts`. Sends use nodemailer + SMTP. No-op + console-log when `SMTP_HOST` / `SMTP_USER` / `SMTP_PASS` / `EMAIL_FROM` are unset, so dev keeps working without credentials.
 
 | Template | When it fires | To | Idempotent? |
 |---|---|---|---|
@@ -174,7 +178,7 @@ In rough priority order:
 
 1. **Phani reviews and publishes the 9 draft cells** at `/ikf360/admin/cells`. Drafts are in DB; content is mine, voice should be his. Until at least some are published, parents who get scored see placeholder text.
 2. **Cloud storage for uploads** — local disk won't survive Vercel deploy. Needs a decision on the provider (R2 if happy with Cloudflare, Vercel Blob if avoiding Cloudflare, Postgres bytea if no extra service, or stay self-hosted with a persistent disk). Hard-blocks Vercel deploy of Stage 2.
-3. **Verify a sending domain in Resend** — emails currently work only to `developer@vizworld.app` via the sandbox sender. Add DNS records (SPF + DKIM) for `indiakhelofootball.com` (or a subdomain), wait 15-60 min, then change `EMAIL_FROM` in `.env.local` and Vercel env to the new sender.
+3. **Provide SMTP credentials** — set `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` / `SMTP_SECURE` / `EMAIL_FROM` in `.env.local` for dev and in the Vercel dashboard for prod. Until set, all email sends are no-op + console-log. For prod deliverability also add SPF + DKIM DNS records for the sending domain (whatever your SMTP provider's instructions say) to avoid the spam folder.
 4. **Physical mobile device test** — code is responsive but never tested on an actual phone. Run through signup → intent → upload → dashboard on iOS and Android at 320px / 360px / 414px widths.
 5. **Per-profile advisor routing** — currently all advisor mail goes to `ADVISOR_EMAIL` (single inbox). `parent_child_profiles.advisor_id` column exists but is unused. Blocked on the decision item below.
 
@@ -188,4 +192,4 @@ In rough priority order:
 
 ## One-line summary
 
-All 3 stages live with end-to-end notification loops (6 email templates), audit logging, consent, mobile-responsive copy, draft cell content authored, and 2 daily crons wired for review reminders + Stage 2 nudges. The remaining work is **(1) content team publishing the 9 draft cells, (2) a cloud storage decision before any Vercel deploy, and (3) DNS verification for the email sending domain**.
+All 3 stages live with end-to-end notification loops (6 email templates via SMTP), audit logging, consent, mobile-responsive copy, draft cell content authored, and 2 daily crons wired for review reminders + Stage 2 nudges. The remaining work is **(1) content team publishing the 9 draft cells, (2) a cloud storage decision before any Vercel deploy, and (3) SMTP credentials provided to the runtime env**.

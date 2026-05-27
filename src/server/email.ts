@@ -1,26 +1,38 @@
-import { Resend } from "resend";
+import nodemailer, { type Transporter } from "nodemailer";
 
-const RESEND_API_KEY = process.env.RESEND_API_KEY;
+const SMTP_HOST = process.env.SMTP_HOST;
+const SMTP_PORT = process.env.SMTP_PORT ? Number(process.env.SMTP_PORT) : 587;
+const SMTP_USER = process.env.SMTP_USER;
+const SMTP_PASS = process.env.SMTP_PASS;
+// SMTP_SECURE: "true" forces TLS-on-connect (port 465). Otherwise STARTTLS is
+// negotiated on port 587. Most providers default to 587 + STARTTLS.
+const SMTP_SECURE = process.env.SMTP_SECURE === "true";
 const EMAIL_FROM = process.env.EMAIL_FROM;
 const ADVISOR_EMAIL = process.env.ADVISOR_EMAIL;
 const APP_BASE_URL = process.env.APP_BASE_URL || "http://localhost:5173";
 
-const resend: Resend | null = RESEND_API_KEY ? new Resend(RESEND_API_KEY) : null;
+const transporter: Transporter | null = (SMTP_HOST && SMTP_USER && SMTP_PASS)
+  ? nodemailer.createTransport({
+      host: SMTP_HOST,
+      port: SMTP_PORT,
+      secure: SMTP_SECURE,
+      auth: { user: SMTP_USER, pass: SMTP_PASS },
+    })
+  : null;
 
 type SendArgs = { to: string; subject: string; html: string; text: string };
 
 async function sendEmail({ to, subject, html, text }: SendArgs): Promise<void> {
-  if (!resend || !EMAIL_FROM) {
-    // Dev mode: no API key or sender configured. Log so the developer can see
-    // what would have been sent without blocking the underlying user action.
+  if (!transporter || !EMAIL_FROM) {
+    // Dev mode: SMTP credentials or sender not configured. Log so the developer
+    // can see what would have been sent without blocking the underlying action.
     console.log(`[email:noop] to=${to} subject="${subject}"\n${text}\n`);
     return;
   }
   try {
-    const { error } = await resend.emails.send({ from: EMAIL_FROM, to, subject, html, text });
-    if (error) console.error(`[email] Resend error for to=${to}:`, error);
+    await transporter.sendMail({ from: EMAIL_FROM, to, subject, html, text });
   } catch (err) {
-    console.error(`[email] Send failed for to=${to}:`, err);
+    console.error(`[email] SMTP send failed for to=${to}:`, err);
   }
 }
 
