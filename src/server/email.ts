@@ -1,38 +1,46 @@
-import nodemailer, { type Transporter } from "nodemailer";
+// Email send via SMTP2GO's HTTP API (NOT SMTP). HTTP is required because the
+// production target is Cloudflare Workers, which doesn't allow raw TCP / SMTP.
+// Same provider as before — just the HTTP API key instead of SMTP credentials.
+//
+// Get your API key at: https://app.smtp2go.com/settings/apikeys
 
-const SMTP_HOST = process.env.SMTP_HOST;
-const SMTP_PORT = process.env.SMTP_PORT ? Number(process.env.SMTP_PORT) : 587;
-const SMTP_USER = process.env.SMTP_USER;
-const SMTP_PASS = process.env.SMTP_PASS;
-// SMTP_SECURE: "true" forces TLS-on-connect (port 465). Otherwise STARTTLS is
-// negotiated on port 587. Most providers default to 587 + STARTTLS.
-const SMTP_SECURE = process.env.SMTP_SECURE === "true";
+const SMTP2GO_API_KEY = process.env.SMTP2GO_API_KEY;
 const EMAIL_FROM = process.env.EMAIL_FROM;
 const ADVISOR_EMAIL = process.env.ADVISOR_EMAIL;
 const APP_BASE_URL = process.env.APP_BASE_URL || "http://localhost:5173";
 
-const transporter: Transporter | null = (SMTP_HOST && SMTP_USER && SMTP_PASS)
-  ? nodemailer.createTransport({
-      host: SMTP_HOST,
-      port: SMTP_PORT,
-      secure: SMTP_SECURE,
-      auth: { user: SMTP_USER, pass: SMTP_PASS },
-    })
-  : null;
+const SMTP2GO_ENDPOINT = "https://api.smtp2go.com/v3/email/send";
 
 type SendArgs = { to: string; subject: string; html: string; text: string };
 
 async function sendEmail({ to, subject, html, text }: SendArgs): Promise<void> {
-  if (!transporter || !EMAIL_FROM) {
-    // Dev mode: SMTP credentials or sender not configured. Log so the developer
-    // can see what would have been sent without blocking the underlying action.
+  if (!SMTP2GO_API_KEY || !EMAIL_FROM) {
+    // Dev mode: API key or sender not configured. Log so the developer can
+    // see what would have been sent without blocking the underlying action.
     console.log(`[email:noop] to=${to} subject="${subject}"\n${text}\n`);
     return;
   }
   try {
-    await transporter.sendMail({ from: EMAIL_FROM, to, subject, html, text });
+    const res = await fetch(SMTP2GO_ENDPOINT, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        api_key: SMTP2GO_API_KEY,
+        to: [to],
+        sender: EMAIL_FROM,
+        subject,
+        text_body: text,
+        html_body: html,
+      }),
+    });
+    const body = await res.json() as {
+      data?: { succeeded?: number; failed?: number; failures?: unknown[]; error?: string; error_code?: string };
+    };
+    if (!res.ok || body.data?.error || (body.data?.failed ?? 0) > 0) {
+      console.error(`[email] SMTP2GO HTTP send failed for to=${to}:`, body);
+    }
   } catch (err) {
-    console.error(`[email] SMTP send failed for to=${to}:`, err);
+    console.error(`[email] SMTP2GO request failed for to=${to}:`, err);
   }
 }
 

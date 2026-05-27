@@ -1,9 +1,27 @@
-import { mkdir, writeFile, unlink, readFile, stat } from "node:fs/promises";
-import { existsSync } from "node:fs";
-import { join, extname } from "node:path";
+// Object storage backed by Cloudflare R2 via the S3-compatible API.
+// Same exported surface as before — callers in stage2.ts don't need to change.
+//
+// Env required (set in .env.local for dev, Wrangler secrets for prod):
+//   R2_ACCOUNT_ID       — Cloudflare account ID (visible in `wrangler whoami`)
+//   R2_BUCKET           — bucket name (e.g. "ikf-pathway-uploads")
+//   R2_ACCESS_KEY_ID    — S3 API key (from R2 dashboard → API Tokens)
+//   R2_SECRET_ACCESS_KEY — S3 API secret
+//   R2_PUBLIC_BASE_URL  — (optional) public r2.dev or custom-domain URL for signed-less reads
+
+import {
+  S3Client,
+  PutObjectCommand,
+  GetObjectCommand,
+  DeleteObjectCommand,
+  type S3ClientConfig,
+} from "@aws-sdk/client-s3";
+import { extname } from "node:path";
 import { randomBytes } from "node:crypto";
 
-const UPLOAD_ROOT = join(process.cwd(), "uploads");
+const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID;
+const R2_BUCKET = process.env.R2_BUCKET;
+const R2_ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID;
+const R2_SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY;
 
 export const ALLOWED_MIME = new Set([
   "application/pdf",
@@ -28,10 +46,24 @@ export type StoredFile = {
   size: number;
 };
 
-async function ensureDir(dir: string) {
-  if (!existsSync(dir)) {
-    await mkdir(dir, { recursive: true });
+let _client: S3Client | null = null;
+function getClient(): S3Client {
+  if (_client) return _client;
+  if (!R2_ACCOUNT_ID || !R2_BUCKET || !R2_ACCESS_KEY_ID || !R2_SECRET_ACCESS_KEY) {
+    throw new Error(
+      "R2 storage not configured. Set R2_ACCOUNT_ID, R2_BUCKET, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY in env."
+    );
   }
+  const config: S3ClientConfig = {
+    region: "auto",
+    endpoint: `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+    credentials: {
+      accessKeyId: R2_ACCESS_KEY_ID,
+      secretAccessKey: R2_SECRET_ACCESS_KEY,
+    },
+  };
+  _client = new S3Client(config);
+  return _client;
 }
 
 export async function storeFile(profileId: string, assessmentKey: string, file: File): Promise<StoredFile> {
@@ -42,33 +74,43 @@ export async function storeFile(profileId: string, assessmentKey: string, file: 
     throw new Error(`File too large (${(file.size / 1024 / 1024).toFixed(1)} MB). Max ${MAX_FILE_SIZE / 1024 / 1024} MB.`);
   }
 
-  const dir = join(UPLOAD_ROOT, profileId);
-  await ensureDir(dir);
-
   const ext = EXT_BY_MIME[file.type] ?? extname(file.name) ?? "";
   const stem = randomBytes(8).toString("hex");
   const fileName = `${assessmentKey}-${stem}${ext}`;
-  const fullPath = join(dir, fileName);
+  const key = `${profileId}/${fileName}`;
 
   const buf = Buffer.from(await file.arrayBuffer());
-  await writeFile(fullPath, buf);
 
-  const relativePath = `${profileId}/${fileName}`;
-  return { path: relativePath, size: buf.length };
+  await getClient().send(new PutObjectCommand({
+    Bucket: R2_BUCKET!,
+    Key: key,
+    Body: buf,
+    ContentType: file.type,
+    ContentLength: buf.length,
+  }));
+
+  return { path: key, size: buf.length };
 }
 
 export async function deleteFile(relativePath: string): Promise<void> {
-  const fullPath = join(UPLOAD_ROOT, relativePath);
   try {
-    await unlink(fullPath);
+    await getClient().send(new DeleteObjectCommand({
+      Bucket: R2_BUCKET!,
+      Key: relativePath,
+    }));
   } catch (err) {
-    if ((err as NodeJS.ErrnoException)?.code !== "ENOENT") throw err;
+    // R2 DELETE is idempotent — a 404 here is fine. Re-throw anything else.
+    const status = (err as { $metadata?: { httpStatusCode?: number } })?.$metadata?.httpStatusCode;
+    if (status && status !== 404) throw err;
   }
 }
 
 export async function readStoredFile(relativePath: string): Promise<{ buffer: Buffer; size: number }> {
-  const fullPath = join(UPLOAD_ROOT, relativePath);
-  const buffer = await readFile(fullPath);
-  const stats = await stat(fullPath);
-  return { buffer, size: stats.size };
+  const res = await getClient().send(new GetObjectCommand({
+    Bucket: R2_BUCKET!,
+    Key: relativePath,
+  }));
+  if (!res.Body) throw new Error(`Object body missing for key ${relativePath}`);
+  const bytes = await res.Body.transformToByteArray();
+  return { buffer: Buffer.from(bytes), size: bytes.length };
 }

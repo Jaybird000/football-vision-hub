@@ -1,72 +1,51 @@
-// Smoke test for SMTP delivery. Reads the same env vars that src/server/email.ts
-// reads, so a passing test here means the real email module will also work.
+// Smoke test for the SMTP2GO HTTP API. Reads the same env vars that
+// src/server/email.ts reads, so a passing test here means the real email
+// module will also work — including on Cloudflare Workers (which is why we're
+// on the HTTP API not raw SMTP).
 //
 // Run: node --env-file=.env.local scripts/test-smtp.mjs
 
-import nodemailer from "nodemailer";
+const { SMTP2GO_API_KEY, EMAIL_FROM, ADVISOR_EMAIL } = process.env;
 
-const {
-  SMTP_HOST,
-  SMTP_PORT,
-  SMTP_USER,
-  SMTP_PASS,
-  SMTP_SECURE,
-  EMAIL_FROM,
-  ADVISOR_EMAIL,
-} = process.env;
-
-if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS || !EMAIL_FROM) {
-  console.error("Missing one of: SMTP_HOST, SMTP_USER, SMTP_PASS, EMAIL_FROM");
-  console.error("Did you run with --env-file=.env.local?");
+if (!SMTP2GO_API_KEY || !EMAIL_FROM) {
+  console.error("Missing SMTP2GO_API_KEY or EMAIL_FROM. Did you run with --env-file=.env.local?");
   process.exit(1);
 }
 
-const to = ADVISOR_EMAIL || SMTP_USER;
-const port = SMTP_PORT ? Number(SMTP_PORT) : 587;
-const secure = SMTP_SECURE === "true";
+const to = ADVISOR_EMAIL || EMAIL_FROM;
 
-console.log(`Connecting to ${SMTP_HOST}:${port} (secure=${secure}) as ${SMTP_USER}…`);
+console.log(`Sending test email via SMTP2GO HTTP API: ${EMAIL_FROM} → ${to}`);
 
-const transporter = nodemailer.createTransport({
-  host: SMTP_HOST,
-  port,
-  secure,
-  auth: { user: SMTP_USER, pass: SMTP_PASS },
-});
-
-try {
-  console.log("Verifying SMTP connection…");
-  await transporter.verify();
-  console.log("✓ SMTP server accepted credentials and is ready to send");
-
-  console.log(`Sending test email from ${EMAIL_FROM} → ${to}…`);
-  const info = await transporter.sendMail({
-    from: EMAIL_FROM,
-    to,
-    subject: "IKF Pathway 360 — SMTP smoke test",
-    text: [
-      "If you can read this, the SMTP path from src/server/email.ts works end-to-end.",
+const res = await fetch("https://api.smtp2go.com/v3/email/send", {
+  method: "POST",
+  headers: { "content-type": "application/json" },
+  body: JSON.stringify({
+    api_key: SMTP2GO_API_KEY,
+    to: [to],
+    sender: EMAIL_FROM,
+    subject: "IKF Pathway 360 — SMTP2GO HTTP API smoke test",
+    text_body: [
+      "If you can read this, the SMTP2GO HTTP API works end-to-end.",
       "",
-      `Host:     ${SMTP_HOST}:${port} (secure=${secure})`,
-      `From:     ${EMAIL_FROM}`,
-      `To:       ${to}`,
-      `Sent at:  ${new Date().toISOString()}`,
+      `From:    ${EMAIL_FROM}`,
+      `To:      ${to}`,
+      `Sent at: ${new Date().toISOString()}`,
     ].join("\n"),
-    html: `<p>If you can read this, the SMTP path from <code>src/server/email.ts</code> works end-to-end.</p>
+    html_body: `<p>If you can read this, the SMTP2GO HTTP API works end-to-end.</p>
 <ul>
-  <li><strong>Host:</strong> ${SMTP_HOST}:${port} (secure=${secure})</li>
   <li><strong>From:</strong> ${EMAIL_FROM}</li>
   <li><strong>To:</strong> ${to}</li>
   <li><strong>Sent at:</strong> ${new Date().toISOString()}</li>
 </ul>`,
-  });
+  }),
+});
 
-  console.log(`✓ Sent. messageId=${info.messageId}`);
-  if (info.accepted?.length) console.log(`  accepted: ${info.accepted.join(", ")}`);
-  if (info.rejected?.length) console.log(`  rejected: ${info.rejected.join(", ")}`);
-  if (info.response) console.log(`  server: ${info.response}`);
-} catch (err) {
-  console.error("✗ Failed:");
-  console.error(err);
+const body = await res.json();
+console.log(`HTTP ${res.status}`);
+console.log(JSON.stringify(body, null, 2));
+
+if (!res.ok || body?.data?.error || (body?.data?.failed ?? 0) > 0) {
+  console.error("\n✗ Send did not succeed.");
   process.exit(1);
 }
+console.log(`\n✓ Email accepted. email_id=${body?.data?.email_id}`);

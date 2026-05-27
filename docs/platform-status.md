@@ -1,6 +1,6 @@
 # Platform status — all 3 stages
 
-_Last updated: 2026-05-26 (after pilot-readiness session, ~10 commits)_
+_Last updated: 2026-05-27 (Cloudflare deploy pivot — Phase 1 done: R2 + SMTP2GO HTTP API)_
 
 ## Local environment — credentials
 
@@ -24,7 +24,7 @@ The app expects a Postgres reachable at `localhost:5432` with the credentials be
 
 | Email | Password | Role | Created via | Login URL |
 |---|---|---|---|---|
-| `admin@ikf.test` | `adminpass123` | admin | seeded inline (see commit history) | http://localhost:5173/admin-login |
+| `admin@ikf.test` | `adminpass123` | admin | seeded inline (see commit history) | http://localhost:5173/login |
 
 Parent users are created on demand:
 - Via UI: http://localhost:5173/signup (now requires consent checkbox)
@@ -65,17 +65,20 @@ Manual via `psql $DATABASE_URL -f db/migrations/<file>.sql` — no runner script
 Gitignored via `*.local`. Holds:
 
 ```
-SMTP_HOST=smtp.yourprovider.com
-SMTP_PORT=587
-SMTP_USER=apikey-or-username
-SMTP_PASS=your-smtp-password
-SMTP_SECURE=false
-EMAIL_FROM=IKF Pathway 360 <pathway@indiakhelofootball.com>
+# Email — SMTP2GO HTTP API (Workers-compatible)
+SMTP2GO_API_KEY=api-xxx
+EMAIL_FROM=IKF Pathway 360 <notifications@sportsvision.ai>
 ADVISOR_EMAIL=developer@vizworld.app
 APP_BASE_URL=http://localhost:5173
+
+# R2 — assessment file storage
+R2_ACCOUNT_ID=<from `wrangler whoami`>
+R2_BUCKET=ikf-pathway-uploads
+R2_ACCESS_KEY_ID=<from Cloudflare → R2 → API Tokens>
+R2_SECRET_ACCESS_KEY=<same>
 ```
 
-Email send goes through nodemailer + SMTP. Any provider works (your own MTA, Gmail SMTP with app password, Postmark/Mailgun/SES via their SMTP relay, etc.). `EMAIL_FROM` must be an address you're authorised to send as on that SMTP server.
+Email and storage both run via HTTP APIs (no raw TCP, no local disk) so the same code path works on Cloudflare Workers. For Workers (prod), set the same env vars via `wrangler secret put` instead of `.env.local`.
 
 ---
 
@@ -98,7 +101,7 @@ Email send goes through nodemailer + SMTP. Any provider works (your own MTA, Gma
 
 | Built | Missing |
 |---|---|
-| 9 assessment templates seeded; admin can toggle required | **Cloud storage** — uploads still go to local disk; ephemeral on Vercel serverless |
+| 9 assessment templates seeded; admin can toggle required | — |
 | Providers fully admin-managed (CRUD + visibility) + 12 sample rows | |
 | File upload: PDF/DOC/DOCX/JPG/PNG, 15 MB cap, server-side MIME validation | |
 | Re-upload overwrites; old file deleted | |
@@ -107,8 +110,9 @@ Email send goes through nodemailer + SMTP. Any provider works (your own MTA, Gma
 | Advisor "ready to score" email when min dataset first reached — `sendAdvisorReadyToScore`, idempotent | |
 | Parent re-engagement nudge email (7+ days stuck on Stage 2) — `sendParentStage2Nudge` via daily cron, idempotent | |
 | Admin verify/reject UI per upload row — badge + buttons writing `status` + `reviewed_at` + `reviewed_by` | |
+| Cloud storage — Cloudflare R2 via S3-compatible API (`ikf-pathway-uploads` bucket, APAC location); same upload/read/delete signatures, ephemeral local disk gone | |
 
-**Verdict:** All notification + review loops closed. **Cloud storage is the only hard blocker for Vercel deploy.**
+**Verdict:** Complete end-to-end. Stage 2 has no remaining blockers.
 
 ## Stage 3 — Categorisation & Recommendation
 
@@ -159,7 +163,7 @@ Still unbuilt; need a product decision before engineering:
 
 ## Email infrastructure
 
-Six templates total, all in `src/server/email.ts`. Sends use nodemailer + SMTP. No-op + console-log when `SMTP_HOST` / `SMTP_USER` / `SMTP_PASS` / `EMAIL_FROM` are unset, so dev keeps working without credentials.
+Six templates total, all in `src/server/email.ts`. Sends use **SMTP2GO's HTTP API via `fetch()`** (NOT raw SMTP) so the same code runs on Cloudflare Workers, which can't open TCP connections. No-op + console-log when `SMTP2GO_API_KEY` / `EMAIL_FROM` are unset, so dev keeps working without credentials.
 
 | Template | When it fires | To | Idempotent? |
 |---|---|---|---|
@@ -170,26 +174,35 @@ Six templates total, all in `src/server/email.ts`. Sends use nodemailer + SMTP. 
 | `sendAdvisorReviewDue` | Daily cron, `valid_until` ≤ 14 days away | advisor inbox | yes — `last_review_reminder_at` flag |
 | `sendParentStage2Nudge` | Daily cron, profile stuck on Stage 2 >7 days | parent | yes — `notified_stage2_nudge_at` flag |
 
-Cron schedule lives in `vercel.json` (`/api/cron/review-reminders` 09:00 UTC, `/api/cron/stage2-nudge` 09:30 UTC). Both endpoints require `Authorization: Bearer $CRON_SECRET`; Vercel sends this automatically when `CRON_SECRET` is set as a project env var.
+Cron schedule lives in `vercel.json` (`/api/cron/review-reminders` 09:00 UTC, `/api/cron/stage2-nudge` 09:30 UTC). Both endpoints require `Authorization: Bearer $CRON_SECRET`. **Phase 3 (Cloudflare deploy) will migrate these to Workers Cron Triggers in `wrangler.toml`** — the route handlers stay the same; only the scheduling layer changes.
+
+## Cloudflare deploy roadmap
+
+**Decision:** target Cloudflare for the entire stack — Workers (compute) + D1 (database) + R2 (object storage) — to keep one vendor and stay close to Indian users (Cloudflare's APAC POPs). Free tier across the board for pilot scale.
+
+| Phase | What | Status |
+|---|---|---|
+| **Phase 1** | R2 for uploads + SMTP2GO HTTP API for email (replace TCP-dependent libs that won't run on Workers) | ✓ done 2026-05-27 |
+| **Phase 2** | Postgres → Cloudflare D1 (SQLite) — rewrite 9 migrations + every SQL query in `src/server/`. Replace `postgres` package with `@cloudflare/d1`. Refactor `password.ts` from Node `scrypt` → Web Crypto `PBKDF2`. Replace `randomBytes` with `crypto.getRandomValues`. | pending — next session |
+| **Phase 3** | TanStack Start build target → Workers via `@cloudflare/vite-plugin`. Restore `wrangler.toml` with R2 + D1 bindings + Workers Cron Triggers (replacing `vercel.json` crons). `wrangler deploy`. | pending — after Phase 2 |
 
 ## What to do next — outstanding work
 
 In rough priority order:
 
-1. **Phani reviews and publishes the 9 draft cells** at `/ikf360/admin/cells`. Drafts are in DB; content is mine, voice should be his. Until at least some are published, parents who get scored see placeholder text.
-2. **Cloud storage for uploads** — local disk won't survive Vercel deploy. Needs a decision on the provider (R2 if happy with Cloudflare, Vercel Blob if avoiding Cloudflare, Postgres bytea if no extra service, or stay self-hosted with a persistent disk). Hard-blocks Vercel deploy of Stage 2.
-3. **Provide SMTP credentials** — set `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` / `SMTP_SECURE` / `EMAIL_FROM` in `.env.local` for dev and in the Vercel dashboard for prod. Until set, all email sends are no-op + console-log. For prod deliverability also add SPF + DKIM DNS records for the sending domain (whatever your SMTP provider's instructions say) to avoid the spam folder.
-4. **Physical mobile device test** — code is responsive but never tested on an actual phone. Run through signup → intent → upload → dashboard on iOS and Android at 320px / 360px / 414px widths.
-5. **Per-profile advisor routing** — currently all advisor mail goes to `ADVISOR_EMAIL` (single inbox). `parent_child_profiles.advisor_id` column exists but is unused. Blocked on the decision item below.
+1. **Fill in `.env.local` with the real credentials** — generate the SMTP2GO HTTP API key and the R2 S3 access key/secret, paste into `.env.local`. Until done, all uploads will fail with "R2 storage not configured" and all emails will be console-log no-ops.
+2. **Phani reviews and publishes the 9 draft cells** at `/ikf360/admin/cells`. Drafts are in DB; content is mine, voice should be his.
+3. **Phase 2 of Cloudflare migration** — D1 schema rewrite + driver swap + crypto refactor. Substantial (~3-4 hrs).
+4. **Phase 3 of Cloudflare migration** — Workers build target + `wrangler.toml` + Cron Triggers + deploy. (~2-3 hrs after Phase 2.)
+5. **Physical mobile device test** — code is responsive but never tested on an actual phone. Run through signup → intent → upload → dashboard on iOS and Android at 320px / 360px / 414px widths.
+6. **Per-profile advisor routing** — currently all advisor mail goes to `ADVISOR_EMAIL` (single inbox). `parent_child_profiles.advisor_id` column exists but is unused. Blocked on the decision item below.
 
 ## Decision items still open (need a human decision, not engineering)
 
 - **Expert Directory** in or out of platform scope? Concept Doc says yes, Brief omits it. Decide before this becomes legacy debt.
-- **Phase 2 algorithm** a real goal? If yes, start capturing structured scoring inputs now so we have training data.
+- **Phase 2 algorithm** (the scoring automation, not the migration phase — naming collision) a real goal? If yes, start capturing structured scoring inputs now so we have training data.
 - **Per-profile advisor assignment** — proper assignment table, or stick with "scorer = contact" through pilot? Latter is fine for <100 parents.
-- **Deploy target for pilot** — Vercel (then cloud storage decision is mandatory) or self-hosted server (local disk is fine).
-
 
 ## One-line summary
 
-All 3 stages live with end-to-end notification loops (6 email templates via SMTP), audit logging, consent, mobile-responsive copy, draft cell content authored, and 2 daily crons wired for review reminders + Stage 2 nudges. The remaining work is **(1) content team publishing the 9 draft cells, (2) a cloud storage decision before any Vercel deploy, and (3) SMTP credentials provided to the runtime env**.
+All 3 stages live with end-to-end notification loops (6 templates via SMTP2GO HTTP), R2 for file uploads, audit logging, consent, mobile-responsive copy, 9 draft cells, and 2 daily crons. **Remaining work for first deploy: real credentials in `.env.local` + Phase 2/3 of the Cloudflare migration (D1 + Workers deploy).**
