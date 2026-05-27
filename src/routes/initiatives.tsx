@@ -12,12 +12,12 @@ export const Route = createFileRoute("/initiatives")({
 
 function Initiatives() {
   const items = [
-    { t: "Khelo Talent Hunt", tag: "Flagship", b: "200+ open trials a year, 50 cities, 100,000+ players scouted. The funnel that starts every IKF journey." },
-    { t: "Naari Shakti", tag: "Women's Football", b: "Dedicated trials, residential camps, and pathway support for girls aged 12-21 across rural India." },
-    { t: "IKF Academies", tag: "Residential", b: "Year-round residential academies in Goa, Manipur, and West Bengal. Full school + football integration." },
-    { t: "Coach Education", tag: "Capacity Building", b: "AIFF-aligned D and C License programs subsidised for grassroots coaches in tier-2 and tier-3 cities." },
-    { t: "Rural Outreach", tag: "Last Mile", b: "Mobile trial vans, equipment drops, and village-level coaching clinics in 12 underserved states." },
-    { t: "Para-Football", tag: "Inclusion", b: "Adapted training and competitive trials for differently-abled players — launched 2024." },
+    { t: "Khelo Talent Hunt", tag: "Flagship", b: "Open city-round trials feeding zonal camps and a national final. The funnel that starts every IKF journey — free for girls and underprivileged players." },
+    { t: "Naari Shakti", tag: "Women's Football", b: "Dedicated trials and pathway support for girls — no registration fee at any stage." },
+    { t: "IKF Academies", tag: "Residential", b: "Residential training environments combining schooling with year-round football development." },
+    { t: "Coach Education", tag: "Capacity Building", b: "Structured coach-development programs for grassroots coaches in tier-2 and tier-3 cities." },
+    { t: "Rural Outreach", tag: "Last Mile", b: "On-the-ground trial drives, equipment support and village-level coaching clinics in underserved geographies." },
+    { t: "Para-Football", tag: "Inclusion", b: "Adapted training and competitive trials for differently-abled players." },
   ];
   return (
     <>

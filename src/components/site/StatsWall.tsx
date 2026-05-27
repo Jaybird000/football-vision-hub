@@ -2,11 +2,12 @@ import { useLang } from "@/lib/i18n";
 import { Counter } from "./Counter";
 
 const stats = [
-  { to: 100000, suffix: "+", en: "Players Scouted", hi: "खिलाड़ी देखे गए", accent: true,
+  { to: 50000, suffix: "+", en: "Lives Engaged", hi: "खिलाड़ी जुड़े", accent: true,
     format: (n: number) => n >= 1000 ? `${(n/1000).toFixed(0)}K` : `${n}` },
-  { to: 50, suffix: "+", en: "City Chapters", hi: "शहर अध्याय" },
-  { to: 420, suffix: "", en: "Academy Placements", hi: "अकादमी चयन" },
-  { to: 0, prefix: "₹", suffix: "", en: "Charged to Players", hi: "खिलाड़ियों से शुल्क", accent: true,
+  { to: 125, prefix: "₹", suffix: "", en: "One-Time City Registration", hi: "एकमुश्त शहर पंजीकरण" },
+  { to: 0, suffix: "", en: "Free for Girls & Underprivileged", hi: "लड़कियों व वंचितों के लिए निःशुल्क",
+    fixed: "FREE", accent: true },
+  { to: 0, prefix: "₹", suffix: "", en: "Charged to Clubs", hi: "क्लबों से शुल्क",
     fixed: "₹0" },
 ];
 

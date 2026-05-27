@@ -2,11 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import { useLang } from "@/lib/i18n";
 
 const stages = [
-  { num: "01", en: "Grassroots Trials", hi: "ज़मीनी ट्रायल्स", body_en: "Free open trials across 50+ cities. The pitch finds you.", body_hi: "50+ शहरों में निःशुल्क खुले ट्रायल्स। मैदान आपको ढूँढता है।", stat: "50+ Cities" },
-  { num: "02", en: "Zonal Camps", hi: "ज़ोनल कैंप", body_en: "Top performers move to regional residential camps for six weeks of intensive scouting.", body_hi: "शीर्ष खिलाड़ी 6 सप्ताह के क्षेत्रीय कैंप के लिए चुने जाते हैं।", stat: "6 Weeks" },
-  { num: "03", en: "National Finals", hi: "राष्ट्रीय फाइनल्स", body_en: "The 200 best converge for a week-long showcase in front of ISL & I-League scouts.", body_hi: "200 सबसे अच्छे खिलाड़ी ISL और I-League स्काउट्स के सामने प्रदर्शन करते हैं।", stat: "Top 200" },
-  { num: "04", en: "Academy Placement", hi: "अकादमी चयन", body_en: "Direct contracts with professional academies — fully funded training, education and lodging.", body_hi: "पेशेवर अकादमियों में सीधा चयन — पूर्णत: प्रायोजित प्रशिक्षण।", stat: "420 Placed" },
-  { num: "05", en: "Pro Debut", hi: "प्रो डेब्यू", body_en: "The journey closes as our alumni take the field in India's top professional leagues.", body_hi: "हमारे पूर्व छात्र भारत की शीर्ष लीगों में पदार्पण करते हैं।", stat: "12 in ISL" },
+  { num: "01", en: "Grassroots Trials", hi: "ज़मीनी ट्रायल्स", body_en: "Open city-round trials with a one-time ₹125 registration — free for girls and underprivileged players.", body_hi: "एकमुश्त ₹125 पंजीकरण पर खुले शहर-राउंड ट्रायल्स — लड़कियों और वंचित खिलाड़ियों के लिए निःशुल्क।" },
+  { num: "02", en: "Zonal Camps", hi: "ज़ोनल कैंप", body_en: "Shortlisted players move to regional zonal rounds — completely free to attend.", body_hi: "चयनित खिलाड़ी क्षेत्रीय ज़ोनल राउंड्स के लिए जाते हैं — पूर्णत: निःशुल्क।" },
+  { num: "03", en: "National Finals", hi: "राष्ट्रीय फाइनल्स", body_en: "The best converge for a national finals showcase in front of I-League and ISL scouts — fully funded.", body_hi: "सर्वश्रेष्ठ खिलाड़ी I-League और ISL स्काउट्स के सामने राष्ट्रीय फाइनल में प्रदर्शन करते हैं।" },
+  { num: "04", en: "Academy Placement", hi: "अकादमी चयन", body_en: "Connect with professional academies and clubs — IKF charges no fee from clubs or players for the bridge.", body_hi: "पेशेवर अकादमियों और क्लबों से जुड़ाव — IKF क्लबों या खिलाड़ियों से कोई शुल्क नहीं लेता।" },
+  { num: "05", en: "Pro Debut", hi: "प्रो डेब्यू", body_en: "The journey closes as our alumni take the field in India's top professional leagues.", body_hi: "हमारे पूर्व छात्र भारत की शीर्ष लीगों में पदार्पण करते हैं।" },
 ];
 
 export function Pathway() {
@@ -71,7 +71,7 @@ export function Pathway() {
               />
             </div>
 
-            <div className="lg:pl-12 relative min-h-[360px]">
+            <div className="pl-6 md:pl-12 lg:pl-20 relative min-h-[360px]">
               {stages.map((s, i) => (
                 <article
                   key={s.num}
@@ -79,7 +79,7 @@ export function Pathway() {
                   className={`absolute inset-0 transition-all duration-700 ease-out ${i === active ? "opacity-100 translate-y-0" : i < active ? "opacity-0 -translate-y-6 pointer-events-none" : "opacity-0 translate-y-6 pointer-events-none"}`}
                 >
                   <div className="flex items-baseline gap-6 mb-6">
-                    <span className="font-display text-[10rem] md:text-[14rem] leading-[0.8] text-neon-strike/80">{s.num}</span>
+                    <span className="font-display text-[6rem] md:text-[9rem] leading-[0.8] text-neon-strike/80">{s.num}</span>
                     <span className="font-display uppercase tracking-widest text-chalk/40 text-xs">Stage {s.num} of 0{stages.length}</span>
                   </div>
                   <h3 className="font-display text-4xl md:text-6xl uppercase leading-[0.95]">
@@ -88,10 +88,6 @@ export function Pathway() {
                   <p className="mt-6 text-chalk/75 text-lg leading-relaxed max-w-xl">
                     {lang === "hi" ? s.body_hi : s.body_en}
                   </p>
-                  <div className="mt-8 inline-flex items-center gap-3 border border-neon-strike/40 px-5 py-2.5 rounded-full">
-                    <span className="size-2 rounded-full bg-neon-strike animate-pulse" />
-                    <span className="font-display uppercase tracking-widest text-sm text-neon-strike">{s.stat}</span>
-                  </div>
                 </article>
               ))}
             </div>

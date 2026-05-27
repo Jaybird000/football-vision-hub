@@ -23,7 +23,7 @@ function Partners() {
           <div>
             <h2 className="font-display text-4xl uppercase">Why IKF</h2>
             <ul className="mt-6 space-y-4 text-chalk/80">
-              {["100K+ scouted players across 28 states","Verified 80G non-profit — full CSR eligibility","Direct ISL & I-League placement track record","Dedicated impact dashboard for every partner"].map(p => (
+              {["50,000+ lives already engaged through IKF's pathway","Verified 80G non-profit — full CSR eligibility","City-round to national-final pipeline feeding I-League & ISL scouts","Dedicated impact dashboard for every partner"].map(p => (
                 <li key={p} className="flex gap-3"><span className="text-neon-strike">→</span>{p}</li>
               ))}
             </ul>
@@ -32,7 +32,7 @@ function Partners() {
             <h3 className="font-display text-3xl uppercase">Partnership Tracks</h3>
             <div className="mt-6 space-y-5">
               {[
-                { t: "Title Sponsor", b: "National season-long visibility across all 50 cities." },
+                { t: "Title Sponsor", b: "National season-long visibility across every IKF city round, zonal camp and final." },
                 { t: "City Chapter", b: "Sponsor a city — own all trials, kits, and impact in that geography." },
                 { t: "Naari Shakti Patron", b: "Power women's football pathways across rural India." },
               ].map(p => (

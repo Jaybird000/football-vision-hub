@@ -5,7 +5,7 @@ import { PageHero, Section } from "@/components/site/PageHero";
 export const Route = createFileRoute("/about")({
   head: () => ({ meta: [
     { title: "About — India Khelo Football" },
-    { name: "description", content: "Founded in 2015 to fix Indian football's broken talent pipeline. Now scouting in 28 states." },
+    { name: "description", content: "Founded in 2015 to fix Indian football's broken talent pipeline — a free, merit-only ladder from the maidan to the professional game." },
   ]}),
   component: About,
 });
@@ -24,13 +24,13 @@ function About() {
             <div className="mt-6 space-y-5 text-chalk/80 leading-relaxed text-lg">
               <p>For decades, the Indian football story repeated itself: a kid with talent, a maidan in a small town, and no road from one to the other. Coaches couldn't reach scouts. Scouts couldn't reach villages. Federations were busy at the top of the pyramid.</p>
               <p>India Khelo Football was started to fix the bottom — and to build a transparent, free, merit-only ladder from the ground floor to the professional game.</p>
-              <p>Ten years later we run trials in 50+ cities, operate residential academies in three states, have placed 420+ players into professional academies, and have moved 12 IKF graduates into the Indian Super League.</p>
+              <p>A decade in, more than 50,000 lives have moved through IKF's pathway. Players reach city-round trials for a one-time ₹125 registration — free for girls and underprivileged children — and zonal rounds, national finals, and academy/club connections cost nothing thereafter. IKF charges clubs nothing either; merit is the only currency.</p>
             </div>
           </div>
           <aside className="md:col-span-5 bg-pitch-green/15 border-l-4 border-neon-strike p-8 self-start">
             <h3 className="font-display text-2xl uppercase">By the numbers</h3>
             <dl className="mt-6 space-y-4">
-              {[["100K+", "Players scouted"],["28","States covered"],["420","Academy placements"],["12","ISL contracts"],["₹0","Charged to players"]].map(([v,l]) => (
+              {[["50K+", "Lives engaged"],["2015", "Founded"],["₹125","One-time city registration"],["FREE","For girls & underprivileged"],["₹0","Charged to clubs"]].map(([v,l]) => (
                 <div key={l} className="flex justify-between border-b border-chalk/10 pb-2">
                   <dt className="text-chalk/60 text-sm uppercase tracking-widest">{l}</dt>
                   <dd className="font-display text-2xl text-neon-strike">{v}</dd>

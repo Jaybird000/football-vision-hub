@@ -1,10 +1,10 @@
 export function Ticker() {
   const items = [
-    "LIVE TRIALS · KOLKATA · OCT 12-14",
-    "50,000+ REGISTERED PLAYERS",
-    "14 SCOUTS ON PITCH",
-    "NEXT TRIAL · MUMBAI · OCT 20",
-    "420 ACADEMY PLACEMENTS · 12 ISL CONTRACTS",
+    "50,000+ LIVES ENGAGED ACROSS INDIA",
+    "ONE-TIME ₹125 CITY REGISTRATION · FREE FOR GIRLS",
+    "ZONAL ROUNDS · FREE TO ATTEND",
+    "NATIONAL FINALS · FULLY FUNDED",
+    "₹0 CHARGED TO CLUBS",
   ];
   return (
     <div className="bg-neon-strike text-pitch-black py-3 overflow-hidden border-y border-pitch-black/10">

@@ -77,7 +77,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "India Khelo Football — From the Street to the Stadium" },
-      { name: "description", content: "India's largest grassroots football scouting platform. Free trials in 50+ cities, direct pathway to ISL academies." },
+      { name: "description", content: "India's grassroots football scouting platform. Open city-round trials — free for girls and underprivileged children — feeding zonal camps, national finals and I-League / ISL scouts." },
       { property: "og:title", content: "India Khelo Football" },
       { property: "og:description", content: "From the street to the stadium. India's grassroots football pipeline." },
       { property: "og:type", content: "website" },

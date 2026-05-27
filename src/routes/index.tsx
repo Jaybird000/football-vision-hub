@@ -11,7 +11,7 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "India Khelo Football — From the Street to the Stadium" },
-      { name: "description", content: "India's largest grassroots football scouting platform. Free trials in 50+ cities, direct pathway to ISL academies." },
+      { name: "description", content: "India's grassroots football scouting platform. Open city-round trials — free for girls and underprivileged children — feeding zonal camps, national finals and I-League / ISL scouts." },
     ],
   }),
   component: Index,
