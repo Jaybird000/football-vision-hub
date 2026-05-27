@@ -1,48 +1,40 @@
-// Tagged-template SQL shim over better-sqlite3 (local dev) — same call-site
-// shape as the `postgres` package we used to have, so caller code doesn't change.
+// SQL helper backed by Cloudflare D1's HTTP API. Same code runs on Node
+// (local dev) and on Cloudflare Workers (production) — both just call
+// fetch() with the account ID + database ID + an API token.
 //
-// Phase 3 will swap the better-sqlite3 implementation for a Cloudflare D1
-// binding when running on Workers (`env.DB.prepare(...).bind(...).all()`).
-// The `sql` tagged template API and the `sql.json` helper stay identical so
-// no caller in src/server/*.ts has to change between local dev and prod.
+// Why HTTP API instead of D1 bindings:
+//   - bindings only work inside the Workers request handler (env.DB), which
+//     would require threading env through every server function. Doable, but
+//     significant TanStack-Start-adapter work.
+//   - HTTP API works from anywhere. One code path. Slower per query (~30-50ms
+//     vs ~1ms for bindings) but acceptable at pilot scale.
+//
+// Caller API matches the postgres `sql` package: tagged template literal
+// `sql<MyRow[]>` returns `Promise<MyRow[]>`; `sql.json(v)` marks JSON columns.
+// Same `now()` / boolean rewrites + ISO-date and JSON hydration as before.
 
-import Database from "better-sqlite3";
-import { existsSync, mkdirSync } from "node:fs";
-import { dirname, join, isAbsolute } from "node:path";
+const ACCOUNT_ID = process.env.CF_ACCOUNT_ID;
+const D1_DATABASE_ID = process.env.CF_D1_DATABASE_ID;
+const API_TOKEN = process.env.CF_API_TOKEN;
 
-const DB_PATH = process.env.DATABASE_PATH || "db/local.sqlite";
-const ABS_PATH = isAbsolute(DB_PATH) ? DB_PATH : join(process.cwd(), DB_PATH);
+const D1_ENDPOINT = ACCOUNT_ID && D1_DATABASE_ID
+  ? `https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/d1/database/${D1_DATABASE_ID}/query`
+  : null;
 
-const globalForDb = globalThis as unknown as { __ikfDb?: Database.Database };
-
-function openDb(): Database.Database {
-  const dir = dirname(ABS_PATH);
-  if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
-  const db = new Database(ABS_PATH);
-  db.pragma("journal_mode = WAL");
-  db.pragma("foreign_keys = ON");
-  // Make UUID-style IDs available to SQLite migrations as `uuid()` so DEFAULT
-  // (uuid()) on a TEXT primary key produces a proper UUIDv4.
-  db.function("uuid", { deterministic: false }, () => globalThis.crypto.randomUUID());
-  return db;
+if (!D1_ENDPOINT || !API_TOKEN) {
+  console.warn("[db] CF_ACCOUNT_ID / CF_D1_DATABASE_ID / CF_API_TOKEN not all set — every query will throw.");
 }
 
-const db: Database.Database = globalForDb.__ikfDb ?? openDb();
-if (process.env.NODE_ENV !== "production") globalForDb.__ikfDb = db;
+// ---- sql.json marker (same shape as the old postgres package) ----
 
-// `sql.json(v)` wraps a value so the shim knows to JSON.stringify it on bind
-// (SQLite has no native JSONB — JSON is stored as TEXT and queried via
-// json_extract). Implemented as a Symbol-keyed marker object so it can never
-// collide with a normal value.
 const JSON_TAG = Symbol("ikf:json");
 type JsonMarker = { [JSON_TAG]: unknown };
-
 function isJsonMarker(v: unknown): v is JsonMarker {
   return typeof v === "object" && v !== null && JSON_TAG in (v as object);
 }
 
-// Matches strict ISO-8601 timestamps so we can re-hydrate text columns back
-// into Date objects on read. SQLite has no TIMESTAMPTZ; we store ISO strings.
+// ---- read hydration: ISO-string → Date, looks-like-JSON → parsed ----
+
 const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})$/;
 
 function hydrate<T>(row: T): T {
@@ -51,17 +43,15 @@ function hydrate<T>(row: T): T {
   for (const k of Object.keys(out)) {
     const v = out[k];
     if (typeof v !== "string" || v.length === 0) continue;
-    if (ISO_DATE_RE.test(v)) {
-      out[k] = new Date(v);
-    } else if (v[0] === "[" || v[0] === "{") {
-      // Looks like JSON. Stand-in for postgres' automatic JSONB → object
-      // hydration. No column in our schema stores a non-JSON string starting
-      // with `[` or `{`, so the heuristic is safe in practice.
+    if (ISO_DATE_RE.test(v)) out[k] = new Date(v);
+    else if (v[0] === "[" || v[0] === "{") {
       try { out[k] = JSON.parse(v); } catch { /* leave as string */ }
     }
   }
   return out as T;
 }
+
+// ---- param binding: Date → ISO, bool → 0/1, JsonMarker → JSON string ----
 
 function bindParam(v: unknown): unknown {
   if (v === undefined) return null;
@@ -71,13 +61,8 @@ function bindParam(v: unknown): unknown {
   return v;
 }
 
-// "select" or any statement containing RETURNING means we want rows back.
-const RETURNING_RE = /\breturning\b/i;
-// Postgres → SQLite syntax rewrites done on-the-fly so caller code doesn't
-// have to know about the dialect change:
-//   now()    → (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
-//   = true   → = 1     (SQLite has no native bool; columns are INTEGER 0/1)
-//   = false  → = 0
+// ---- dialect rewrites: now() and = true/false stay PG-style at call sites ----
+
 const NOW_REPLACEMENT = "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))";
 const NOW_RE = /\bnow\(\)/gi;
 const BOOL_TRUE_RE = /=\s*true\b/gi;
@@ -90,28 +75,44 @@ function rewriteDialect(s: string): string {
     .replace(BOOL_FALSE_RE, "= 0");
 }
 
-// Signature matches the `postgres` package: caller writes `sql<MyRow[]>` and
-// gets back `Promise<MyRow[]>` — i.e. T is the whole array type, not a single
-// row. Preserving this lets every existing call site keep the same generic.
+// ---- the tagged-template entry point ----
+
+type D1QueryResponse = {
+  success: boolean;
+  errors?: Array<{ message: string }>;
+  result?: Array<{ results?: unknown[]; meta?: { changes?: number; last_row_id?: number } }>;
+};
+
 async function runTag<T = unknown[]>(strings: TemplateStringsArray, ...values: unknown[]): Promise<T> {
+  if (!D1_ENDPOINT || !API_TOKEN) {
+    throw new Error("D1 not configured: set CF_ACCOUNT_ID, CF_D1_DATABASE_ID, CF_API_TOKEN.");
+  }
   const sqlText = rewriteDialect(strings.join("?"));
   const params = values.map(bindParam);
-  const trimmed = sqlText.trimStart().toLowerCase();
-  const wantsRows = trimmed.startsWith("select") || RETURNING_RE.test(sqlText);
 
+  let res: Response;
   try {
-    const stmt = db.prepare(sqlText);
-    if (wantsRows) {
-      const rows = stmt.all(...(params as never[])) as unknown[];
-      return rows.map(hydrate) as unknown as T;
-    }
-    stmt.run(...(params as never[]));
-    return [] as unknown as T;
+    res = await fetch(D1_ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${API_TOKEN}`,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({ sql: sqlText, params }),
+    });
   } catch (err) {
-    // Re-throw with the query attached so we can see what broke in dev logs.
     const msg = err instanceof Error ? err.message : String(err);
-    throw new Error(`SQL error: ${msg}\nQuery: ${sqlText}`);
+    throw new Error(`D1 fetch failed: ${msg}\nQuery: ${sqlText}`);
   }
+
+  const body = (await res.json()) as D1QueryResponse;
+  if (!res.ok || !body.success) {
+    const errMsg = body.errors?.map(e => e.message).join("; ") || `HTTP ${res.status}`;
+    throw new Error(`D1 error: ${errMsg}\nQuery: ${sqlText}`);
+  }
+
+  const rows = (body.result?.[0]?.results ?? []) as unknown[];
+  return rows.map(hydrate) as unknown as T;
 }
 
 type SqlFn = {

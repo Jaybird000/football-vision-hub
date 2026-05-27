@@ -15,7 +15,13 @@ CREATE TABLE IF NOT EXISTS assessment_templates (
 );
 
 CREATE TABLE IF NOT EXISTS providers (
-  id             TEXT PRIMARY KEY DEFAULT (uuid()),
+  id             TEXT PRIMARY KEY DEFAULT (lower(
+    hex(randomblob(4)) || '-' ||
+    hex(randomblob(2)) || '-4' ||
+    substr(hex(randomblob(2)), 2) || '-' ||
+    substr('89ab', 1 + (abs(random()) % 4), 1) || substr(hex(randomblob(2)), 2) || '-' ||
+    hex(randomblob(6))
+  )),
   assessment_key TEXT NOT NULL REFERENCES assessment_templates(key) ON DELETE CASCADE,
   name           TEXT NOT NULL,
   description    TEXT NOT NULL DEFAULT '',
@@ -31,7 +37,13 @@ CREATE INDEX IF NOT EXISTS idx_providers_assessment ON providers (assessment_key
 CREATE INDEX IF NOT EXISTS idx_providers_active     ON providers (is_active);
 
 CREATE TABLE IF NOT EXISTS assessment_uploads (
-  id              TEXT PRIMARY KEY DEFAULT (uuid()),
+  id              TEXT PRIMARY KEY DEFAULT (lower(
+    hex(randomblob(4)) || '-' ||
+    hex(randomblob(2)) || '-4' ||
+    substr(hex(randomblob(2)), 2) || '-' ||
+    substr('89ab', 1 + (abs(random()) % 4), 1) || substr(hex(randomblob(2)), 2) || '-' ||
+    hex(randomblob(6))
+  )),
   profile_id      TEXT NOT NULL REFERENCES parent_child_profiles(id) ON DELETE CASCADE,
   assessment_key  TEXT NOT NULL REFERENCES assessment_templates(key),
   file_name       TEXT NOT NULL,

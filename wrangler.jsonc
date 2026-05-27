@@ -1,7 +1,51 @@
+// Cloudflare Workers configuration for IKF Pathway 360.
+// Read by both `wrangler deploy` and @cloudflare/vite-plugin during build.
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "tanstack-start-app",
+  "name": "ikf-pathway-360",
   "compatibility_date": "2025-09-24",
-  "compatibility_flags": ["nodejs_compat"],
+  "compatibility_flags": ["nodejs_compat", "nodejs_compat_populate_process_env"],
   "main": "src/server.ts",
+
+  // D1 database (APAC). Runtime uses the HTTP API via src/server/db.ts;
+  // this binding is declared for future migration-to-bindings + dashboard visibility.
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "ikf-pathway",
+      "database_id": "2d17006c-e5f4-4271-becc-2d76ce1f6a19",
+      "migrations_dir": "db/migrations"
+    }
+  ],
+
+  // R2 bucket for assessment uploads (APAC).
+  "r2_buckets": [
+    {
+      "binding": "UPLOADS",
+      "bucket_name": "ikf-pathway-uploads"
+    }
+  ],
+
+  // Daily cron triggers (UTC).
+  "triggers": {
+    "crons": ["0 9 * * *", "30 9 * * *"]
+  },
+
+  // Non-secret config (visible in Cloudflare dashboard).
+  // Secrets go through `wrangler secret put` and never land in this file.
+  "vars": {
+    "APP_BASE_URL": "https://ikf-pathway-360.workers.dev",
+    "EMAIL_FROM": "IKF Pathway 360 <notifications@sportsvision.ai>",
+    "ADVISOR_EMAIL": "developer@vizworld.app",
+    "CF_ACCOUNT_ID": "d628e95a0bbafdd45ff52ca1189daae5",
+    "CF_D1_DATABASE_ID": "2d17006c-e5f4-4271-becc-2d76ce1f6a19",
+    "R2_ACCOUNT_ID": "d628e95a0bbafdd45ff52ca1189daae5",
+    "R2_BUCKET": "ikf-pathway-uploads"
+  }
+  // Secrets to set before the worker can serve:
+  //   wrangler secret put CF_API_TOKEN
+  //   wrangler secret put SMTP2GO_API_KEY
+  //   wrangler secret put R2_ACCESS_KEY_ID
+  //   wrangler secret put R2_SECRET_ACCESS_KEY
+  //   wrangler secret put CRON_SECRET
 }

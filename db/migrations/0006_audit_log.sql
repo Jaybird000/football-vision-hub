@@ -3,7 +3,13 @@
 -- erase the audit trail. user_email is denormalised at write time so audit rows
 -- remain interpretable even after the user row is gone.
 CREATE TABLE IF NOT EXISTS audit_log (
-  id           TEXT PRIMARY KEY DEFAULT (uuid()),
+  id           TEXT PRIMARY KEY DEFAULT (lower(
+    hex(randomblob(4)) || '-' ||
+    hex(randomblob(2)) || '-4' ||
+    substr(hex(randomblob(2)), 2) || '-' ||
+    substr('89ab', 1 + (abs(random()) % 4), 1) || substr(hex(randomblob(2)), 2) || '-' ||
+    hex(randomblob(6))
+  )),
   user_id      TEXT REFERENCES users(id) ON DELETE SET NULL,
   user_email   TEXT,
   action       TEXT NOT NULL,

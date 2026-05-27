@@ -9,7 +9,13 @@
 -- JSON: TEXT holding JSON string; sql.json(v) helper wraps writes.
 
 CREATE TABLE IF NOT EXISTS parent_child_profiles (
-  id              TEXT PRIMARY KEY DEFAULT (uuid()),
+  id              TEXT PRIMARY KEY DEFAULT (lower(
+    hex(randomblob(4)) || '-' ||
+    hex(randomblob(2)) || '-4' ||
+    substr(hex(randomblob(2)), 2) || '-' ||
+    substr('89ab', 1 + (abs(random()) % 4), 1) || substr(hex(randomblob(2)), 2) || '-' ||
+    hex(randomblob(6))
+  )),
   parent_name     TEXT NOT NULL,
   parent_email    TEXT NOT NULL,
   parent_phone    TEXT,
