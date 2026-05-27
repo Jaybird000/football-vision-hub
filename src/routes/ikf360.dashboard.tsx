@@ -30,10 +30,10 @@ function ParentDashboard() {
   if (!stage2.profileId) {
     return (
       <EmptyCard
-        title="Complete the Intent Form first"
+        title="Complete the Parent SOP first"
         body="Your dashboard appears here once you've finished Stage 1."
         to="/ikf360/intent"
-        cta="Go to Intent Form"
+        cta="Open the Parent SOP"
       />
     );
   }

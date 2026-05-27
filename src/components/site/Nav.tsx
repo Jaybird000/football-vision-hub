@@ -9,7 +9,7 @@ import { currentUser, logout } from "@/server/auth";
 
 const PARENT_TABS: { to: string; label: string }[] = [
   { to: "/ikf360", label: "Overview" },
-  { to: "/ikf360/intent", label: "1 · Intent Form" },
+  { to: "/ikf360/intent", label: "1 · Parent SOP" },
   { to: "/ikf360/upload", label: "2 · Upload Portal" },
   { to: "/ikf360/dashboard", label: "3 · Parent Dashboard" },
 ];

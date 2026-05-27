@@ -98,7 +98,7 @@ export async function sendAdvisorNewIntent(args: {
   const subject = `New Stage 1 intent — ${args.childName} (${args.readiness} readiness)`;
   const phoneLine = args.parentPhone ? `\nPhone:      ${args.parentPhone}` : "";
   const text = [
-    `A new parent has completed the Stage 1 intent form.`,
+    `A new parent has completed the Stage 1 Parent SOP.`,
     ``,
     `Child:      ${args.childName}, age ${args.childAge}`,
     `Parent:     ${args.parentName}`,

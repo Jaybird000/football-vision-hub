@@ -37,12 +37,12 @@ function UploadPortal() {
       <div className="max-w-2xl mx-auto py-10">
         <div className="ikf-card p-8 text-center space-y-4">
           <AlertCircle size={40} className="mx-auto" style={{ color: "var(--ikf-brand)" }} />
-          <h1 className="text-[28px] leading-tight">Complete the Intent Form first</h1>
+          <h1 className="text-[28px] leading-tight">Complete the Parent SOP first</h1>
           <p className="text-[14px]" style={{ color: "var(--ikf-text-dim)" }}>
             Stage 2 unlocks automatically as soon as you've finished Stage 1.
           </p>
           <Link to="/ikf360/intent" className="ikf-btn-primary inline-flex items-center gap-2">
-            Go to Intent Form <ArrowRight size={16} />
+            Open the Parent SOP <ArrowRight size={16} />
           </Link>
         </div>
       </div>

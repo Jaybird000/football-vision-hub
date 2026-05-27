@@ -6,7 +6,7 @@ export const Route = createFileRoute("/ikf360/")({
 });
 
 const stages = [
-  { to: "/ikf360/intent", num: "01", title: "Intent Form", desc: "Parent enters. 8 questions surface intent and readiness.", icon: ClipboardList, role: "Parent view" },
+  { to: "/ikf360/intent", num: "01", title: "Parent SOP", desc: "Parent enters. 8 questions surface intent and readiness.", icon: ClipboardList, role: "Parent view" },
   { to: "/ikf360/upload", num: "02", title: "Upload Portal", desc: "9 third-party assessments uploaded into one profile.", icon: Upload, role: "Parent view" },
   { to: "/ikf360/dashboard", num: "03", title: "Parent Dashboard", desc: "Categorisation, recommendation, advisor and journey timeline.", icon: LayoutDashboard, role: "Parent view" },
   { to: "/ikf360/admin", num: "04", title: "Advisor Console", desc: "Profile list, scoring interface, recommendation issuer.", icon: Users, role: "Admin view" },

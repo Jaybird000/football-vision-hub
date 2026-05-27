@@ -166,7 +166,7 @@ export const PROFILES: ParentChildProfile[] = [
       ],
     },
     timeline: [
-      { date: "8 Feb 2026", type: "intent", text: "Stage 1 intent form completed. Readiness: high." },
+      { date: "8 Feb 2026", type: "intent", text: "Stage 1 Parent SOP completed. Readiness: high." },
       { date: "12 Mar 2026", type: "upload", text: "Scouting + Technical reports uploaded." },
       { date: "20 Mar 2026", type: "upload", text: "Academic record uploaded." },
       { date: "28 Mar 2026", type: "upload", text: "Psychometric assessment uploaded." },
@@ -206,7 +206,7 @@ export const PROFILES: ParentChildProfile[] = [
       ],
     },
     timeline: [
-      { date: "2 Mar 2026", type: "intent", text: "Stage 1 intent form completed. Readiness: high." },
+      { date: "2 Mar 2026", type: "intent", text: "Stage 1 Parent SOP completed. Readiness: high." },
       { date: "15 Mar 2026", type: "upload", text: "Scouting report uploaded." },
       { date: "1 Apr 2026", type: "upload", text: "Psychometric + Academic uploaded." },
       { date: "20 Apr 2026", type: "upload", text: "S&C profile uploaded." },
@@ -238,7 +238,7 @@ export const PROFILES: ParentChildProfile[] = [
       ],
     },
     timeline: [
-      { date: "20 Apr 2026", type: "intent", text: "Stage 1 intent form completed. Readiness: medium." },
+      { date: "20 Apr 2026", type: "intent", text: "Stage 1 Parent SOP completed. Readiness: medium." },
     ],
   },
   {
@@ -266,7 +266,7 @@ export const PROFILES: ParentChildProfile[] = [
       ],
     },
     timeline: [
-      { date: "10 May 2026", type: "intent", text: "Stage 1 intent form completed. Readiness: forming." },
+      { date: "10 May 2026", type: "intent", text: "Stage 1 Parent SOP completed. Readiness: forming." },
     ],
   },
 ];

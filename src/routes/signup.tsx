@@ -59,7 +59,7 @@ function SignupPage() {
           <header>
             <h1 className="text-[34px] leading-tight">Create your account.</h1>
             <p className="mt-3 text-[15px] leading-relaxed" style={{ color: "var(--ikf-text-dim)" }}>
-              One account for your family. Your responses, your child's profile, your IKF advisor — all in one place. Next step after this is the intent form.
+              One account for your family. Your responses, your child's profile, your IKF advisor — all in one place. Next step after this is the Parent SOP.
             </p>
           </header>
 
@@ -142,7 +142,7 @@ function SignupPage() {
                 </>
               ) : (
                 <>
-                  Continue to intent form <ArrowRight size={16} />
+                  Continue to Parent SOP <ArrowRight size={16} />
                 </>
               )}
             </button>

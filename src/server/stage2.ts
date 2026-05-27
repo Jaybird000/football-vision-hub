@@ -149,7 +149,7 @@ export const uploadAssessment = createServerFn({ method: "POST" })
   .handler(async ({ data }): Promise<UploadRecord> => {
     const user = await getSessionUser();
     if (!user) throw new Error("You must be signed in to upload reports.");
-    if (!user.profileId) throw new Error("Please complete the Intent Form (Stage 1) before uploading reports.");
+    if (!user.profileId) throw new Error("Please complete the Parent SOP (Stage 1) before uploading reports.");
 
     const templateRows = await sql<{ key: string }[]>`
       SELECT key FROM assessment_templates WHERE key = ${data.key} LIMIT 1
