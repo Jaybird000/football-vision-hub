@@ -1,12 +1,21 @@
 import { createServerFn } from "@tanstack/react-start";
 import { getCookie, setCookie } from "@tanstack/react-start/server";
-import { randomBytes } from "node:crypto";
 import { z } from "zod";
 import { sql } from "./db";
 import { hashPassword, verifyPassword } from "./password";
 
 const SESSION_COOKIE = "ikf_session";
 const SESSION_TTL_DAYS = 30;
+
+// Session token: 32 random bytes (256 bits) → base64url. Web Crypto so it runs
+// identically on Node and Cloudflare Workers (no `node:crypto.randomBytes`).
+function randomSessionToken(): string {
+  const bytes = new Uint8Array(32);
+  crypto.getRandomValues(bytes);
+  let bin = "";
+  for (const b of bytes) bin += String.fromCharCode(b);
+  return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
 
 // Bumped when the privacy policy materially changes. Stored on users.consent_version
 // at signup so we can later detect users who agreed to an older policy.
@@ -27,7 +36,7 @@ function normalizeEmail(email: string): string {
 }
 
 async function createSession(userId: string): Promise<string> {
-  const token = randomBytes(32).toString("base64url");
+  const token = randomSessionToken();
   const expiresAt = new Date(Date.now() + SESSION_TTL_DAYS * 24 * 60 * 60 * 1000);
   await sql`
     INSERT INTO sessions (token, user_id, expires_at)

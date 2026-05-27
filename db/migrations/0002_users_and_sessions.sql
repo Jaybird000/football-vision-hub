@@ -1,21 +1,21 @@
 CREATE TABLE IF NOT EXISTS users (
-  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  id              TEXT PRIMARY KEY DEFAULT (uuid()),
   email           TEXT UNIQUE NOT NULL,
   password_hash   TEXT NOT NULL,
   full_name       TEXT NOT NULL,
   role            TEXT NOT NULL DEFAULT 'parent' CHECK (role IN ('parent','advisor','admin')),
-  profile_id      UUID REFERENCES parent_child_profiles(id) ON DELETE SET NULL,
-  created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+  profile_id      TEXT REFERENCES parent_child_profiles(id) ON DELETE SET NULL,
+  created_at      TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  updated_at      TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
 );
 
 CREATE INDEX IF NOT EXISTS idx_users_role ON users (role);
 
 CREATE TABLE IF NOT EXISTS sessions (
   token           TEXT PRIMARY KEY,
-  user_id         UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  expires_at      TIMESTAMPTZ NOT NULL,
-  created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+  user_id         TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  expires_at      TEXT NOT NULL,
+  created_at      TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
 );
 
 CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions (user_id);

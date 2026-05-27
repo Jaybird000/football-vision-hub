@@ -26,6 +26,14 @@ uploads/
 # Generated sample PDFs (regenerate with `node scripts/generate-sample-pdfs.mjs`)
 samples/
 
+# Local SQLite database files (regenerate via `node scripts/apply-migrations.mjs`)
+*.sqlite
+*.sqlite-journal
+*.sqlite-shm
+*.sqlite-wal
+*.db
+*.db-journal
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

@@ -3,14 +3,14 @@
 -- erase the audit trail. user_email is denormalised at write time so audit rows
 -- remain interpretable even after the user row is gone.
 CREATE TABLE IF NOT EXISTS audit_log (
-  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id      UUID REFERENCES users(id) ON DELETE SET NULL,
+  id           TEXT PRIMARY KEY DEFAULT (uuid()),
+  user_id      TEXT REFERENCES users(id) ON DELETE SET NULL,
   user_email   TEXT,
   action       TEXT NOT NULL,
   entity_type  TEXT NOT NULL,
   entity_id    TEXT,
-  payload      JSONB,
-  created_at   TIMESTAMPTZ NOT NULL DEFAULT now()
+  payload      TEXT,
+  created_at   TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
 );
 
 CREATE INDEX IF NOT EXISTS idx_audit_created  ON audit_log (created_at DESC);

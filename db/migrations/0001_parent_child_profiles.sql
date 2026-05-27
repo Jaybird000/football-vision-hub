@@ -1,19 +1,27 @@
-CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+-- SQLite (for Cloudflare D1 / better-sqlite3 local dev).
+-- Originally PostgreSQL; rewritten 2026-05-27 as part of the Cloudflare migration.
+--
+-- ID convention: TEXT holding UUID-style values, generated via the uuid() SQL
+-- function registered in src/server/db.ts (better-sqlite3 user function).
+-- Timestamps: TEXT holding ISO-8601 with millisecond precision; db.ts hydrates
+-- back to Date objects on read.
+-- Booleans: INTEGER 0/1 (SQLite has no native bool).
+-- JSON: TEXT holding JSON string; sql.json(v) helper wraps writes.
 
 CREATE TABLE IF NOT EXISTS parent_child_profiles (
-  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  id              TEXT PRIMARY KEY DEFAULT (uuid()),
   parent_name     TEXT NOT NULL,
   parent_email    TEXT NOT NULL,
   parent_phone    TEXT,
   child_name      TEXT NOT NULL,
   child_age       INTEGER NOT NULL CHECK (child_age BETWEEN 5 AND 25),
   child_gender    TEXT NOT NULL,
-  answers         JSONB NOT NULL,
+  answers         TEXT NOT NULL,
   readiness       TEXT NOT NULL CHECK (readiness IN ('high', 'medium', 'forming')),
   advisor_id      TEXT,
   stage           INTEGER NOT NULL DEFAULT 1,
-  created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+  created_at      TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  updated_at      TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
 );
 
 CREATE INDEX IF NOT EXISTS idx_profiles_email     ON parent_child_profiles (parent_email);

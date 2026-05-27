@@ -1,15 +1,35 @@
-import { randomBytes, scrypt } from "node:crypto";
-import { promisify } from "node:util";
+// Seed or update an IKF Pathway 360 admin/advisor user against the local SQLite DB.
+// Uses PBKDF2 (matches src/server/password.ts) so the resulting hash is verified
+// by the running app without any compatibility shim.
+//
+// Usage: node scripts/seed-admin.mjs
+
+import Database from "better-sqlite3";
 import { createInterface } from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
-import postgres from "postgres";
+import { join, isAbsolute } from "node:path";
 
-const scryptAsync = promisify(scrypt);
+const DB_PATH = process.env.DATABASE_PATH || "db/local.sqlite";
+const ABS_PATH = isAbsolute(DB_PATH) ? DB_PATH : join(process.cwd(), DB_PATH);
+
+const ITERATIONS = 600_000;
+const enc = new TextEncoder();
+
+function toB64(bytes) {
+  return Buffer.from(bytes).toString("base64");
+}
 
 async function hashPassword(plain) {
-  const salt = randomBytes(16).toString("hex");
-  const derived = await scryptAsync(plain, salt, 64);
-  return `scrypt$16384$${salt}$${derived.toString("hex")}`;
+  const salt = new Uint8Array(16);
+  globalThis.crypto.getRandomValues(salt);
+  const key = await globalThis.crypto.subtle.importKey(
+    "raw", enc.encode(plain), { name: "PBKDF2" }, false, ["deriveBits"],
+  );
+  const bits = await globalThis.crypto.subtle.deriveBits(
+    { name: "PBKDF2", salt, iterations: ITERATIONS, hash: "SHA-256" },
+    key, 256,
+  );
+  return `pbkdf2$${ITERATIONS}$${toB64(salt)}$${toB64(new Uint8Array(bits))}`;
 }
 
 async function prompt(rl, label, { secret = false } = {}) {
@@ -27,11 +47,8 @@ async function prompt(rl, label, { secret = false } = {}) {
         input.removeListener("data", onData);
         process.stdout.write("\n");
         resolve();
-      } else if (ch === "") {
-        if (buf.length > 0) {
-          buf = buf.slice(0, -1);
-          process.stdout.write("\b \b");
-        }
+      } else if (ch === "" || ch === "\b") {
+        if (buf.length > 0) { buf = buf.slice(0, -1); process.stdout.write("\b \b"); }
       } else {
         buf += ch;
         process.stdout.write("*");
@@ -43,17 +60,15 @@ async function prompt(rl, label, { secret = false } = {}) {
   return buf;
 }
 
-const url = process.env.DATABASE_URL;
-if (!url) {
-  console.error("DATABASE_URL not set. Run with: node --env-file=.env scripts/seed-admin.mjs");
-  process.exit(1);
-}
+const db = new Database(ABS_PATH);
+db.pragma("journal_mode = WAL");
+db.pragma("foreign_keys = ON");
+db.function("uuid", { deterministic: false }, () => globalThis.crypto.randomUUID());
 
-const sql = postgres(url, { max: 1, connect_timeout: 5 });
 const rl = createInterface({ input, output });
 
 try {
-  console.log("\nSeed IKF 360 admin user\n----------------------");
+  console.log("\nSeed IKF Pathway 360 admin user\n-------------------------------");
   const fullName = await prompt(rl, "Full name: ");
   const email = (await prompt(rl, "Email: ")).toLowerCase();
   const role = (await prompt(rl, "Role [admin/advisor] (default: admin): ")) || "admin";
@@ -67,34 +82,32 @@ try {
     process.exit(1);
   }
 
-  const existing = await sql`SELECT id, role FROM users WHERE email = ${email} LIMIT 1`;
+  const existing = db.prepare("SELECT id, role FROM users WHERE email = ? LIMIT 1").get(email);
   const passwordHash = await hashPassword(password);
 
-  if (existing.length > 0) {
-    const ans = (await rl.question(`User ${email} already exists with role '${existing[0].role}'. Update password and set role to '${role}'? [y/N] `)).trim().toLowerCase();
-    if (ans !== "y") {
-      console.log("Aborted.");
-      process.exit(0);
-    }
-    await sql`
+  if (existing) {
+    const ans = (await rl.question(`User ${email} already exists with role '${existing.role}'. Update password and set role to '${role}'? [y/N] `)).trim().toLowerCase();
+    if (ans !== "y") { console.log("Aborted."); process.exit(0); }
+    db.prepare(`
       UPDATE users
-      SET password_hash = ${passwordHash}, full_name = ${fullName}, role = ${role}, updated_at = now()
-      WHERE email = ${email}
-    `;
+      SET password_hash = ?, full_name = ?, role = ?,
+          updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+      WHERE email = ?
+    `).run(passwordHash, fullName, role, email);
     console.log(`\nUpdated ${email} → role=${role}.`);
   } else {
-    const rows = await sql`
+    const row = db.prepare(`
       INSERT INTO users (email, password_hash, full_name, role)
-      VALUES (${email}, ${passwordHash}, ${fullName}, ${role})
+      VALUES (?, ?, ?, ?)
       RETURNING id
-    `;
-    console.log(`\nCreated ${email} → role=${role} (id=${rows[0].id}).`);
+    `).get(email, passwordHash, fullName, role);
+    console.log(`\nCreated ${email} → role=${role} (id=${row.id}).`);
   }
-  console.log("Sign in at: http://localhost:5173/ikf360/admin-login\n");
+  console.log("Sign in at: http://localhost:5173/login\n");
 } catch (err) {
   console.error("FAIL:", err);
   process.exit(1);
 } finally {
   rl.close();
-  await sql.end();
+  db.close();
 }
