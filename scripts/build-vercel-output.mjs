@@ -42,12 +42,68 @@ console.log(`[vercel-output] static copied → ${STATIC_OUT}`);
 // Bundle the server entry into the function directory. esbuild follows the
 // import into dist/server/server.js and pulls in all transitive npm deps
 // (h3-v2, @tanstack/router-core, react, etc.). node: built-ins stay external.
+//
+// Handler signature is the classic Node `(req, res)` because Vercel's Web
+// Standard auto-detection for ESM modules is unreliable — we adapt manually
+// from Node IncomingMessage → Web Request, call server.fetch (Workers-shaped),
+// then pipe the Web Response back into the Node ServerResponse. Works on every
+// Vercel runtime version.
 await esbuild.build({
   stdin: {
     contents: `
       import server from "./dist/server/server.js";
-      export default async function handler(request) {
-        return server.fetch(request, {}, {});
+
+      export default async function handler(req, res) {
+        try {
+          const proto = req.headers["x-forwarded-proto"] || "https";
+          const host = req.headers["x-forwarded-host"] || req.headers.host || "localhost";
+          const url = new URL(req.url || "/", proto + "://" + host);
+
+          const headers = new Headers();
+          for (const [key, value] of Object.entries(req.headers)) {
+            if (value == null) continue;
+            if (Array.isArray(value)) {
+              for (const v of value) headers.append(key, v);
+            } else {
+              headers.set(key, value);
+            }
+          }
+
+          const method = (req.method || "GET").toUpperCase();
+          const hasBody = method !== "GET" && method !== "HEAD";
+          const request = new Request(url, {
+            method,
+            headers,
+            body: hasBody ? req : undefined,
+            duplex: "half",
+          });
+
+          const response = await server.fetch(request, {}, {});
+
+          res.statusCode = response.status;
+          for (const [k, v] of response.headers) {
+            res.setHeader(k, v);
+          }
+
+          if (response.body) {
+            const reader = response.body.getReader();
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              if (value) res.write(Buffer.from(value));
+            }
+          }
+          res.end();
+        } catch (error) {
+          console.error("[vercel-fn] handler threw:", error);
+          if (!res.headersSent) {
+            res.statusCode = 500;
+            res.setHeader("content-type", "text/plain");
+            res.end("Internal Server Error");
+          } else {
+            res.end();
+          }
+        }
       }
     `,
     resolveDir: ROOT,
@@ -74,7 +130,6 @@ await writeFile(
       handler: "index.mjs",
       launcherType: "Nodejs",
       shouldAddHelpers: false,
-      supportsResponseStreaming: true,
     },
     null,
     2,
