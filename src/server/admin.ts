@@ -11,6 +11,7 @@ async function requireAdmin(): Promise<{ id: string; role: Role }> {
   const rows = await sql<{ id: string; role: Role }[]>`
     SELECT u.id, u.role
     FROM sessions s
+    
     JOIN users u ON u.id = s.user_id
     WHERE s.token = ${token} AND s.expires_at > now()
     LIMIT 1
