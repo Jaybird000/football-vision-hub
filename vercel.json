@@ -4,6 +4,9 @@
   "outputDirectory": "dist/client",
   "framework": null,
   "cleanUrls": true,
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/api" }
+  ],
   "crons": [
     { "path": "/api/cron/review-reminders", "schedule": "0 9 * * *" },
     { "path": "/api/cron/stage2-nudge", "schedule": "30 9 * * *" }
