@@ -43,19 +43,20 @@ console.log(`[vercel-output] static copied → ${STATIC_OUT}`);
 // import into dist/server/server.js and pulls in all transitive npm deps
 // (h3-v2, @tanstack/router-core, react, etc.). node: built-ins stay external.
 //
-// Handler signature is the classic Node `(req, res)` because Vercel's Web
-// Standard auto-detection for ESM modules is unreliable — we adapt manually
-// from Node IncomingMessage → Web Request, call server.fetch (Workers-shaped),
-// then pipe the Web Response back into the Node ServerResponse. Works on every
-// Vercel runtime version.
+// Vercel's nodejs20.x runtime invokes the handler Node-style (req, res). Our
+// server bundle is Workers-shaped `{ fetch(Request) => Response }`, so this
+// entry bridges: Node IncomingMessage → Web Request, call server.fetch, then
+// stream the Web Response back. Set-Cookie is read via getSetCookie() so
+// multiple cookies on one response aren't comma-collapsed into a single header.
 await esbuild.build({
   stdin: {
     contents: `
+      import { Readable } from "node:stream";
       import server from "./dist/server/server.js";
 
       export default async function handler(req, res) {
         try {
-          const proto = req.headers["x-forwarded-proto"] || "https";
+          const proto = String(req.headers["x-forwarded-proto"] || "https").split(",")[0].trim();
           const host = req.headers["x-forwarded-host"] || req.headers.host || "localhost";
           const url = new URL(req.url || "/", proto + "://" + host);
 
@@ -71,19 +72,26 @@ await esbuild.build({
 
           const method = (req.method || "GET").toUpperCase();
           const hasBody = method !== "GET" && method !== "HEAD";
-          const request = new Request(url, {
-            method,
-            headers,
-            body: hasBody ? req : undefined,
-            duplex: "half",
-          });
+          const init = { method, headers };
+          if (hasBody) {
+            init.body = Readable.toWeb(req);
+            init.duplex = "half";
+          }
 
+          const request = new Request(url, init);
           const response = await server.fetch(request, {}, {});
 
           res.statusCode = response.status;
-          for (const [k, v] of response.headers) {
-            res.setHeader(k, v);
-          }
+
+          // Set-Cookie can repeat; everything else is single-valued.
+          const setCookies = typeof response.headers.getSetCookie === "function"
+            ? response.headers.getSetCookie()
+            : [];
+          if (setCookies.length > 0) res.setHeader("set-cookie", setCookies);
+          response.headers.forEach((value, key) => {
+            if (key.toLowerCase() === "set-cookie") return;
+            res.setHeader(key, value);
+          });
 
           if (response.body) {
             const reader = response.body.getReader();
@@ -95,14 +103,12 @@ await esbuild.build({
           }
           res.end();
         } catch (error) {
-          console.error("[vercel-fn] handler threw:", error);
+          console.error("[vercel-fn] handler threw:", error && (error.stack || error.message || error));
           if (!res.headersSent) {
             res.statusCode = 500;
-            res.setHeader("content-type", "text/plain");
-            res.end("Internal Server Error");
-          } else {
-            res.end();
+            res.setHeader("content-type", "text/plain; charset=utf-8");
           }
+          res.end("Internal Server Error");
         }
       }
     `,
@@ -130,6 +136,7 @@ await writeFile(
       handler: "index.mjs",
       launcherType: "Nodejs",
       shouldAddHelpers: false,
+      supportsResponseStreaming: true,
     },
     null,
     2,
