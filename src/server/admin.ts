@@ -27,6 +27,7 @@ export type AdminTemplate = {
   category: string;
   title: string;
   description: string;
+  
   required: boolean;
   sortOrder: number;
   providerCount: number;
