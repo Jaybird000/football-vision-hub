@@ -23,6 +23,7 @@ import { Route as CoachesRouteImport } from './routes/coaches'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as Ikf360IndexRouteImport } from './routes/ikf360.index'
+import { Route as ParentsPathwayRouteImport } from './routes/parents_.pathway'
 import { Route as Ikf360UploadRouteImport } from './routes/ikf360.upload'
 import { Route as Ikf360SupportRouteImport } from './routes/ikf360.support'
 import { Route as Ikf360IntentRouteImport } from './routes/ikf360.intent'
@@ -107,6 +108,11 @@ const Ikf360IndexRoute = Ikf360IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => Ikf360Route,
+} as any)
+const ParentsPathwayRoute = ParentsPathwayRouteImport.update({
+  id: '/parents_/pathway',
+  path: '/parents/pathway',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const Ikf360UploadRoute = Ikf360UploadRouteImport.update({
   id: '/upload',
@@ -198,6 +204,7 @@ export interface FileRoutesByFullPath {
   '/ikf360/intent': typeof Ikf360IntentRoute
   '/ikf360/support': typeof Ikf360SupportRoute
   '/ikf360/upload': typeof Ikf360UploadRoute
+  '/parents/pathway': typeof ParentsPathwayRoute
   '/ikf360/': typeof Ikf360IndexRoute
   '/api/cron/review-reminders': typeof ApiCronReviewRemindersRoute
   '/api/cron/stage2-nudge': typeof ApiCronStage2NudgeRoute
@@ -227,6 +234,7 @@ export interface FileRoutesByTo {
   '/ikf360/intent': typeof Ikf360IntentRoute
   '/ikf360/support': typeof Ikf360SupportRoute
   '/ikf360/upload': typeof Ikf360UploadRoute
+  '/parents/pathway': typeof ParentsPathwayRoute
   '/ikf360': typeof Ikf360IndexRoute
   '/api/cron/review-reminders': typeof ApiCronReviewRemindersRoute
   '/api/cron/stage2-nudge': typeof ApiCronStage2NudgeRoute
@@ -258,6 +266,7 @@ export interface FileRoutesById {
   '/ikf360/intent': typeof Ikf360IntentRoute
   '/ikf360/support': typeof Ikf360SupportRoute
   '/ikf360/upload': typeof Ikf360UploadRoute
+  '/parents_/pathway': typeof ParentsPathwayRoute
   '/ikf360/': typeof Ikf360IndexRoute
   '/api/cron/review-reminders': typeof ApiCronReviewRemindersRoute
   '/api/cron/stage2-nudge': typeof ApiCronStage2NudgeRoute
@@ -290,6 +299,7 @@ export interface FileRouteTypes {
     | '/ikf360/intent'
     | '/ikf360/support'
     | '/ikf360/upload'
+    | '/parents/pathway'
     | '/ikf360/'
     | '/api/cron/review-reminders'
     | '/api/cron/stage2-nudge'
@@ -319,6 +329,7 @@ export interface FileRouteTypes {
     | '/ikf360/intent'
     | '/ikf360/support'
     | '/ikf360/upload'
+    | '/parents/pathway'
     | '/ikf360'
     | '/api/cron/review-reminders'
     | '/api/cron/stage2-nudge'
@@ -349,6 +360,7 @@ export interface FileRouteTypes {
     | '/ikf360/intent'
     | '/ikf360/support'
     | '/ikf360/upload'
+    | '/parents_/pathway'
     | '/ikf360/'
     | '/api/cron/review-reminders'
     | '/api/cron/stage2-nudge'
@@ -375,6 +387,7 @@ export interface RootRouteChildren {
   PlayersRoute: typeof PlayersRoute
   PrivacyRoute: typeof PrivacyRoute
   SignupRoute: typeof SignupRoute
+  ParentsPathwayRoute: typeof ParentsPathwayRoute
   ApiCronReviewRemindersRoute: typeof ApiCronReviewRemindersRoute
   ApiCronStage2NudgeRoute: typeof ApiCronStage2NudgeRoute
   ApiUploadsIdRoute: typeof ApiUploadsIdRoute
@@ -479,6 +492,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/ikf360/'
       preLoaderRoute: typeof Ikf360IndexRouteImport
       parentRoute: typeof Ikf360Route
+    }
+    '/parents_/pathway': {
+      id: '/parents_/pathway'
+      path: '/parents/pathway'
+      fullPath: '/parents/pathway'
+      preLoaderRoute: typeof ParentsPathwayRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/ikf360/upload': {
       id: '/ikf360/upload'
@@ -638,6 +658,7 @@ const rootRouteChildren: RootRouteChildren = {
   PlayersRoute: PlayersRoute,
   PrivacyRoute: PrivacyRoute,
   SignupRoute: SignupRoute,
+  ParentsPathwayRoute: ParentsPathwayRoute,
   ApiCronReviewRemindersRoute: ApiCronReviewRemindersRoute,
   ApiCronStage2NudgeRoute: ApiCronStage2NudgeRoute,
   ApiUploadsIdRoute: ApiUploadsIdRoute,

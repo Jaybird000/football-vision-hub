@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useMemo } from "react";
 import { ArrowRight, Check, Mail, Phone, Loader2, CheckCircle2 } from "lucide-react";
-import { INTENT_QUESTIONS, scoreReadiness, READINESS_META, type Readiness } from "@/lib/ikf360-data";
+import { INTENT_QUESTIONS, scoreReadiness, READINESS_META, READINESS_PARENT_COPY, STAGE1_EXPLAINER, type Readiness } from "@/lib/ikf360-data";
 import { submitIntent, getMyIntent, type MyIntent } from "@/server/intent";
 
 export const Route = createFileRoute("/ikf360/intent")({
@@ -16,6 +16,7 @@ function IntentRoute() {
 
 function AlreadySubmitted({ intent }: { intent: MyIntent }) {
   const meta = READINESS_META[intent.readiness];
+  const pcopy = READINESS_PARENT_COPY[intent.readiness];
   const submittedDate = new Date(intent.submittedAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
   return (
     <div className="max-w-2xl mx-auto animate-fade-up space-y-8">
@@ -56,6 +57,21 @@ function AlreadySubmitted({ intent }: { intent: MyIntent }) {
         </dl>
       </div>
 
+      <div className="ikf-card p-7 space-y-5">
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <div className="text-[11px] uppercase tracking-[0.16em]" style={{ color: "var(--ikf-text-dim)" }}>What your starting signal means</div>
+            <span className="ikf-chip" style={{ background: meta.bg, color: meta.color }}>{meta.label}</span>
+          </div>
+          <h3 className="text-[18px] mb-2">{pcopy.headline}</h3>
+          <p className="text-[14px] leading-relaxed" style={{ color: "var(--ikf-text-dim)" }}>{pcopy.meaning}</p>
+        </div>
+        <div className="pt-5 border-t" style={{ borderColor: "var(--ikf-border)" }}>
+          <div className="text-[11px] uppercase tracking-[0.16em] mb-2" style={{ color: "var(--ikf-brand)" }}>What happens next</div>
+          <p className="text-[14px] leading-relaxed" style={{ color: "var(--ikf-text-dim)" }}>{pcopy.next}</p>
+        </div>
+      </div>
+
       <div className="ikf-card p-5 flex items-start gap-3" style={{ background: "var(--ikf-surface-2)" }}>
         <Mail size={16} className="mt-0.5 shrink-0" style={{ color: "var(--ikf-brand)" }} />
         <p className="text-[13px] leading-relaxed" style={{ color: "var(--ikf-text-dim)" }}>
@@ -88,8 +104,9 @@ type Step = "details" | "questions" | "submitting" | "done";
 
 function IntentForm() {
   const [step, setStep] = useState<Step>("details");
-  const [details, setDetails] = useState({ parent: "", email: "", phone: "", child: "", age: "", gender: "Boy" });
+  const [details, setDetails] = useState({ parent: "", email: "", phone: "", child: "", age: "", gender: "Boy", city: "" });
   const [answers, setAnswers] = useState<Record<string, number>>({});
+  const [choices, setChoices] = useState<Record<string, string>>({});
   const [qIdx, setQIdx] = useState(0);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [serverResult, setServerResult] = useState<{ id: string; readiness: Readiness } | null>(null);
@@ -97,11 +114,22 @@ function IntentForm() {
   const q = INTENT_QUESTIONS[qIdx];
   const progress = useMemo(() => Math.round((Object.keys(answers).length / INTENT_QUESTIONS.length) * 100), [answers]);
   const readiness = serverResult?.readiness ?? scoreReadiness(answers);
-  const detailsValid = details.parent && details.email && details.child && details.age;
+  // All Stage 1 detail fields are required before continuing. (Gender always has
+  // a value; the 8 questions must each be answered to advance.)
+  const detailsValid =
+    details.parent.trim() &&
+    /\S+@\S+\.\S+/.test(details.email) &&
+    details.phone.trim() &&
+    details.child.trim() &&
+    details.age.trim() &&
+    details.city.trim() &&
+    details.gender;
 
-  async function answer(score: number) {
-    const next = { ...answers, [q.id]: score };
+  async function answer(opt: { label: string; score: number }) {
+    const next = { ...answers, [q.id]: opt.score };
+    const nextChoices = { ...choices, [q.id]: opt.label };
     setAnswers(next);
+    setChoices(nextChoices);
     if (qIdx < INTENT_QUESTIONS.length - 1) {
       setQIdx(qIdx + 1);
       return;
@@ -117,7 +145,9 @@ function IntentForm() {
           childName: details.child.trim(),
           childAge: parseInt(details.age, 10),
           childGender: details.gender as "Boy" | "Girl" | "Other",
+          city: details.city.trim(),
           answers: next,
+          answerChoices: nextChoices,
         },
       });
       setServerResult(result);
@@ -162,6 +192,7 @@ function IntentForm() {
               <Field label="Phone (WhatsApp)"><input className="ikf-input" value={details.phone} onChange={e => setDetails({ ...details, phone: e.target.value })} placeholder="+91" /></Field>
             </div>
             <Field label="Child's name"><input className="ikf-input" value={details.child} onChange={e => setDetails({ ...details, child: e.target.value })} placeholder="Arjun" /></Field>
+            <Field label="City"><input className="ikf-input" value={details.city} onChange={e => setDetails({ ...details, city: e.target.value })} placeholder="Jamshedpur" /></Field>
             <div className="grid sm:grid-cols-2 gap-5">
               <Field label="Child's age">
                 <input type="number" min={8} max={20} className="ikf-input" value={details.age} onChange={e => setDetails({ ...details, age: e.target.value })} placeholder="8 to 20" />
@@ -201,7 +232,7 @@ function IntentForm() {
           )}
           <div className="space-y-3">
             {q.options.map(o => (
-              <button key={o.label} onClick={() => answer(o.score)}
+              <button key={o.label} onClick={() => answer(o)}
                 className="w-full text-left ikf-card p-5 hover:border-[var(--ikf-brand)] transition-colors flex items-center justify-between gap-4">
                 <span className="text-[15px]">{o.label}</span>
                 <ArrowRight size={16} style={{ color: "var(--ikf-text-dim)" }} />
@@ -233,14 +264,26 @@ function IntentForm() {
             </p>
           </div>
 
-          <div className="ikf-card p-7">
-            <div className="flex items-center justify-between mb-5">
-              <div className="text-[11px] uppercase tracking-[0.16em]" style={{ color: "var(--ikf-text-dim)" }}>Internal — readiness signal</div>
-              <span className="ikf-chip" style={{ background: READINESS_META[readiness].bg, color: READINESS_META[readiness].color }}>{READINESS_META[readiness].label}</span>
+          <div className="ikf-card p-7 space-y-6">
+            <div>
+              <div className="text-[11px] uppercase tracking-[0.16em] mb-2" style={{ color: "var(--ikf-text-dim)" }}>What is Stage 1?</div>
+              <p className="text-[14px] leading-relaxed">{STAGE1_EXPLAINER.whatIsStage1}</p>
             </div>
-            <p className="text-[13px] leading-relaxed" style={{ color: "var(--ikf-text-dim)" }}>
-              This signal is computed from the parent's answers and shown only to advisors. It determines whether the family is invited into Stage 2 immediately, or first scheduled for an orientation call.
-            </p>
+
+            <div className="pt-6 border-t" style={{ borderColor: "var(--ikf-border)" }}>
+              <div className="flex items-center justify-between mb-3">
+                <div className="text-[11px] uppercase tracking-[0.16em]" style={{ color: "var(--ikf-text-dim)" }}>Your starting signal</div>
+                <span className="ikf-chip" style={{ background: READINESS_META[readiness].bg, color: READINESS_META[readiness].color }}>{READINESS_META[readiness].label}</span>
+              </div>
+              <h3 className="text-[18px] mb-2">{READINESS_PARENT_COPY[readiness].headline}</h3>
+              <p className="text-[14px] leading-relaxed" style={{ color: "var(--ikf-text-dim)" }}>{READINESS_PARENT_COPY[readiness].meaning}</p>
+            </div>
+
+            <div className="pt-6 border-t" style={{ borderColor: "var(--ikf-border)" }}>
+              <div className="text-[11px] uppercase tracking-[0.16em] mb-2" style={{ color: "var(--ikf-brand)" }}>What happens next</div>
+              <p className="text-[14px] leading-relaxed" style={{ color: "var(--ikf-text-dim)" }}>{READINESS_PARENT_COPY[readiness].next}</p>
+              <p className="mt-3 text-[13px] leading-relaxed" style={{ color: "var(--ikf-text-dim)" }}>{STAGE1_EXPLAINER.curiosity}</p>
+            </div>
           </div>
 
           <div className="ikf-card p-7" style={{ background: "var(--ikf-surface-2)" }}>

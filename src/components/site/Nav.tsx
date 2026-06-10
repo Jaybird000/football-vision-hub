@@ -47,7 +47,8 @@ export function Nav() {
     router.navigate({ to: "/" });
   }
 
-  const publicLinks: Array<{ to: "/players" | "/coaches" | "/initiatives" | "/about"; label: string }> = [
+  const publicLinks: Array<{ to: "/players" | "/coaches" | "/initiatives" | "/about" | "/parents/pathway"; label: string }> = [
+    { to: "/parents/pathway", label: t("nav", "parentPathway") },
     { to: "/players", label: t("nav", "players") },
     { to: "/coaches", label: t("nav", "coaches") },
     { to: "/initiatives", label: t("nav", "initiatives") },

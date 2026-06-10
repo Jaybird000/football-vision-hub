@@ -31,9 +31,24 @@ function Overview() {
         <p className="text-[16px] leading-relaxed" style={{ color: "var(--ikf-text-dim)" }}>
           {hasStarted
             ? "Your Stage 1 details are saved. Continue to Stage 2 to upload assessment reports, or revisit the details you've already shared."
-            : "Three stages. The first takes about four minutes — eight questions about you and your child. Click below to start."}
+            : "Three stages, at your own pace. Look around below to see what's ahead — then start the Parent SOP whenever you're ready. It's about four minutes: eight questions about you and your child."}
         </p>
       </header>
+
+      <section className="ikf-card p-6 sm:p-8 space-y-4">
+        <div className="text-[11px] uppercase tracking-[0.18em]" style={{ color: "var(--ikf-brand)" }}>What is IKF Pathway 360?</div>
+        <p className="text-[15px] leading-relaxed" style={{ color: "var(--ikf-text-dim)" }}>
+          IKF Pathway 360 is your child's personalised football roadmap. You share a little about your child, add a few assessment reports when you're ready, and an IKF advisor gives you a clear, honest picture of where they stand today — and the best next step forward. No jargon, no pressure.
+        </p>
+        <div className="grid sm:grid-cols-3 gap-3 text-[13px]">
+          <div><span className="font-semibold" style={{ color: "var(--ikf-text)" }}>1 · Parent SOP</span><div style={{ color: "var(--ikf-text-dim)" }}>Tell us about your child.</div></div>
+          <div><span className="font-semibold" style={{ color: "var(--ikf-text)" }}>2 · Deep Assessment</span><div style={{ color: "var(--ikf-text-dim)" }}>Add reports at your own pace.</div></div>
+          <div><span className="font-semibold" style={{ color: "var(--ikf-text)" }}>3 · Recommendation</span><div style={{ color: "var(--ikf-text-dim)" }}>A clear, personalised plan.</div></div>
+        </div>
+        <Link to="/parents/pathway" className="ikf-btn-ghost inline-flex items-center gap-2 text-[13px]">
+          Read the full parent guide <ArrowRight size={14} />
+        </Link>
+      </section>
 
       <section className="ikf-card p-6 sm:p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-5" style={{ background: "var(--ikf-surface-2)", borderColor: "var(--ikf-brand)" }}>
         <div className="flex items-start gap-4">

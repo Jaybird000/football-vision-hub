@@ -1,8 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
-import { Check, Clock, ExternalLink, FileUp, ShieldCheck, ArrowRight, Loader2, AlertCircle, FileText, Trash2 } from "lucide-react";
-import { getMyStage2, uploadAssessment, deleteUpload, type Stage2State, type UploadRecord } from "@/server/stage2";
+import { Check, Clock, ExternalLink, FileUp, ShieldCheck, ArrowRight, Loader2, AlertCircle, FileText, Trash2, LifeBuoy, Send, CheckCircle2 } from "lucide-react";
+import { getMyStage2, uploadAssessment, deleteUpload, requestMentorAssistance, type Stage2State, type UploadRecord } from "@/server/stage2";
 
 export const Route = createFileRoute("/ikf360/upload")({
   loader: async () => ({ initial: await getMyStage2() }),
@@ -63,6 +63,10 @@ function Portal({ state, onChanged }: { state: Stage2State; onChanged: () => voi
     return acc;
   }, {});
 
+  // Module E: required reports the parent hasn't uploaded yet — drives the
+  // "don't have these documents? contact your IKF mentor" panel.
+  const missingRequired = state.templates.filter(t => t.required && !uploadByKey.has(t.key));
+
   return (
     <div className="max-w-5xl mx-auto">
       <div className="mb-10">
@@ -87,6 +91,10 @@ function Portal({ state, onChanged }: { state: Stage2State; onChanged: () => voi
           {state.childName ? `For ${state.childName}. ` : ""}IKF doesn't conduct these assessments — pick a recommended provider, get the report, then upload the PDF/DOC/JPG here. Re-uploads overwrite the previous version.
         </p>
       </header>
+
+      {missingRequired.length > 0 && (
+        <MentorAssistancePanel state={state} missingCount={missingRequired.length} onChanged={onChanged} />
+      )}
 
       {state.minimumDatasetReached && (
         <div
@@ -127,6 +135,103 @@ function Portal({ state, onChanged }: { state: Stage2State; onChanged: () => voi
           </div>
         </section>
       ))}
+    </div>
+  );
+}
+
+function MentorAssistancePanel({
+  state,
+  missingCount,
+  onChanged,
+}: {
+  state: Stage2State;
+  missingCount: number;
+  onChanged: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [message, setMessage] = useState("");
+
+  const mutation = useMutation({
+    mutationFn: async () => requestMentorAssistance({ data: { message: message.trim() } }),
+    onSuccess: () => onChanged(),
+  });
+
+  // Already requested (this session or a prior visit) → show the reassuring
+  // "we've got it" state instead of the form.
+  if (state.assistanceRequestedAt || mutation.isSuccess) {
+    return (
+      <div className="ikf-card p-6 mb-8 flex items-start gap-3" style={{ borderColor: "var(--ikf-brand)" }}>
+        <CheckCircle2 size={22} className="mt-0.5 shrink-0" style={{ color: "var(--ikf-brand)" }} />
+        <div>
+          <h3 className="text-[16px] font-bold">Your request is in.</h3>
+          <p className="mt-1 text-[13px] leading-relaxed" style={{ color: "var(--ikf-text-dim)" }}>
+            Your IKF mentor has been notified and will get back to you within 48 hours to guide you on the documents you're missing. There's nothing more you need to do right now.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="ikf-card p-6 mb-8" style={{ borderColor: "var(--ikf-brand)", borderStyle: "dashed" }}>
+      <div className="flex items-start gap-3">
+        <LifeBuoy size={22} className="mt-0.5 shrink-0" style={{ color: "var(--ikf-brand)" }} />
+        <div className="flex-1">
+          <h3 className="text-[16px] font-bold">Don't have these documents?</h3>
+          <p className="mt-1 text-[13px] leading-relaxed" style={{ color: "var(--ikf-text-dim)" }}>
+            That's completely fine. If you don't currently have {missingCount === 1 ? "this report" : "these reports"}, your IKF mentor can guide you on the next steps — usually within 48 hours.
+          </p>
+
+          {!open ? (
+            <button
+              onClick={() => setOpen(true)}
+              className="ikf-btn-primary inline-flex items-center gap-2 text-[13px] mt-4"
+            >
+              <LifeBuoy size={14} /> Contact my IKF Mentor
+            </button>
+          ) : (
+            <div className="mt-4 space-y-3">
+              <label className="block">
+                <div className="text-[12px] font-semibold uppercase tracking-[0.12em] mb-2" style={{ color: "var(--ikf-text-dim)" }}>
+                  Anything you'd like your mentor to know? (optional)
+                </div>
+                <textarea
+                  className="ikf-input"
+                  rows={3}
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  placeholder="e.g. We haven't done the fitness or psychometric assessments yet and aren't sure where to start."
+                  maxLength={2000}
+                />
+              </label>
+              {mutation.isError && (
+                <div
+                  className="text-[12px] p-3 rounded-lg"
+                  style={{ background: "rgba(220, 38, 38, 0.08)", color: "#dc2626", border: "1px solid rgba(220, 38, 38, 0.2)" }}
+                >
+                  {mutation.error instanceof Error ? mutation.error.message : "Could not send your request."}
+                </div>
+              )}
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => mutation.mutate()}
+                  disabled={mutation.isPending}
+                  className="ikf-btn-primary inline-flex items-center gap-2 text-[13px] disabled:opacity-50"
+                >
+                  {mutation.isPending ? (
+                    <><Loader2 size={14} className="animate-spin" /> Sending…</>
+                  ) : (
+                    <><Send size={14} /> Request assistance</>
+                  )}
+                </button>
+                <button onClick={() => setOpen(false)} className="text-[13px]" style={{ color: "var(--ikf-text-dim)" }}>
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -200,24 +305,32 @@ function AssessmentCard({
 
       {providers.length > 0 && (
         <div className="text-[12px]">
-          <div className="uppercase tracking-[0.14em] mb-2" style={{ color: "var(--ikf-text-dim)" }}>
-            Recommended providers
+          <div className="uppercase tracking-[0.14em] mb-2 flex items-center justify-between gap-2" style={{ color: "var(--ikf-text-dim)" }}>
+            <span>Recommended providers</span>
+            {providers.some(p => p.chargeInr != null) && <span>Report charge</span>}
           </div>
           <ul className="space-y-1.5">
             {providers.map(p => (
-              <li key={p.id}>
-                <a
-                  href={p.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 hover:underline"
-                  style={{ color: "var(--ikf-brand)" }}
-                >
-                  {p.name}{p.city ? ` · ${p.city}` : ""} <ExternalLink size={11} />
-                </a>
-                {p.description && (
-                  <span className="ml-2 text-[12px]" style={{ color: "var(--ikf-text-dim)" }}>
-                    — {p.description}
+              <li key={p.id} className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <a
+                    href={p.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 hover:underline"
+                    style={{ color: "var(--ikf-brand)" }}
+                  >
+                    {p.name}{p.city ? ` · ${p.city}` : ""} <ExternalLink size={11} />
+                  </a>
+                  {p.description && (
+                    <span className="ml-2 text-[12px]" style={{ color: "var(--ikf-text-dim)" }}>
+                      — {p.description}
+                    </span>
+                  )}
+                </div>
+                {p.chargeInr != null && (
+                  <span className="shrink-0 text-[12px] font-bold tabular-nums" style={{ color: "var(--ikf-accent)" }}>
+                    ₹{p.chargeInr.toLocaleString("en-IN")}
                   </span>
                 )}
               </li>

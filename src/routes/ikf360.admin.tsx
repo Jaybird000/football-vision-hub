@@ -1,7 +1,7 @@
 import { createFileRoute, Link, Outlet, redirect, useLocation } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { Search, FileText, Settings, Database, Layers, Grid3x3 } from "lucide-react";
+import { Search, FileText, Settings, Database, Layers, Grid3x3, Download } from "lucide-react";
 import { currentUser } from "@/server/auth";
 import { listAdminProfiles, type AdminProfileRow } from "@/server/admin";
 
@@ -33,11 +33,36 @@ function AdminList() {
 
   const [q, setQ] = useState("");
   const [readiness, setReadiness] = useState<"all" | "high" | "medium" | "forming">("all");
+  const [stage, setStage] = useState<"all" | "1" | "2" | "3">("all");
+  const [city, setCity] = useState("all");
+
+  const cities = Array.from(
+    new Set(profiles.map(p => p.city).filter((c): c is string => !!c && c.trim() !== ""))
+  ).sort((a, b) => a.localeCompare(b));
 
   const filtered = profiles.filter((p: AdminProfileRow) =>
     (readiness === "all" || p.readiness === readiness) &&
+    (stage === "all" || p.stage === Number(stage)) &&
+    (city === "all" || p.city === city) &&
     (q === "" || (p.childName + " " + p.parentName + " " + p.parentEmail).toLowerCase().includes(q.toLowerCase()))
   );
+
+  function exportCsv() {
+    const esc = (v: string | number) => `"${String(v).replace(/"/g, '""')}"`;
+    const header = ["Child", "Parent", "Email", "City", "Readiness", "Stage", "Uploads required", "Uploads total", "Created"];
+    const lines = [header.map(esc).join(",")];
+    for (const p of filtered) {
+      lines.push([p.childName, p.parentName, p.parentEmail, p.city ?? "", p.readiness, p.stage, p.uploadsRequired, p.uploadsTotal, new Date(p.createdAt).toLocaleDateString()].map(esc).join(","));
+    }
+    // BOM + CRLF so Excel opens UTF-8 correctly.
+    const blob = new Blob(["﻿" + lines.join("\r\n")], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `ikf-profiles-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
 
   const stats = {
     total: profiles.length,
@@ -83,7 +108,7 @@ function AdminList() {
         </div>
         <select
           className="ikf-input"
-          style={{ width: "auto", minWidth: 180 }}
+          style={{ width: "auto", minWidth: 160 }}
           value={readiness}
           onChange={e => setReadiness(e.target.value as typeof readiness)}
         >
@@ -92,6 +117,34 @@ function AdminList() {
           <option value="medium">Medium</option>
           <option value="forming">Forming</option>
         </select>
+        <select
+          className="ikf-input"
+          style={{ width: "auto", minWidth: 140 }}
+          value={stage}
+          onChange={e => setStage(e.target.value as typeof stage)}
+        >
+          <option value="all">All stages</option>
+          <option value="1">Stage 1</option>
+          <option value="2">Stage 2</option>
+          <option value="3">Stage 3</option>
+        </select>
+        <select
+          className="ikf-input"
+          style={{ width: "auto", minWidth: 150 }}
+          value={city}
+          onChange={e => setCity(e.target.value)}
+        >
+          <option value="all">All cities</option>
+          {cities.map(c => <option key={c} value={c}>{c}</option>)}
+        </select>
+        <button
+          onClick={exportCsv}
+          disabled={filtered.length === 0}
+          className="ikf-btn-ghost inline-flex items-center gap-2 text-[13px] disabled:opacity-50"
+          title="Export the filtered list as CSV"
+        >
+          <Download size={14} /> Export CSV
+        </button>
       </section>
 
       <section className="ikf-card overflow-hidden">
@@ -122,7 +175,9 @@ function AdminList() {
                   </td>
                   <td className="p-4">
                     <div>{p.parentName}</div>
-                    <div className="text-[11px]" style={{ color: "var(--ikf-text-dim)" }}>{p.parentEmail}</div>
+                    <div className="text-[11px]" style={{ color: "var(--ikf-text-dim)" }}>
+                      {p.parentEmail}{p.city ? ` · ${p.city}` : ""}
+                    </div>
                   </td>
                   <td className="p-4"><ReadinessBadge r={p.readiness} /></td>
                   <td className="p-4">Stage {p.stage}</td>

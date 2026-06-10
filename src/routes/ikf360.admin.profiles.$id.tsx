@@ -1,10 +1,22 @@
 import { createFileRoute, redirect, Link, useRouter } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, useMemo, useEffect } from "react";
-import { ArrowLeft, Loader2, Check, FileText, ExternalLink, CheckCircle2, XCircle, Clock, Eye, X } from "lucide-react";
+import { ArrowLeft, Loader2, Check, FileText, ExternalLink, CheckCircle2, XCircle, Clock, Eye, X, LifeBuoy } from "lucide-react";
 import { currentUser } from "@/server/auth";
 import { listAxes, getAdminProfileDetail, getProfileCategorisation, scoreProfile } from "@/server/stage3";
 import { setUploadStatus } from "@/server/stage2";
+import { INTENT_QUESTIONS } from "@/lib/ikf360-data";
+
+// Reconstruct the parent's chosen answer text from the stored score. The SOP
+// stores only the option score (1-4), not which option — so for the few
+// questions where two options share a score, both candidates are shown.
+function sopAnswerLabel(questionId: string, score: number | undefined): { text: string; ambiguous: boolean } {
+  const q = INTENT_QUESTIONS.find(qq => qq.id === questionId);
+  if (!q || score === undefined) return { text: "—", ambiguous: false };
+  const matches = q.options.filter(o => o.score === score).map(o => o.label);
+  if (matches.length === 0) return { text: `Score ${score}`, ambiguous: false };
+  return { text: matches.join("  /  "), ambiguous: matches.length > 1 };
+}
 
 export const Route = createFileRoute("/ikf360/admin/profiles/$id")({
   beforeLoad: async () => {
@@ -100,6 +112,64 @@ function ProfileScorePage() {
           {profile.parentName} · {profile.parentEmail} · readiness <span className="font-semibold">{profile.readiness}</span> · stage <span className="font-semibold">{profile.stage}</span>
         </p>
       </div>
+
+      {profile.assistanceRequests.length > 0 && (
+        <section className="ikf-card p-5 mb-6" style={{ borderColor: "var(--ikf-brand)" }}>
+          <div className="flex items-center gap-2 mb-3">
+            <LifeBuoy size={16} style={{ color: "var(--ikf-brand)" }} />
+            <h2 className="text-[15px] font-bold">Mentor help requested</h2>
+          </div>
+          <ul className="space-y-3">
+            {profile.assistanceRequests.map(a => (
+              <li key={a.id} className="rounded-lg p-3 text-[13px]" style={{ background: "var(--ikf-surface-2)" }}>
+                <div className="flex items-center justify-between gap-3 flex-wrap">
+                  <span className="text-[11px] uppercase tracking-[0.12em]" style={{ color: a.status === "open" ? "var(--ikf-brand)" : "var(--ikf-text-dim)" }}>
+                    {a.status === "open" ? "Open · awaiting response" : a.status} · {new Date(a.createdAt).toLocaleDateString()}
+                  </span>
+                </div>
+                {a.missingKeys.length > 0 && (
+                  <div className="mt-2 text-[12px]" style={{ color: "var(--ikf-text-dim)" }}>
+                    Missing at request: {a.missingKeys.join(", ")}
+                  </div>
+                )}
+                {a.message && <p className="mt-2">{a.message}</p>}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      <section className="ikf-card p-6 mb-6">
+        <h2 className="text-[16px] font-bold mb-4">Parent SOP responses</h2>
+        <dl className="grid sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-3 mb-6">
+          <SopDetail label="Parent" value={profile.parentName} />
+          <SopDetail label="Phone" value={profile.parentPhone || "—"} />
+          <SopDetail label="City" value={profile.city || "—"} />
+          <SopDetail label="Child" value={`${profile.childName} · ${profile.childAge} · ${profile.childGender}`} />
+          <SopDetail label="Submitted" value={new Date(profile.submittedAt).toLocaleDateString()} />
+        </dl>
+        <ol className="space-y-3">
+          {INTENT_QUESTIONS.map((q, i) => {
+            // Prefer the exact option text (0013); fall back to score-based
+            // reconstruction for profiles submitted before that migration.
+            const exact = profile.answerChoices?.[q.id];
+            const ans = exact ? { text: exact, ambiguous: false } : sopAnswerLabel(q.id, profile.answers[q.id]);
+            return (
+              <li key={q.id} className="rounded-lg p-3" style={{ background: "var(--ikf-surface-2)" }}>
+                <div className="text-[12px] mb-1" style={{ color: "var(--ikf-text-dim)" }}>{i + 1}. {q.q}</div>
+                <div className="text-[14px] font-medium">
+                  {ans.text}
+                  {ans.ambiguous && (
+                    <span className="ml-2 text-[10px] uppercase tracking-[0.12em]" style={{ color: "var(--ikf-text-dim)" }} title="Submitted before exact-answer capture; the SOP stored only the score, and two options share it.">
+                      (either)
+                    </span>
+                  )}
+                </div>
+              </li>
+            );
+          })}
+        </ol>
+      </section>
 
       <div className="grid lg:grid-cols-[1.2fr_1fr] gap-6">
         {/* LEFT — uploaded reports */}
@@ -336,6 +406,15 @@ function PreviewModal({
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+function SopDetail({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <dt className="text-[10px] font-semibold uppercase tracking-[0.12em] mb-0.5" style={{ color: "var(--ikf-text-dim)" }}>{label}</dt>
+      <dd className="text-[13px]">{value}</dd>
     </div>
   );
 }

@@ -15,9 +15,13 @@ const SubmitIntentInput = z.object({
   childName: z.string().trim().min(1).max(120),
   childAge: z.number().int().min(5).max(25),
   childGender: z.enum(["Boy", "Girl", "Other"]),
+  city: z.string().trim().max(120).optional().default(""),
   answers: z.record(z.string(), z.number().int().min(1).max(4))
     .refine(a => Object.keys(a).length === INTENT_QUESTIONS.length, "All questions must be answered")
     .refine(a => Object.keys(a).every(k => validQuestionIds.has(k)), "Unknown question id"),
+  // Exact option text the parent chose per question (qid → label). Lets admins
+  // see the real answer, not just the score. Optional for back-compat.
+  answerChoices: z.record(z.string(), z.string().max(300)).optional().default({}),
 });
 
 export type SubmitIntentResult = {
@@ -104,6 +108,19 @@ export const submitIntent = createServerFn({ method: "POST" })
     `;
 
     const profileId = rows[0].id;
+
+    // City (0012) and exact answer choices (0013) live in columns added by later
+    // migrations. Write them best-effort so SOP submit keeps working before those
+    // migrations are applied (the data is simply not stored until then).
+    const cityVal = data.city?.trim() || null;
+    if (cityVal) {
+      await sql`UPDATE parent_child_profiles SET city = ${cityVal} WHERE id = ${profileId}`
+        .catch(e => console.warn("[intent] city write skipped (migration 0012 applied?):", e instanceof Error ? e.message : e));
+    }
+    if (data.answerChoices && Object.keys(data.answerChoices).length > 0) {
+      await sql`UPDATE parent_child_profiles SET answer_choices = ${sql.json(data.answerChoices)} WHERE id = ${profileId}`
+        .catch(e => console.warn("[intent] answer_choices write skipped (migration 0013 applied?):", e instanceof Error ? e.message : e));
+    }
 
     if (userId) {
       await sql`

@@ -5,12 +5,15 @@ import { ArrowRight, Loader2 } from "lucide-react";
 import { login } from "@/server/auth";
 
 export const Route = createFileRoute("/login")({
+  validateSearch: (search: Record<string, unknown>): { next?: string } =>
+    typeof search.next === "string" ? { next: search.next } : {},
   component: LoginPage,
 });
 
 function LoginPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { next } = Route.useSearch();
   const [form, setForm] = useState({ email: "", password: "" });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -31,10 +34,14 @@ function LoginPage() {
       });
       queryClient.setQueryData(["currentUser"], result);
       router.invalidate();
-      const destination = (result.role === "admin" || result.role === "advisor")
-        ? "/ikf360/admin"
-        : "/ikf360";
-      router.navigate({ to: destination });
+      // Admins always land in the console. Parents default to the overview
+      // (explore-first); only an explicit `next` to the SOP is honored — this
+      // whitelist keeps it type-safe and immune to open-redirects.
+      if (result.role === "admin" || result.role === "advisor") {
+        router.navigate({ to: "/ikf360/admin" });
+      } else {
+        router.navigate({ to: next === "/ikf360/intent" ? "/ikf360/intent" : "/ikf360" });
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not sign you in.");
       setSubmitting(false);

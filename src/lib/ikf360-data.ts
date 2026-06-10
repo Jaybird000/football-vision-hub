@@ -277,6 +277,36 @@ export const READINESS_META: Record<Readiness, { label: string; color: string; b
   forming: { label: "Forming",           color: "#EAF0F7", bg: "#243049" },
 };
 
+// Parent-facing explanation of the readiness signal (BRD Module D). Kept separate
+// from READINESS_META so the admin/advisor chip stays unchanged. The goal is to
+// leave the parent informed and reassured, but curious enough to continue.
+export const READINESS_PARENT_COPY: Record<Readiness, { headline: string; meaning: string; next: string }> = {
+  high: {
+    headline: "A strong, ready start.",
+    meaning:
+      "Your answers show many of the things we look for early on — steady play, real match experience, and a supportive environment at home and school. Your child has a solid foundation to build on.",
+    next: "You can move into Stage 2 whenever you're ready. Your advisor will help you decide what to focus on first.",
+  },
+  medium: {
+    headline: "A promising start, with room to grow.",
+    meaning:
+      "There are several positive signs here. A few areas — like experience, routine, or the support around your child — may need a little more attention before the next step. That's completely normal, and it's exactly what we're here to help with.",
+    next: "Your advisor will talk a few of these areas through with you, then guide you into Stage 2.",
+  },
+  forming: {
+    headline: "An early, welcome start.",
+    meaning:
+      "Your child's football journey is still taking shape — and that's a good place to begin. Starting early means we can help point things in the right direction from the very start, with no pressure at all.",
+    next: "Your advisor will begin with a short, friendly orientation to help you understand what's ahead.",
+  },
+};
+
+export const STAGE1_EXPLAINER = {
+  whatIsStage1:
+    "Stage 1 is a quick first conversation. Your answers give your IKF advisor an early sense of where your child stands today — in football, at school, and at home. It isn't a test, and there are no wrong answers.",
+  curiosity: "This is only the starting picture. As you complete Stage 2, it becomes far more detailed and personal to your child.",
+} as const;
+
 export const STAGE_META: Record<Stage, { label: string; desc: string }> = {
   1: { label: "Stage 1 — Intent",      desc: "Conversation started" },
   2: { label: "Stage 2 — Assessment",  desc: "Evidence being gathered" },

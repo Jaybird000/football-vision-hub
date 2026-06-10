@@ -32,6 +32,7 @@ type DraftProvider = {
   description: string;
   url: string;
   city: string;
+  chargeInr: string; // free-text in the form; parsed to number on save
   isActive: boolean;
 };
 
@@ -41,6 +42,7 @@ const emptyDraft = (assessmentKey: string): DraftProvider => ({
   description: "",
   url: "",
   city: "",
+  chargeInr: "",
   isActive: true,
 });
 
@@ -57,7 +59,12 @@ function ProvidersAdmin() {
   const [editing, setEditing] = useState<DraftProvider | null>(null);
 
   const save = useMutation({
-    mutationFn: (p: DraftProvider) => upsertProvider({ data: p }),
+    mutationFn: (p: DraftProvider) => {
+      const trimmed = p.chargeInr.trim();
+      const n = trimmed === "" ? null : Math.round(Number(trimmed));
+      const chargeInr = n != null && Number.isFinite(n) && n >= 0 ? n : null;
+      return upsertProvider({ data: { ...p, chargeInr } });
+    },
     onSuccess: () => {
       setEditing(null);
       qc.invalidateQueries({ queryKey: ["admin", "providers"] });
@@ -125,6 +132,7 @@ function ProvidersAdmin() {
                       description: p.description,
                       url: p.url,
                       city: p.city ?? "",
+                      chargeInr: p.chargeInr != null ? String(p.chargeInr) : "",
                       isActive: p.isActive,
                     })}
                     onDelete={() => {
@@ -170,6 +178,11 @@ function ProviderRow({ p, onEdit, onDelete, deleting }: {
         <div className="flex items-center gap-2 flex-wrap">
           <span className="font-semibold">{p.name}</span>
           {p.city && <span className="text-[12px]" style={{ color: "var(--ikf-text-dim)" }}>· {p.city}</span>}
+          {p.chargeInr != null && (
+            <span className="text-[11px] font-bold px-2 py-0.5 rounded-full" style={{ background: "rgba(245,197,24,0.14)", color: "#F5C518" }}>
+              ₹{p.chargeInr.toLocaleString("en-IN")}
+            </span>
+          )}
           {!p.isActive && (
             <span className="text-[10px] uppercase tracking-[0.14em] px-2 py-0.5 rounded-full font-bold" style={{ background: "rgba(160,160,160,0.15)", color: "#9ca3af" }}>
               Hidden
@@ -252,6 +265,19 @@ function EditModal({
           <Field label="City (optional)">
             <input className="ikf-input" value={draft.city} onChange={e => onChange({ city: e.target.value })} placeholder="Bengaluru" />
           </Field>
+          <Field label="Report charges ₹ (optional)">
+            <input
+              className="ikf-input"
+              type="number"
+              min={0}
+              inputMode="numeric"
+              value={draft.chargeInr}
+              onChange={e => onChange({ chargeInr: e.target.value })}
+              placeholder="e.g. 2500"
+            />
+          </Field>
+        </div>
+        <div>
           <Field label="Visible to parents">
             <button
               onClick={() => onChange({ isActive: !draft.isActive })}

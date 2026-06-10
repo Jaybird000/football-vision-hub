@@ -268,3 +268,80 @@ export async function sendParentStage2Nudge(args: {
   `);
   await sendEmail({ to: args.to, subject, html, text });
 }
+
+// ---------- Stage 2: advisor "mentor help requested" (Module E) ----------
+
+export async function sendAdvisorAssistanceRequested(args: {
+  profileId: string;
+  parentName: string;
+  parentEmail: string;
+  parentPhone: string | null;
+  childName: string;
+  missingTitles: string[];
+  message: string;
+}): Promise<void> {
+  if (!ADVISOR_EMAIL) {
+    console.warn("[email] ADVISOR_EMAIL not set; skipping advisor assistance-requested notification.");
+    return;
+  }
+  const profileUrl = `${APP_BASE_URL}/ikf360/admin/profiles/${args.profileId}`;
+  const subject = `Mentor help requested (48h) — ${args.childName}`;
+  const missingList = args.missingTitles.length > 0 ? args.missingTitles : ["(none specified)"];
+  const phoneLine = args.parentPhone ? `\nPhone:    ${args.parentPhone}` : "";
+  const text = [
+    `${args.parentName} has asked for help gathering documents for ${args.childName}. Please respond within 48 hours.`,
+    ``,
+    `Parent:   ${args.parentName}`,
+    `Email:    ${args.parentEmail}${phoneLine}`,
+    ``,
+    `Documents they're missing:`,
+    ...missingList.map(t => `  • ${t}`),
+    ``,
+    args.message ? `Their message:\n"${args.message}"` : `(No message left.)`,
+    ``,
+    `Open profile: ${profileUrl}`,
+  ].join("\n");
+  const html = shell(`
+    <p style="margin:0 0 12px;font-weight:600;">Mentor help requested — respond within 48 hours</p>
+    <p style="margin:0 0 16px;"><strong>${args.parentName}</strong> has asked for help gathering documents for <strong>${args.childName}</strong>.</p>
+    <table cellpadding="6" cellspacing="0" border="0" style="font-size:14px;margin:0 0 16px;">
+      <tr><td style="color:#6b7280;">Parent</td><td>${args.parentName}</td></tr>
+      <tr><td style="color:#6b7280;">Email</td><td><a href="mailto:${args.parentEmail}" style="color:#0B1220;">${args.parentEmail}</a></td></tr>
+      ${args.parentPhone ? `<tr><td style="color:#6b7280;">Phone</td><td>${args.parentPhone}</td></tr>` : ""}
+    </table>
+    <p style="margin:0 0 6px;font-weight:600;">Documents they're missing</p>
+    <ul style="margin:0 0 16px;padding-left:20px;">
+      ${missingList.map(t => `<li style="margin-bottom:4px;">${t}</li>`).join("")}
+    </ul>
+    ${args.message ? `<p style="margin:0 0 6px;font-weight:600;">Their message</p><p style="margin:0 0 16px;padding:12px;background:#f5f6f7;border-radius:6px;">${args.message}</p>` : `<p style="margin:0 0 16px;color:#6b7280;">No message left.</p>`}
+    <p style="margin:0;"><a href="${profileUrl}" style="display:inline-block;padding:10px 16px;background:#dfff5e;color:#0B1220;text-decoration:none;border-radius:6px;font-weight:600;font-size:13px;">Open profile</a></p>
+  `);
+  await sendEmail({ to: ADVISOR_EMAIL, subject, html, text });
+}
+
+// ---------- Stage 2: parent assistance acknowledgement (Module E) ----------
+
+export async function sendParentAssistanceAck(args: {
+  to: string;
+  parentName: string;
+  childName: string;
+}): Promise<void> {
+  const fn = firstName(args.parentName);
+  const subject = `We've got your request — your IKF mentor will be in touch`;
+  const text = [
+    `Hi ${fn},`,
+    ``,
+    `Thank you for reaching out. We understand you don't have all of ${args.childName}'s documents ready yet — that's completely fine, and you don't need to worry.`,
+    ``,
+    `Your IKF mentor has been notified and will get back to you within 48 hours to guide you on the next steps. There's nothing more you need to do right now.`,
+    ``,
+    `— The IKF Pathway 360 team`,
+  ].join("\n");
+  const html = shell(`
+    <p style="margin:0 0 12px;">Hi ${fn},</p>
+    <p style="margin:0 0 16px;">Thank you for reaching out. We understand you don't have all of <strong>${args.childName}</strong>'s documents ready yet — that's completely fine, and you don't need to worry.</p>
+    <p style="margin:0 0 16px;">Your IKF mentor has been notified and will get back to you <strong>within 48 hours</strong> to guide you on the next steps. There's nothing more you need to do right now.</p>
+    <p style="margin:0;">— The IKF Pathway 360 team</p>
+  `);
+  await sendEmail({ to: args.to, subject, html, text });
+}

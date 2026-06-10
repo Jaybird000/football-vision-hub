@@ -5,12 +5,18 @@ import { ArrowRight, Loader2 } from "lucide-react";
 import { signup } from "@/server/auth";
 
 export const Route = createFileRoute("/signup")({
+  validateSearch: (search: Record<string, unknown>): { next?: string } =>
+    typeof search.next === "string" ? { next: search.next } : {},
   component: SignupPage,
 });
 
 function SignupPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { next } = Route.useSearch();
+  // Only an explicit "Fill the Parent SOP" CTA carries this; otherwise new
+  // families land on the overview to explore first (BRD Module B).
+  const toSOP = next === "/ikf360/intent";
   const [form, setForm] = useState({ fullName: "", email: "", password: "" });
   const [consent, setConsent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -38,7 +44,7 @@ function SignupPage() {
       });
       queryClient.setQueryData(["currentUser"], result);
       router.invalidate();
-      router.navigate({ to: "/ikf360/intent" });
+      router.navigate({ to: toSOP ? "/ikf360/intent" : "/ikf360" });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not create your account.");
       setSubmitting(false);
@@ -51,7 +57,7 @@ function SignupPage() {
         <div className="mb-10">
           <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.16em] mb-2" style={{ color: "var(--ikf-text-dim)" }}>
             <span>Account · Create</span>
-            <span>Step 1 of 2 — Your details</span>
+            <span>{toSOP ? "Step 1 of 2 — Your details" : "Your details"}</span>
           </div>
           <div className="h-1 rounded-full overflow-hidden" style={{ background: "var(--ikf-surface-2)" }}>
             <div className="h-full" style={{ width: "50%", background: "var(--ikf-brand)" }} />
@@ -62,7 +68,9 @@ function SignupPage() {
           <header>
             <h1 className="text-[34px] leading-tight">Create your account.</h1>
             <p className="mt-3 text-[15px] leading-relaxed" style={{ color: "var(--ikf-text-dim)" }}>
-              One account for your family. Your responses, your child's profile, your IKF advisor — all in one place. Next step after this is the Parent SOP.
+              {toSOP
+                ? "One account for your family. Your responses, your child's profile, your IKF advisor — all in one place. Next step after this is the Parent SOP."
+                : "One account for your family. Your responses, your child's profile, your IKF advisor — all in one place. After this you can explore the platform and start the Parent SOP whenever you're ready."}
             </p>
           </header>
 
@@ -145,7 +153,7 @@ function SignupPage() {
                 </>
               ) : (
                 <>
-                  Continue to Parent SOP <ArrowRight size={16} />
+                  {toSOP ? "Continue to Parent SOP" : "Create account"} <ArrowRight size={16} />
                 </>
               )}
             </button>

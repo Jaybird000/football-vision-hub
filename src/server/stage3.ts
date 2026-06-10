@@ -429,17 +429,30 @@ export type AdminProfileDetail = {
   childName: string;
   parentName: string;
   parentEmail: string;
+  parentPhone: string | null;
+  childAge: number;
+  childGender: string;
+  city: string | null;
   readiness: "high" | "medium" | "forming";
   stage: number;
+  submittedAt: string;
+  // Raw Parent SOP answers: question id → chosen option score (1-4). The admin
+  // UI prefers `answerChoices` (exact text) and falls back to reconstructing from
+  // these scores for profiles submitted before migration 0013.
+  answers: Record<string, number>;
+  // Exact option text chosen per question (qid → label), when available (0013).
+  answerChoices: Record<string, string>;
   uploads: { id: string; assessmentKey: string; assessmentTitle: string; fileName: string; mimeType: string; status: string; uploadedAt: string }[];
+  // Mentor-help requests for this profile (Module E). Empty if none / table absent.
+  assistanceRequests: { id: string; message: string; missingKeys: string[]; status: string; createdAt: string }[];
 };
 
 export const getAdminProfileDetail = createServerFn({ method: "GET" })
   .inputValidator((d: unknown) => GetProfileCatInput.parse(d))
   .handler(async ({ data }): Promise<AdminProfileDetail | null> => {
     await requireAdmin();
-    const prows = await sql<{ id: string; child_name: string; parent_name: string; parent_email: string; readiness: string; stage: number }[]>`
-      SELECT id, child_name, parent_name, parent_email, readiness, stage
+    const prows = await sql<{ id: string; child_name: string; parent_name: string; parent_email: string; parent_phone: string | null; child_age: number; child_gender: string; readiness: string; stage: number; answers: Record<string, number>; created_at: Date }[]>`
+      SELECT id, child_name, parent_name, parent_email, parent_phone, child_age, child_gender, readiness, stage, answers, created_at
       FROM parent_child_profiles WHERE id = ${data.profileId} LIMIT 1
     `;
     if (prows.length === 0) return null;
@@ -451,13 +464,46 @@ export const getAdminProfileDetail = createServerFn({ method: "GET" })
       WHERE u.profile_id = ${data.profileId}
       ORDER BY u.uploaded_at DESC
     `;
+    // Mentor-help requests (Module E). Guarded so the page still loads if
+    // migration 0010 hasn't been applied yet.
+    const arows = await sql<{ id: string; message: string; missing_keys: string[]; status: string; created_at: Date }[]>`
+      SELECT id, message, missing_keys, status, created_at
+      FROM mentor_assistance_requests
+      WHERE profile_id = ${data.profileId}
+      ORDER BY created_at DESC
+    `.catch((e) => {
+      console.warn("[admin] mentor_assistance_requests read failed (migration 0010 applied?):", e instanceof Error ? e.message : e);
+      return [] as { id: string; message: string; missing_keys: string[]; status: string; created_at: Date }[];
+    });
+    // city (0012) + answer_choices (0013) live in later-migration columns; read
+    // each guarded so the page loads before those migrations are applied.
+    const cityRows = await sql<{ city: string | null }[]>`
+      SELECT city FROM parent_child_profiles WHERE id = ${data.profileId} LIMIT 1
+    `.catch(() => [] as { city: string | null }[]);
+    const choiceRows = await sql<{ answer_choices: Record<string, string> | null }[]>`
+      SELECT answer_choices FROM parent_child_profiles WHERE id = ${data.profileId} LIMIT 1
+    `.catch(() => [] as { answer_choices: Record<string, string> | null }[]);
     return {
       id: p.id,
       childName: p.child_name,
       parentName: p.parent_name,
       parentEmail: p.parent_email,
+      parentPhone: p.parent_phone,
+      childAge: p.child_age,
+      childGender: p.child_gender,
+      city: cityRows[0]?.city ?? null,
       readiness: p.readiness as "high" | "medium" | "forming",
       stage: p.stage,
+      submittedAt: p.created_at.toISOString(),
+      answers: p.answers ?? {},
+      answerChoices: choiceRows[0]?.answer_choices ?? {},
+      assistanceRequests: arows.map(a => ({
+        id: a.id,
+        message: a.message,
+        missingKeys: Array.isArray(a.missing_keys) ? a.missing_keys : [],
+        status: a.status,
+        createdAt: a.created_at.toISOString(),
+      })),
       uploads: urows.map(u => ({
         id: u.id,
         assessmentKey: u.assessment_key,

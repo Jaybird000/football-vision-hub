@@ -1,4 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { ArrowRight } from "lucide-react";
 import img from "@/assets/persona-parent.jpg";
 import { PageHero, Section } from "@/components/site/PageHero";
 
@@ -24,6 +25,18 @@ function Parents() {
         sub="Sending a child into competitive sport is a leap of faith. IKF makes it a structured, safe, and education-first journey — built for parents who care."
         image={img}
         quote={{ text: "We were terrified the day she left for camp. A year on, she's stronger, sharper at school, and chasing something real.", author: "Sunita Devi", role: "Mother of an IKF scholar, Patna" }} />
+      <Section className="!pb-0">
+        <div className="bg-pitch-green/10 border border-neon-strike/30 p-8 md:p-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="max-w-2xl">
+            <span className="text-neon-strike font-bold text-xs uppercase tracking-[0.3em]">IKF Pathway 360</span>
+            <h2 className="font-display text-3xl md:text-4xl uppercase mt-3">New here? Start with our parent guide.</h2>
+            <p className="mt-3 text-chalk/70 leading-relaxed">Understand exactly what IKF Pathway 360 is, the journey your child goes through, and what you can expect — before you sign up.</p>
+          </div>
+          <Link to="/parents/pathway" className="inline-flex items-center justify-center gap-2 bg-neon-strike text-pitch-black px-7 py-3.5 rounded-full font-bold text-sm uppercase tracking-wider hover:bg-chalk transition-colors shrink-0">
+            Read the guide <ArrowRight size={16} />
+          </Link>
+        </div>
+      </Section>
       <Section>
         <h2 className="font-display text-4xl md:text-5xl uppercase mb-10 md:mb-12">Questions, answered.</h2>
         <div className="space-y-1">

@@ -41,11 +41,14 @@
 }
 
 :root {
-  --pitch-black: oklch(0.12 0.005 150);
-  --pitch-green: oklch(0.22 0.05 145);
-  --neon-strike: oklch(0.93 0.27 125);
+  /* IKF re-skin (Module U): the brand accent shifts from neon-lime to IKF
+     bright blue. Kept as a LIGHT colour so the existing dark-text-on-brand
+     pattern stays legible everywhere. Confirm exact hex vs IKF brand kit. */
+  --pitch-black: oklch(0.13 0.02 250);   /* deep IKF navy (was near-black green) */
+  --pitch-green: oklch(0.24 0.06 245);   /* navy panel tint */
+  --neon-strike: #2BB8F0;                /* IKF bright blue (primary accent) */
   --chalk: oklch(0.98 0.005 240);
-  --ikf-yellow: oklch(0.88 0.18 95);
+  --ikf-yellow: oklch(0.88 0.18 95);     /* IKF yellow (secondary accent) */
 
   --background: var(--pitch-black);
   --foreground: var(--chalk);
@@ -115,7 +118,7 @@
 
 /* Custom cursor halo on key CTAs */
 .cta-cursor {
-  cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'><circle cx='14' cy='14' r='10' fill='none' stroke='%23dfff5e' stroke-width='2'/><circle cx='14' cy='14' r='2' fill='%23dfff5e'/></svg>") 14 14, pointer;
+  cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'><circle cx='14' cy='14' r='10' fill='none' stroke='%232bb8f0' stroke-width='2'/><circle cx='14' cy='14' r='2' fill='%232bb8f0'/></svg>") 14 14, pointer;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -136,8 +139,8 @@
   --ikf-border:    #243049;   /* hairlines */
   --ikf-text:      #EAF0F7;   /* primary text */
   --ikf-text-dim:  #8A98AE;   /* secondary text */
-  --ikf-brand:     #DFFF5E;   /* neon strike (primary CTA) */
-  --ikf-accent:    #F5C518;   /* IKF yellow */
+  --ikf-brand:     #2BB8F0;   /* IKF bright blue (primary CTA) — was neon lime */
+  --ikf-accent:    #F5C518;   /* IKF yellow (secondary accent) */
   --ikf-success:   #4ADE80;
   --ikf-warning:   #F59E0B;
   --ikf-danger:    #F87171;

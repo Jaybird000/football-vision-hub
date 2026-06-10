@@ -3,7 +3,7 @@ import { getCookie } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { sql } from "./db";
 import { storeFile, deleteFile, readStoredFile, ALLOWED_MIME, MAX_FILE_SIZE } from "./storage";
-import { sendAdvisorReadyToScore } from "./email";
+import { sendAdvisorReadyToScore, sendAdvisorAssistanceRequested, sendParentAssistanceAck } from "./email";
 import { logAudit } from "./audit";
 
 type Role = "parent" | "advisor" | "admin";
@@ -24,6 +24,7 @@ export type ProviderListing = {
   description: string;
   url: string;
   city: string | null;
+  chargeInr: number | null;
 };
 
 export type UploadRecord = {
@@ -45,6 +46,9 @@ export type Stage2State = {
   requiredKeys: string[];
   uploadedRequiredCount: number;
   minimumDatasetReached: boolean;
+  // Module E: timestamp of the parent's most recent *open* mentor-help request,
+  // or null if none is outstanding. Drives the "request sent" UI state.
+  assistanceRequestedAt: string | null;
 };
 
 async function getSessionUser(): Promise<{ id: string; role: Role; profileId: string | null } | null> {
@@ -62,18 +66,31 @@ async function getSessionUser(): Promise<{ id: string; role: Role; profileId: st
 }
 
 async function loadStage2(profileId: string | null, childName: string | null): Promise<Stage2State> {
-  const [templates, providers, uploads] = await Promise.all([
+  const [templates, providers, uploads, openAssist] = await Promise.all([
     sql<{ key: string; category: string; title: string; description: string; required: boolean; sort_order: number }[]>`
       SELECT key, category, title, description, required, sort_order
       FROM assessment_templates
       ORDER BY sort_order, key
     `,
-    sql<{ id: string; assessment_key: string; name: string; description: string; url: string; city: string | null }[]>`
-      SELECT id, assessment_key, name, description, url, city
-      FROM providers
-      WHERE is_active = true
-      ORDER BY assessment_key, sort_order, name
-    `,
+    (() => {
+      type PRow = { id: string; assessment_key: string; name: string; description: string; url: string; city: string | null; charge_inr: number | null };
+      // Tolerate migration 0011 (charge_inr) being unapplied — fall back to the
+      // pre-charge query so the upload portal keeps listing providers.
+      return sql<PRow[]>`
+        SELECT id, assessment_key, name, description, url, city, charge_inr
+        FROM providers
+        WHERE is_active = true
+        ORDER BY assessment_key, sort_order, name
+      `.catch(async (e) => {
+        console.warn("[stage2] providers.charge_inr read failed (migration 0011 applied?):", e instanceof Error ? e.message : e);
+        return sql<PRow[]>`
+          SELECT id, assessment_key, name, description, url, city
+          FROM providers
+          WHERE is_active = true
+          ORDER BY assessment_key, sort_order, name
+        `;
+      });
+    })(),
     profileId
       ? sql<{ id: string; assessment_key: string; file_name: string; file_size: number; mime_type: string; status: string; uploaded_at: Date }[]>`
           SELECT id, assessment_key, file_name, file_size, mime_type, status, uploaded_at
@@ -81,6 +98,19 @@ async function loadStage2(profileId: string | null, childName: string | null): P
           WHERE profile_id = ${profileId}
           ORDER BY uploaded_at DESC
         `
+      : Promise.resolve([]),
+    profileId
+      ? sql<{ created_at: Date }[]>`
+          SELECT created_at FROM mentor_assistance_requests
+          WHERE profile_id = ${profileId} AND status = 'open'
+          ORDER BY created_at DESC
+          LIMIT 1
+        `.catch((e) => {
+          // Resilient to migration 0010 not being applied yet — the upload page
+          // must keep working without the mentor_assistance_requests table.
+          console.warn("[stage2] mentor_assistance_requests read failed (migration 0010 applied?):", e instanceof Error ? e.message : e);
+          return [] as { created_at: Date }[];
+        })
       : Promise.resolve([]),
   ]);
 
@@ -106,6 +136,7 @@ async function loadStage2(profileId: string | null, childName: string | null): P
       description: p.description,
       url: p.url,
       city: p.city,
+      chargeInr: p.charge_inr != null ? Number(p.charge_inr) : null,
     })),
     uploads: uploads.map(u => ({
       id: u.id,
@@ -119,6 +150,7 @@ async function loadStage2(profileId: string | null, childName: string | null): P
     requiredKeys,
     uploadedRequiredCount,
     minimumDatasetReached: requiredKeys.length > 0 && uploadedRequiredCount === requiredKeys.length,
+    assistanceRequestedAt: openAssist[0]?.created_at.toISOString() ?? null,
   };
 }
 
@@ -308,4 +340,78 @@ export const deleteUpload = createServerFn({ method: "POST" })
       payload: { profileId: upload.profile_id },
     });
     return { ok: true };
+  });
+
+// ---------- Module E: parent requests IKF mentor help with documents ----------
+
+const AssistanceInput = z.object({ message: z.string().max(2000).optional() });
+
+export const requestMentorAssistance = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => AssistanceInput.parse(data ?? {}))
+  .handler(async ({ data }): Promise<{ ok: true; alreadyOpen: boolean; requestedAt: string }> => {
+    const user = await getSessionUser();
+    if (!user) throw new Error("You must be signed in to request assistance.");
+    if (!user.profileId) throw new Error("Please complete the Parent SOP (Stage 1) first.");
+
+    // One open request per profile — don't duplicate or re-notify the advisor.
+    const open = await sql<{ id: string; created_at: Date }[]>`
+      SELECT id, created_at FROM mentor_assistance_requests
+      WHERE profile_id = ${user.profileId} AND status = 'open'
+      ORDER BY created_at DESC
+      LIMIT 1
+    `;
+    if (open.length > 0) {
+      return { ok: true, alreadyOpen: true, requestedAt: open[0].created_at.toISOString() };
+    }
+
+    // Compute the missing required assessments server-side (authoritative).
+    const [reqRows, uploadedRows, profileRows] = await Promise.all([
+      sql<{ key: string; title: string }[]>`
+        SELECT key, title FROM assessment_templates WHERE required = true ORDER BY sort_order, key
+      `,
+      sql<{ assessment_key: string }[]>`
+        SELECT DISTINCT assessment_key FROM assessment_uploads WHERE profile_id = ${user.profileId}
+      `,
+      sql<{ parent_name: string; parent_email: string; parent_phone: string | null; child_name: string }[]>`
+        SELECT parent_name, parent_email, parent_phone, child_name
+        FROM parent_child_profiles WHERE id = ${user.profileId} LIMIT 1
+      `,
+    ]);
+    if (profileRows.length === 0) throw new Error("Profile not found.");
+
+    const uploaded = new Set(uploadedRows.map(u => u.assessment_key));
+    const missing = reqRows.filter(r => !uploaded.has(r.key));
+    const message = (data.message ?? "").trim();
+
+    const ins = await sql<{ id: string; created_at: Date }[]>`
+      INSERT INTO mentor_assistance_requests (profile_id, message, missing_keys)
+      VALUES (${user.profileId}, ${message}, ${sql.json(missing.map(m => m.key))})
+      RETURNING id, created_at
+    `;
+    const req = ins[0];
+
+    await logAudit({
+      action: "assistance.request",
+      entityType: "profile",
+      entityId: user.profileId,
+      payload: { requestId: req.id, missingKeys: missing.map(m => m.key), hasMessage: message.length > 0 },
+    });
+
+    const p = profileRows[0];
+    void sendAdvisorAssistanceRequested({
+      profileId: user.profileId,
+      parentName: p.parent_name,
+      parentEmail: p.parent_email,
+      parentPhone: p.parent_phone,
+      childName: p.child_name,
+      missingTitles: missing.map(m => m.title),
+      message,
+    }).catch(err => console.error("[stage2] advisor assistance send failed:", err));
+    void sendParentAssistanceAck({
+      to: p.parent_email,
+      parentName: p.parent_name,
+      childName: p.child_name,
+    }).catch(err => console.error("[stage2] parent assistance ack send failed:", err));
+
+    return { ok: true, alreadyOpen: false, requestedAt: req.created_at.toISOString() };
   });
