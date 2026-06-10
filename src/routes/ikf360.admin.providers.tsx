@@ -161,7 +161,7 @@ function ProvidersAdmin() {
 
       <div className="mt-6 text-[13px]" style={{ color: "var(--ikf-text-dim)" }}>
         Need to toggle which assessments are required?{" "}
-        <Link to="/ikf360/admin/templates" className="underline" style={{ color: "var(--ikf-brand)" }}>
+        <Link to="/ikf360/admin/templates" className="underline" style={{ color: "var(--ikf-brand-ink)" }}>
           Open templates
         </Link>
       </div>
@@ -197,7 +197,7 @@ function ProviderRow({ p, onEdit, onDelete, deleting }: {
           target="_blank"
           rel="noopener noreferrer"
           className="text-[12px] mt-1 inline-flex items-center gap-1 hover:underline"
-          style={{ color: "var(--ikf-brand)" }}
+          style={{ color: "var(--ikf-brand-ink)" }}
         >
           {p.url} <ExternalLink size={10} />
         </a>

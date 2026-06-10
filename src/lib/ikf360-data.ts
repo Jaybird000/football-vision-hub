@@ -272,9 +272,9 @@ export const PROFILES: ParentChildProfile[] = [
 ];
 
 export const READINESS_META: Record<Readiness, { label: string; color: string; bg: string }> = {
-  high:    { label: "High Readiness",    color: "#0B1220", bg: "#DFFF5E" },
-  medium:  { label: "Medium Readiness",  color: "#0B1220", bg: "#F5C518" },
-  forming: { label: "Forming",           color: "#EAF0F7", bg: "#243049" },
+  high:    { label: "High Readiness",    color: "#1E2A38", bg: "#F5C518" },
+  medium:  { label: "Medium Readiness",  color: "#1E2A38", bg: "#FBE7A1" },
+  forming: { label: "Forming",           color: "#1E2A38", bg: "#E7DEC4" },
 };
 
 // Parent-facing explanation of the readiness signal (BRD Module D). Kept separate
@@ -312,3 +312,255 @@ export const STAGE_META: Record<Stage, { label: string; desc: string }> = {
   2: { label: "Stage 2 — Assessment",  desc: "Evidence being gathered" },
   3: { label: "Stage 3 — Pathway",     desc: "Recommendation active" },
 };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Parent Journey SOP — the 4-section / 11-question Stage 1 entry experience that
+// replaces the legacy INTENT_QUESTIONS flow above. The legacy exports are kept
+// only so the admin view can still render profiles submitted before this SOP.
+//
+// Heterogeneous shapes (single-select, a yes/no with a conditional follow-up,
+// a max-2 multi-select with an "other" field, a "prefer not to say", and an
+// open text box) are stored verbatim as `SopResponses` JSON. Readiness is
+// derived from the scoreable subset (see `deriveReadiness`).
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type SopResponses = {
+  firstName: string;
+  age: number | null;
+  q2: string;                                  // years playing — option label
+  q3: string;                                  // where trains — option label
+  q4: { prior: "yes" | "no" | ""; detail: string };
+  q5: string;                                  // age-22 vision — option label
+  q6: { choices: string[]; other: string };    // biggest concern(s), up to two
+  q7: string;                                  // support duration — option label
+  q8: string;                                  // funding capacity — label or "Prefer not to say"
+  q9: string;                                  // relocation openness — option label
+  q10: string;                                 // career-path openness — option label
+  q11: string;                                 // open text — anything else
+};
+
+export const EMPTY_SOP_RESPONSES: SopResponses = {
+  firstName: "",
+  age: null,
+  q2: "",
+  q3: "",
+  q4: { prior: "", detail: "" },
+  q5: "",
+  q6: { choices: [], other: "" },
+  q7: "",
+  q8: "",
+  q9: "",
+  q10: "",
+  q11: "",
+};
+
+export type JourneyOption = { label: string; score?: number };
+
+export type JourneyQuestion = {
+  id: "q2" | "q3" | "q4" | "q5" | "q6" | "q7" | "q8" | "q9" | "q10";
+  section: 1 | 2 | 3 | 4;
+  kind: "single" | "yesno" | "multi";
+  q: string;
+  note?: string;
+  options: JourneyOption[];
+  max?: number;            // multi: maximum selectable (Q6 → 2)
+  otherLabel?: string;     // multi: option that reveals a free-text field (Q6 → "Something else")
+  followValue?: string;    // yesno: option that reveals the follow-up field (Q4 → "Yes")
+  followPrompt?: string;   // yesno: label for the follow-up field
+  preferNotToSay?: boolean; // single: append a visible, unscored "Prefer not to say" (Q8)
+};
+
+export const JOURNEY_QUESTIONS: JourneyQuestion[] = [
+  {
+    id: "q2", section: 1, kind: "single",
+    q: "How long has your child been playing football seriously — meaning regular training, not just casual kickabouts?",
+    options: [
+      { label: "Less than a year", score: 1 },
+      { label: "1–2 years", score: 2 },
+      { label: "3–4 years", score: 3 },
+      { label: "5 years or more", score: 4 },
+    ],
+  },
+  {
+    id: "q3", section: 1, kind: "single",
+    q: "Where does your child currently train?",
+    options: [
+      { label: "A registered football academy", score: 4 },
+      { label: "A school team or programme", score: 3 },
+      { label: "A local club or coaching setup", score: 2 },
+      { label: "Independently — no formal coaching yet", score: 1 },
+      { label: "Other", score: 2 },
+    ],
+  },
+  {
+    id: "q4", section: 1, kind: "yesno",
+    q: "Has your child participated in any IKF assessment camps before?",
+    options: [
+      { label: "Yes" },
+      { label: "No — this is our first contact with IKF" },
+    ],
+    followValue: "Yes",
+    followPrompt: "Which city and approximately when?",
+  },
+  {
+    id: "q5", section: 2, kind: "single",
+    q: "When you imagine your child at age 22, what does the best version of their football story look like?",
+    options: [
+      { label: "Playing professionally — for a club in India or abroad", score: 4 },
+      { label: "Earning a scholarship through football — for a college or university", score: 4 },
+      { label: "Continuing to play seriously at a good level — without necessarily going professional", score: 3 },
+      { label: "Using football as a foundation — for discipline, fitness, and life skills — regardless of where it leads", score: 3 },
+      { label: "Staying connected to football in some way — coaching, management, sports education — even if not as a player", score: 3 },
+      { label: "Honestly, I'm not sure yet — I need help understanding what's realistic", score: 2 },
+    ],
+  },
+  {
+    id: "q6", section: 2, kind: "multi", max: 2,
+    q: "What has been your biggest concern about your child's football journey so far?",
+    note: "Choose up to two.",
+    options: [
+      { label: "Whether my child has the talent to go far" },
+      { label: "Whether the investment — time and money — is realistic for our family" },
+      { label: "Whether football will affect my child's academics" },
+      { label: "Whether my child is getting the right coaching and guidance" },
+      { label: "Whether there is actually a future in Indian football worth investing in" },
+      { label: "Something else" },
+    ],
+    otherLabel: "Something else",
+  },
+  {
+    id: "q7", section: 2, kind: "single",
+    q: "How long are you prepared to continue actively supporting your child's football journey from today?",
+    options: [
+      { label: "We are at the beginning — at least 5–7 more years", score: 4 },
+      { label: "We are mid-journey — 3–5 more years", score: 3 },
+      { label: "We are approaching a decision point — 1–2 years", score: 2 },
+      { label: "We need to make a decision very soon — within the next year", score: 1 },
+    ],
+  },
+  {
+    id: "q8", section: 3, kind: "single", preferNotToSay: true,
+    q: "How would you describe your family's current capacity to fund your child's football development?",
+    options: [
+      { label: "We can sustain serious investment — residential academies, travel, specialised coaching — for the foreseeable future", score: 4 },
+      { label: "We can manage moderate investment — regular coaching and local tournaments — but significant costs would be difficult", score: 3 },
+      { label: "Our capacity is limited — we need pathways that are affordable or supported by scholarships and programmes", score: 2 },
+      { label: "Our situation is variable — it depends on the year and what comes up", score: 2 },
+    ],
+  },
+  {
+    id: "q9", section: 3, kind: "single",
+    q: "If the right opportunity required your child to train or study in a different city, would your family consider it?",
+    options: [
+      { label: "Yes — we are open to relocation if the opportunity is right" },
+      { label: "Possibly — it would depend on the specifics, cost, and timing" },
+      { label: "No — our child needs to stay in our city for now" },
+      { label: "Our child is already training away from home" },
+    ],
+  },
+  {
+    id: "q10", section: 3, kind: "single",
+    q: "If at some point it became clear that a professional playing career was unlikely, would you want guidance on other football-related career paths — coaching, sports management, analytics, officiating?",
+    options: [
+      { label: "Yes — absolutely. We want a future in football, not just as a player", score: 4 },
+      { label: "Possibly — we haven't thought that far ahead yet", score: 3 },
+      { label: "No — for now we are focused entirely on the playing pathway", score: 2 },
+    ],
+  },
+];
+
+export const PREFER_NOT_TO_SAY = "Prefer not to say";
+
+export type JourneySection = {
+  n: 1 | 2 | 3 | 4;
+  eyebrow: string;
+  header: string;
+  subtext: string;
+  close: string | null; // bridging copy shown before the next section (null on the last)
+};
+
+export const JOURNEY_SECTIONS: JourneySection[] = [
+  {
+    n: 1,
+    eyebrow: "About your child",
+    header: "Tell us about your child's football journey so far.",
+    subtext: "Just the basics — we build the detailed picture during the assessment.",
+    close: "Good. Now let's talk about what you're hoping this journey leads to.",
+  },
+  {
+    n: 2,
+    eyebrow: "What you're hoping for",
+    header: "Every parent has a different picture of what success looks like. Tell us yours.",
+    subtext: "Be honest — including with yourself. There is no wrong answer, and your response shapes everything that follows.",
+    close: "Thank you for being honest. That takes courage — and it makes everything we do next more useful.",
+  },
+  {
+    n: 3,
+    eyebrow: "Your family's situation",
+    header: "Football journeys don't happen in isolation. They happen within families — with real constraints and real possibilities.",
+    subtext: "This section asks some practical questions. Answer as honestly as you can. Nothing here is judged. Everything here is used to give you a recommendation that actually fits your reality.",
+    close: "Almost done. One last section — and it's entirely yours.",
+  },
+  {
+    n: 4,
+    eyebrow: "One last thing",
+    header: "Is there anything else we should know?",
+    subtext: "This is an open space. Use it however you want — a question you've been sitting with, something about your child's situation that doesn't fit a dropdown, or something you simply want IKF to know before we begin. Not mandatory — but the parents who use it tend to get the most precise picture.",
+    close: null,
+  },
+];
+
+export const JOURNEY_ENTRY = {
+  eyebrow: "Section 1 of 4",
+  headline: "Before we assess your child, we'd like to understand your family.",
+  body: [
+    "This takes about ten minutes.",
+    "There are no right answers here. The more honestly you respond, the more useful your child's profile will be. Everything you share stays within IKF Pathway 360 — it is never shared with clubs, academies, or anyone outside the platform without your permission.",
+    "We have four short sections. You can pause and return at any point — your answers save automatically.",
+  ],
+  button: "Let's begin",
+} as const;
+
+export const JOURNEY_SUBMISSION = {
+  headline: "Your child's profile has been started.",
+  intro: "Here is what happens next.",
+  body: [
+    "Our team will review what you've shared. Within five days, we will be in touch to schedule your child's assessment — which covers football skill and trajectory, academic profile, and temperament.",
+    "After the assessment, you will receive a clear recommendation. Not a report filled with jargon. A plain-language picture of where your child stands, what it means, and what your family should focus on in the next six months.",
+    "You have done something most football parents never do — you have asked for an honest picture. That is the right place to start.",
+  ],
+  button: "Go to your dashboard",
+} as const;
+
+export const JOURNEY_Q11_PLACEHOLDER =
+  "My son has been training for three years but recently lost motivation after being dropped from his school team. I want to understand whether this is normal or a warning sign…";
+
+// Look up the numeric score for a chosen option label within a question.
+function optionScore(q: JourneyQuestion, label: string): number | undefined {
+  return q.options.find(o => o.label === label)?.score;
+}
+
+// Map the SOP responses to the numeric per-question score map that backs the
+// legacy `answers` column and feeds readiness. Only the scoreable single-select
+// questions contribute (q2,q3,q5,q7,q8,q10); "Prefer not to say" on q8 simply
+// drops out (no score). Unanswered questions are skipped.
+export function journeyScoreMap(r: SopResponses): Record<string, number> {
+  const map: Record<string, number> = {};
+  const byId = (id: JourneyQuestion["id"]) => JOURNEY_QUESTIONS.find(q => q.id === id)!;
+  const single: [JourneyQuestion["id"], string][] = [
+    ["q2", r.q2], ["q3", r.q3], ["q5", r.q5], ["q7", r.q7], ["q8", r.q8], ["q10", r.q10],
+  ];
+  for (const [id, label] of single) {
+    if (!label || label === PREFER_NOT_TO_SAY) continue;
+    const s = optionScore(byId(id), label);
+    if (typeof s === "number") map[id] = s;
+  }
+  return map;
+}
+
+// Derive the high/medium/forming readiness signal from the new SOP, reusing the
+// same averaging + thresholds as the legacy scoreReadiness so everything
+// downstream (dashboard, admin, emails, Stage 3) keeps working unchanged.
+export function deriveReadiness(r: SopResponses): Readiness {
+  return scoreReadiness(journeyScoreMap(r));
+}

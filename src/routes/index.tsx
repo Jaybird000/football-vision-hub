@@ -1,17 +1,27 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Hero } from "@/components/site/Hero";
-import { Ticker } from "@/components/site/Ticker";
-import { Pathway } from "@/components/site/Pathway";
-import { Personas } from "@/components/site/Personas";
-import { StatsWall } from "@/components/site/StatsWall";
-import { NaariShakti } from "@/components/site/NaariShakti";
-import { Partners } from "@/components/site/Partners";
+import { Hero } from "@/components/home/Hero";
+import { Pain } from "@/components/home/Pain";
+import { Difference } from "@/components/home/Difference";
+import { HowItWorks } from "@/components/home/HowItWorks";
+import { Credibility } from "@/components/home/Credibility";
+import { WhoFor } from "@/components/home/WhoFor";
+import { CtaClose } from "@/components/home/CtaClose";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "India Khelo Football — From the Street to the Stadium" },
-      { name: "description", content: "India's grassroots football scouting platform. Open city-round trials — free for girls and underprivileged children — feeding zonal camps, national finals and I-League / ISL scouts." },
+      { title: "IKF Pathway 360 — An honest picture of your child's football journey" },
+      {
+        name: "description",
+        content:
+          "Most parents fund a nine-year football journey with no honest picture of where their child stands. IKF Pathway 360 assesses the whole family and gives you one clear, honest recommendation. Start free.",
+      },
+      { property: "og:title", content: "IKF Pathway 360 — An honest picture of your child's football journey" },
+      {
+        property: "og:description",
+        content:
+          "We assess the family, not just the player. One profile. One honest picture. One recommendation. Built from five years on the ground across 135 cities and villages.",
+      },
     ],
   }),
   component: Index,
@@ -19,14 +29,14 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   return (
-    <>
+    <main>
       <Hero />
-      <Ticker />
-      <Pathway />
-      <Personas />
-      <StatsWall />
-      <NaariShakti />
-      <Partners />
-    </>
+      <Pain />
+      <Difference />
+      <HowItWorks />
+      <Credibility />
+      <WhoFor />
+      <CtaClose />
+    </main>
   );
 }

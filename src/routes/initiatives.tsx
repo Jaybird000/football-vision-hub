@@ -23,7 +23,7 @@ function Initiatives() {
   return (
     <>
       <PageHero eyebrow="Initiatives"
-        title={<>Many <span className="text-neon-strike not-italic mx-[0.1em]">programs</span>. One pipeline.</>}
+        title={<>Many <span className="text-gold-ink not-italic mx-[0.1em]">programs</span>. One pipeline.</>}
         sub="Every IKF initiative feeds the same pathway — from a kid touching a ball for the first time, to a player signing a professional contract."
         image={img} />
       <Section>
@@ -31,10 +31,10 @@ function Initiatives() {
           {items.map(it => (
             <a key={it.t} href={it.href} target="_blank" rel="noopener noreferrer"
               className="group bg-pitch-green/10 border border-chalk/10 p-8 hover:border-neon-strike transition-colors flex flex-col">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-neon-strike">{it.tag}</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-gold-ink">{it.tag}</span>
               <h3 className="font-display text-3xl uppercase mt-3">{it.t}</h3>
-              <p className="mt-4 text-chalk/70 text-sm leading-relaxed flex-1">{it.b}</p>
-              <span className="mt-6 text-xs uppercase tracking-widest font-bold text-chalk/60 group-hover:text-neon-strike">Learn more →</span>
+              <p className="mt-4 text-chalk/86 text-sm leading-relaxed flex-1">{it.b}</p>
+              <span className="mt-6 text-xs uppercase tracking-widest font-bold text-chalk/82 group-hover:text-gold-ink">Learn more →</span>
             </a>
           ))}
         </div>

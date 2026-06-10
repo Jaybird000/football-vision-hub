@@ -154,20 +154,46 @@ async function loadStage2(profileId: string | null, childName: string | null): P
   };
 }
 
-export const getMyStage2 = createServerFn({ method: "GET" }).handler(async (): Promise<Stage2State> => {
-  const user = await getSessionUser();
-  if (!user) {
-    return loadStage2(null, null);
-  }
-  let childName: string | null = null;
-  if (user.profileId) {
-    const r = await sql<{ child_name: string }[]>`
-      SELECT child_name FROM parent_child_profiles WHERE id = ${user.profileId} LIMIT 1
-    `;
-    childName = r[0]?.child_name ?? null;
-  }
-  return loadStage2(user.profileId, childName);
-});
+// Resolve which child this Stage 2 read targets: the active child by default, or
+// an explicit (ownership-checked) child for multi-child dashboards. Guarded so it
+// works before migration 0015 adds parent_child_profiles.user_id.
+async function resolveOwnedProfileId(
+  user: { id: string; profileId: string | null },
+  requestedId?: string | null,
+): Promise<string | null> {
+  if (!requestedId) return user.profileId;
+  const owned = await sql<{ id: string }[]>`
+    SELECT id FROM parent_child_profiles
+    WHERE id = ${requestedId} AND (user_id = ${user.id} OR id = ${user.profileId})
+    LIMIT 1
+  `.catch(() => sql<{ id: string }[]>`
+    SELECT id FROM parent_child_profiles
+    WHERE id = ${requestedId} AND id = ${user.profileId}
+    LIMIT 1
+  `);
+  if (owned.length === 0) throw new Error("That profile is not yours.");
+  return requestedId;
+}
+
+const Stage2Input = z.object({ profileId: z.string().uuid().optional() });
+
+export const getMyStage2 = createServerFn({ method: "GET" })
+  .inputValidator((d: unknown) => Stage2Input.parse(d ?? {}))
+  .handler(async ({ data }): Promise<Stage2State> => {
+    const user = await getSessionUser();
+    if (!user) {
+      return loadStage2(null, null);
+    }
+    const profileId = await resolveOwnedProfileId(user, data.profileId);
+    let childName: string | null = null;
+    if (profileId) {
+      const r = await sql<{ child_name: string }[]>`
+        SELECT child_name FROM parent_child_profiles WHERE id = ${profileId} LIMIT 1
+      `;
+      childName = r[0]?.child_name ?? null;
+    }
+    return loadStage2(profileId, childName);
+  });
 
 export const uploadAssessment = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => {

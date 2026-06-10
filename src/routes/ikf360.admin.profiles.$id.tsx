@@ -5,7 +5,7 @@ import { ArrowLeft, Loader2, Check, FileText, ExternalLink, CheckCircle2, XCircl
 import { currentUser } from "@/server/auth";
 import { listAxes, getAdminProfileDetail, getProfileCategorisation, scoreProfile } from "@/server/stage3";
 import { setUploadStatus } from "@/server/stage2";
-import { INTENT_QUESTIONS } from "@/lib/ikf360-data";
+import { INTENT_QUESTIONS, JOURNEY_QUESTIONS, type SopResponses } from "@/lib/ikf360-data";
 
 // Reconstruct the parent's chosen answer text from the stored score. The SOP
 // stores only the option score (1-4), not which option — so for the few
@@ -93,7 +93,7 @@ function ProfileScorePage() {
     return (
       <div className="max-w-2xl mx-auto py-10 text-center" style={{ color: "var(--ikf-text-dim)" }}>
         Profile not found.{" "}
-        <Link to="/ikf360/admin" className="underline" style={{ color: "var(--ikf-brand)" }}>Back to admin</Link>
+        <Link to="/ikf360/admin" className="underline" style={{ color: "var(--ikf-brand-ink)" }}>Back to admin</Link>
       </div>
     );
   }
@@ -116,7 +116,7 @@ function ProfileScorePage() {
       {profile.assistanceRequests.length > 0 && (
         <section className="ikf-card p-5 mb-6" style={{ borderColor: "var(--ikf-brand)" }}>
           <div className="flex items-center gap-2 mb-3">
-            <LifeBuoy size={16} style={{ color: "var(--ikf-brand)" }} />
+            <LifeBuoy size={16} style={{ color: "var(--ikf-brand-ink)" }} />
             <h2 className="text-[15px] font-bold">Mentor help requested</h2>
           </div>
           <ul className="space-y-3">
@@ -145,30 +145,12 @@ function ProfileScorePage() {
           <SopDetail label="Parent" value={profile.parentName} />
           <SopDetail label="Phone" value={profile.parentPhone || "—"} />
           <SopDetail label="City" value={profile.city || "—"} />
-          <SopDetail label="Child" value={`${profile.childName} · ${profile.childAge} · ${profile.childGender}`} />
+          <SopDetail label="Child" value={`${profile.childName} · ${profile.childAge}${profile.childGender && profile.childGender !== "Not specified" ? ` · ${profile.childGender}` : ""}`} />
           <SopDetail label="Submitted" value={new Date(profile.submittedAt).toLocaleDateString()} />
         </dl>
-        <ol className="space-y-3">
-          {INTENT_QUESTIONS.map((q, i) => {
-            // Prefer the exact option text (0013); fall back to score-based
-            // reconstruction for profiles submitted before that migration.
-            const exact = profile.answerChoices?.[q.id];
-            const ans = exact ? { text: exact, ambiguous: false } : sopAnswerLabel(q.id, profile.answers[q.id]);
-            return (
-              <li key={q.id} className="rounded-lg p-3" style={{ background: "var(--ikf-surface-2)" }}>
-                <div className="text-[12px] mb-1" style={{ color: "var(--ikf-text-dim)" }}>{i + 1}. {q.q}</div>
-                <div className="text-[14px] font-medium">
-                  {ans.text}
-                  {ans.ambiguous && (
-                    <span className="ml-2 text-[10px] uppercase tracking-[0.12em]" style={{ color: "var(--ikf-text-dim)" }} title="Submitted before exact-answer capture; the SOP stored only the score, and two options share it.">
-                      (either)
-                    </span>
-                  )}
-                </div>
-              </li>
-            );
-          })}
-        </ol>
+        {profile.sopResponses
+          ? <JourneyResponses s={profile.sopResponses} />
+          : <LegacyIntentResponses answers={profile.answers} answerChoices={profile.answerChoices} />}
       </section>
 
       <div className="grid lg:grid-cols-[1.2fr_1fr] gap-6">
@@ -201,7 +183,7 @@ function ProfileScorePage() {
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 text-[12px] font-semibold shrink-0"
-                        style={{ color: "var(--ikf-brand)" }}
+                        style={{ color: "var(--ikf-brand-ink)" }}
                       >
                         Open <ExternalLink size={11} />
                       </a>
@@ -210,7 +192,7 @@ function ProfileScorePage() {
                       <button
                         onClick={() => setPreview({ id: u.id, title: u.assessmentTitle, fileName: u.fileName, mimeType: u.mimeType })}
                         className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold border"
-                        style={{ borderColor: "var(--ikf-brand)", color: "var(--ikf-brand)", background: "rgba(223,255,94,0.06)" }}
+                        style={{ borderColor: "var(--ikf-brand)", color: "#8A6D08", background: "rgba(245,197,24,0.12)" }}
                       >
                         <Eye size={11} /> Preview
                       </button>
@@ -270,7 +252,7 @@ function ProfileScorePage() {
                       onClick={() => setSelections({ ...selections, [axis.key]: v.key })}
                       className="text-left p-3 rounded-lg border transition-colors"
                       style={selected
-                        ? { borderColor: "var(--ikf-brand)", background: "rgba(223,255,94,0.08)" }
+                        ? { borderColor: "var(--ikf-brand)", background: "rgba(245,197,24,0.12)" }
                         : { borderColor: "var(--ikf-border)", background: "var(--ikf-surface-2)" }}
                     >
                       <div className="font-semibold text-[13px]">{v.label}</div>
@@ -363,7 +345,7 @@ function PreviewModal({
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 text-[12px] font-semibold px-2.5 py-1 rounded-md"
-              style={{ color: "var(--ikf-brand)" }}
+              style={{ color: "var(--ikf-brand-ink)" }}
             >
               Open in new tab <ExternalLink size={11} />
             </a>
@@ -392,7 +374,7 @@ function PreviewModal({
             )
           ) : (
             <div className="w-full h-full flex flex-col items-center justify-center text-center px-6 gap-3" style={{ color: "var(--ikf-text-dim)" }}>
-              <FileText size={36} style={{ color: "var(--ikf-brand)" }} />
+              <FileText size={36} style={{ color: "var(--ikf-brand-ink)" }} />
               <div className="text-[14px]">In-browser preview isn't supported for <code>{preview.mimeType}</code>.</div>
               <a
                 href={fileUrl}
@@ -416,6 +398,66 @@ function SopDetail({ label, value }: { label: string; value: string }) {
       <dt className="text-[10px] font-semibold uppercase tracking-[0.12em] mb-0.5" style={{ color: "var(--ikf-text-dim)" }}>{label}</dt>
       <dd className="text-[13px]">{value}</dd>
     </div>
+  );
+}
+
+// New 4-section / 11-question Parent Journey SOP (migration 0014). Renders the
+// parent's exact answers grouped as a numbered Q&A list.
+function JourneyResponses({ s }: { s: SopResponses }) {
+  const qText = (id: string) => JOURNEY_QUESTIONS.find(q => q.id === id)?.q ?? id;
+  const concern =
+    s.q6.choices.map(c => (c === "Something else" && s.q6.other ? `Something else — ${s.q6.other}` : c)).join("  ·  ") || "—";
+  const prior =
+    s.q4.prior === "yes" ? `Yes${s.q4.detail ? ` — ${s.q4.detail}` : ""}`
+    : s.q4.prior === "no" ? "No — first contact with IKF"
+    : "—";
+  const rows: { q: string; a: string }[] = [
+    { q: qText("q2"), a: s.q2 || "—" },
+    { q: qText("q3"), a: s.q3 || "—" },
+    { q: qText("q4"), a: prior },
+    { q: qText("q5"), a: s.q5 || "—" },
+    { q: qText("q6"), a: concern },
+    { q: qText("q7"), a: s.q7 || "—" },
+    { q: qText("q8"), a: s.q8 || "—" },
+    { q: qText("q9"), a: s.q9 || "—" },
+    { q: qText("q10"), a: s.q10 || "—" },
+    { q: "Anything else they wanted us to know", a: s.q11 || "—" },
+  ];
+  return (
+    <ol className="space-y-3">
+      {rows.map((row, i) => (
+        <li key={i} className="rounded-lg p-3" style={{ background: "var(--ikf-surface-2)" }}>
+          <div className="text-[12px] mb-1" style={{ color: "var(--ikf-text-dim)" }}>{i + 1}. {row.q}</div>
+          <div className="text-[14px] font-medium whitespace-pre-wrap">{row.a}</div>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+// Legacy 8-question intent (pre-0014 profiles). Prefers exact option text (0013);
+// falls back to score-based reconstruction for pre-0013 rows.
+function LegacyIntentResponses({ answers, answerChoices }: { answers: Record<string, number>; answerChoices: Record<string, string> }) {
+  return (
+    <ol className="space-y-3">
+      {INTENT_QUESTIONS.map((q, i) => {
+        const exact = answerChoices?.[q.id];
+        const ans = exact ? { text: exact, ambiguous: false } : sopAnswerLabel(q.id, answers[q.id]);
+        return (
+          <li key={q.id} className="rounded-lg p-3" style={{ background: "var(--ikf-surface-2)" }}>
+            <div className="text-[12px] mb-1" style={{ color: "var(--ikf-text-dim)" }}>{i + 1}. {q.q}</div>
+            <div className="text-[14px] font-medium">
+              {ans.text}
+              {ans.ambiguous && (
+                <span className="ml-2 text-[10px] uppercase tracking-[0.12em]" style={{ color: "var(--ikf-text-dim)" }} title="Submitted before exact-answer capture; the SOP stored only the score, and two options share it.">
+                  (either)
+                </span>
+              )}
+            </div>
+          </li>
+        );
+      })}
+    </ol>
   );
 }
 

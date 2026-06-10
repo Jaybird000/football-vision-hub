@@ -14,7 +14,7 @@ function Partners() {
   return (
     <>
       <PageHero eyebrow="For Partners"
-        title={<>Build the next <span className="text-neon-strike not-italic mx-[0.1em]">India</span>.</>}
+        title={<>Build the next <span className="text-gold-ink not-italic mx-[0.1em]">India</span>.</>}
         sub="Brands, corporates, and federations: partner with IKF to fund, scale, and shape the most ambitious grassroots sports programme in India."
         image={img}
         quote={{ text: "Our CSR rupees finally feel like they hit the pitch. The IKF impact dashboard tells us exactly which kid wore which kit.", author: "Ritika Menon", role: "Head of CSR, Partner Brand" }} />
@@ -24,7 +24,7 @@ function Partners() {
             <h2 className="font-display text-4xl uppercase">Why IKF</h2>
             <ul className="mt-6 space-y-4 text-chalk/80">
               {["50,000+ lives already engaged through IKF's pathway","Verified 80G non-profit — full CSR eligibility","City-round to national-final pipeline feeding I-League & ISL scouts","Dedicated impact dashboard for every partner"].map(p => (
-                <li key={p} className="flex gap-3"><span className="text-neon-strike">→</span>{p}</li>
+                <li key={p} className="flex gap-3"><span className="text-gold-ink">→</span>{p}</li>
               ))}
             </ul>
           </div>
@@ -37,8 +37,8 @@ function Partners() {
                 { t: "Naari Shakti Patron", b: "Power women's football pathways across rural India." },
               ].map(p => (
                 <div key={p.t}>
-                  <h4 className="font-display text-xl uppercase text-neon-strike">{p.t}</h4>
-                  <p className="text-chalk/70 text-sm mt-1">{p.b}</p>
+                  <h4 className="font-display text-xl uppercase text-gold-ink">{p.t}</h4>
+                  <p className="text-chalk/86 text-sm mt-1">{p.b}</p>
                 </div>
               ))}
             </div>

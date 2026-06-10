@@ -126,7 +126,7 @@ function LoginPage() {
 
           <div className="text-center text-[13px]" style={{ color: "var(--ikf-text-dim)" }}>
             New to IKF 360?{" "}
-            <Link to="/signup" className="underline" style={{ color: "var(--ikf-brand)" }}>
+            <Link to="/signup" className="underline" style={{ color: "var(--ikf-brand-ink)" }}>
               Create an account
             </Link>
           </div>

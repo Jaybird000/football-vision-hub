@@ -135,7 +135,7 @@ function SignupPage() {
               />
               <span style={{ color: "var(--ikf-text-dim)" }}>
                 I have read and agree to the{" "}
-                <Link to="/privacy" target="_blank" className="underline" style={{ color: "var(--ikf-brand)" }}>
+                <Link to="/privacy" target="_blank" className="underline" style={{ color: "var(--ikf-brand-ink)" }}>
                   IKF Pathway 360 privacy policy
                 </Link>
                 . I understand that what I share about my child will be held by IKF and used only to guide their pathway.
@@ -161,7 +161,7 @@ function SignupPage() {
 
           <div className="text-center text-[13px]" style={{ color: "var(--ikf-text-dim)" }}>
             Already have an account?{" "}
-            <Link to="/login" className="underline" style={{ color: "var(--ikf-brand)" }}>
+            <Link to="/login" className="underline" style={{ color: "var(--ikf-brand-ink)" }}>
               Log in
             </Link>
           </div>

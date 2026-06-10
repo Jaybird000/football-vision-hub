@@ -67,7 +67,7 @@ function AxesAdmin() {
           Define the axes IKF uses to categorise a parent–child profile. Each axis has a set of values; the cross-product becomes the recommendation cells.
         </p>
         <div className="mt-2 text-[12px]" style={{ color: "var(--ikf-text-dim)" }}>
-          Current cell count: <span className="font-semibold" style={{ color: "var(--ikf-brand)" }}>{axes.reduce((n: number, a: Axis) => n * (a.values.length || 0), 1) || 0}</span>
+          Current cell count: <span className="font-semibold" style={{ color: "var(--ikf-brand-ink)" }}>{axes.reduce((n: number, a: Axis) => n * (a.values.length || 0), 1) || 0}</span>
         </div>
       </div>
 
@@ -133,7 +133,7 @@ function AxesAdmin() {
               <button
                 onClick={() => setValueDraft({ axisId: axis.id, key: "", label: "", description: "", sortOrder: (axis.values.length + 1) * 10 })}
                 className="text-[12px] inline-flex items-center gap-1 px-2 py-1 rounded-md"
-                style={{ color: "var(--ikf-brand)" }}
+                style={{ color: "var(--ikf-brand-ink)" }}
               >
                 <Plus size={12} /> Add value
               </button>
@@ -144,7 +144,7 @@ function AxesAdmin() {
 
       <div className="mt-6 text-[13px]" style={{ color: "var(--ikf-text-dim)" }}>
         After editing axes,{" "}
-        <Link to="/ikf360/admin/cells" className="underline" style={{ color: "var(--ikf-brand)" }}>edit cell recommendations</Link>
+        <Link to="/ikf360/admin/cells" className="underline" style={{ color: "var(--ikf-brand-ink)" }}>edit cell recommendations</Link>
         {" "}for each new combination.
       </div>
 

@@ -39,9 +39,9 @@ export function Pathway() {
         <div className="max-w-7xl mx-auto px-6 w-full grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-center">
           {/* Left: title + stage list (desktop) / compact title (mobile) */}
           <div className="lg:col-span-5">
-            <span className="text-neon-strike font-bold text-xs uppercase tracking-[0.3em]">{t("home", "pipelineEyebrow")}</span>
+            <span className="text-gold-ink font-bold text-xs uppercase tracking-[0.3em]">{t("home", "pipelineEyebrow")}</span>
             <h2 className="font-display text-4xl md:text-5xl lg:text-6xl uppercase mt-3 lg:mt-4 leading-[0.9]">{t("home", "pipelineTitle")}</h2>
-            <p className="hidden lg:block mt-4 text-chalk/60 text-sm max-w-md">Scroll to walk the path — from a kid on a maidan to a contract in the Indian Super League.</p>
+            <p className="hidden lg:block mt-4 text-chalk/82 text-sm max-w-md">Scroll to walk the path — from a kid on a maidan to a contract in the Indian Super League.</p>
 
             <ol className="hidden lg:block mt-10 space-y-3">
               {stages.map((s, i) => {
@@ -49,10 +49,10 @@ export function Pathway() {
                 const isPast = i < active;
                 return (
                   <li key={s.num} className="flex items-center gap-4">
-                    <span className={`grid place-items-center size-8 rounded-full text-xs font-display transition-colors ${isActive ? "bg-neon-strike text-pitch-black" : isPast ? "bg-neon-strike/30 text-pitch-black" : "bg-chalk/10 text-chalk/60"}`}>
+                    <span className={`grid place-items-center size-8 rounded-full text-xs font-display transition-colors ${isActive ? "bg-neon-strike text-ink" : isPast ? "bg-neon-strike/30 text-ink" : "bg-chalk/10 text-chalk/82"}`}>
                       {s.num}
                     </span>
-                    <span className={`font-display uppercase tracking-wide transition-colors ${isActive ? "text-chalk text-xl" : "text-chalk/40 text-base"}`}>
+                    <span className={`font-display uppercase tracking-wide transition-colors ${isActive ? "text-chalk text-xl" : "text-chalk/72 text-base"}`}>
                       {lang === "hi" ? s.hi : s.en}
                     </span>
                   </li>
@@ -68,16 +68,16 @@ export function Pathway() {
                 <article
                   key={s.num}
                   aria-hidden={i !== active}
-                  className={`absolute inset-0 ml-0 md:ml-8 lg:ml-16 p-6 md:p-10 bg-pitch-black/40 border-l-4 border-neon-strike/40 transition-all duration-700 ease-out ${i === active ? "opacity-100 translate-y-0" : i < active ? "opacity-0 -translate-y-6 pointer-events-none" : "opacity-0 translate-y-6 pointer-events-none"}`}
+                  className={`absolute inset-0 ml-0 md:ml-8 lg:ml-16 p-6 md:p-10 bg-paper-2 shadow-sm border-l-4 border-neon-strike transition-all duration-700 ease-out ${i === active ? "opacity-100 translate-y-0" : i < active ? "opacity-0 -translate-y-6 pointer-events-none" : "opacity-0 translate-y-6 pointer-events-none"}`}
                 >
                   <div className="flex items-baseline gap-6 mb-6">
-                    <span className="font-display text-[5rem] md:text-[8rem] leading-[0.8] text-neon-strike/80">{s.num}</span>
-                    <span className="font-display uppercase tracking-widest text-chalk/40 text-xs">Stage {s.num} of 0{stages.length}</span>
+                    <span className="font-display text-[5rem] md:text-[8rem] leading-[0.8] text-gold-ink/80">{s.num}</span>
+                    <span className="font-display uppercase tracking-widest text-chalk/72 text-xs">Stage {s.num} of 0{stages.length}</span>
                   </div>
                   <h3 className="font-display text-4xl md:text-6xl uppercase leading-[0.95]">
                     {lang === "hi" ? s.hi : s.en}
                   </h3>
-                  <p className="mt-6 text-chalk/75 text-base md:text-lg leading-relaxed max-w-xl">
+                  <p className="mt-6 text-chalk/86 text-base md:text-lg leading-relaxed max-w-xl">
                     {lang === "hi" ? s.body_hi : s.body_en}
                   </p>
                 </article>

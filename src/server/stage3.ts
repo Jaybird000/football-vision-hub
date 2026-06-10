@@ -4,6 +4,7 @@ import { z } from "zod";
 import { sql } from "./db";
 import { sendParentRecommendationReady } from "./email";
 import { logAudit } from "./audit";
+import type { SopResponses } from "@/lib/ikf360-data";
 
 type Role = "parent" | "advisor" | "admin";
 
@@ -28,6 +29,27 @@ async function requireAdmin() {
   if (!user) throw new Error("Not signed in.");
   if (user.role !== "admin" && user.role !== "advisor") throw new Error("Admin or advisor only.");
   return user;
+}
+
+// Resolve which child a parent read should target: the active child by default,
+// or an explicit (ownership-checked) child for multi-child tab switching. Guarded
+// so it works before migration 0015 adds parent_child_profiles.user_id.
+async function resolveOwnedProfileId(
+  user: { id: string; profileId: string | null },
+  requestedId?: string | null,
+): Promise<string | null> {
+  if (!requestedId) return user.profileId;
+  const owned = await sql<{ id: string }[]>`
+    SELECT id FROM parent_child_profiles
+    WHERE id = ${requestedId} AND (user_id = ${user.id} OR id = ${user.profileId})
+    LIMIT 1
+  `.catch(() => sql<{ id: string }[]>`
+    SELECT id FROM parent_child_profiles
+    WHERE id = ${requestedId} AND id = ${user.profileId}
+    LIMIT 1
+  `);
+  if (owned.length === 0) throw new Error("That profile is not yours.");
+  return requestedId;
 }
 
 // Cell key = sorted "axis_key:value_key" joined by "|" — deterministic regardless of input order.
@@ -359,36 +381,87 @@ export const scoreProfile = createServerFn({ method: "POST" })
     return { id: rows[0].id, cellKey };
   });
 
-// Parent view: latest current categorisation
-export const getMyCategorisation = createServerFn({ method: "GET" }).handler(async (): Promise<CategorisationSnapshot | null> => {
-  const user = await getSessionUser();
-  if (!user?.profileId) return null;
+// Parent view: latest current categorisation. Optional profileId selects a
+// specific (ownership-checked) child for multi-child dashboards; default = active.
+const MyProfileInput = z.object({ profileId: z.string().uuid().optional() });
 
-  const rows = await sql<{
-    id: string; cell_key: string; cell_title: string; axis_values: { axisKey: string; axisName: string; valueKey: string; valueLabel: string }[];
-    recommendation_md: string; advisor_notes: string; scored_by_name: string; scored_at: Date; valid_until: Date | null;
-  }[]>`
-    SELECT id, cell_key, cell_title, axis_values, recommendation_md, advisor_notes,
-           scored_by_name, scored_at, valid_until
-    FROM categorisations
-    WHERE profile_id = ${user.profileId} AND is_current = true
-    ORDER BY scored_at DESC
-    LIMIT 1
-  `;
-  if (rows.length === 0) return null;
-  const r = rows[0];
-  return {
-    id: r.id,
-    cellKey: r.cell_key,
-    cellTitle: r.cell_title,
-    axisValues: r.axis_values,
-    recommendationMd: r.recommendation_md,
-    advisorNotes: r.advisor_notes,
-    scoredByName: r.scored_by_name,
-    scoredAt: r.scored_at.toISOString(),
-    validUntil: r.valid_until?.toISOString() ?? null,
-  };
-});
+export const getMyCategorisation = createServerFn({ method: "GET" })
+  .inputValidator((d: unknown) => MyProfileInput.parse(d ?? {}))
+  .handler(async ({ data }): Promise<CategorisationSnapshot | null> => {
+    const user = await getSessionUser();
+    if (!user) return null;
+    const profileId = await resolveOwnedProfileId(user, data.profileId);
+    if (!profileId) return null;
+
+    const rows = await sql<{
+      id: string; cell_key: string; cell_title: string; axis_values: { axisKey: string; axisName: string; valueKey: string; valueLabel: string }[];
+      recommendation_md: string; advisor_notes: string; scored_by_name: string; scored_at: Date; valid_until: Date | null;
+    }[]>`
+      SELECT id, cell_key, cell_title, axis_values, recommendation_md, advisor_notes,
+             scored_by_name, scored_at, valid_until
+      FROM categorisations
+      WHERE profile_id = ${profileId} AND is_current = true
+      ORDER BY scored_at DESC
+      LIMIT 1
+    `;
+    if (rows.length === 0) return null;
+    const r = rows[0];
+    return {
+      id: r.id,
+      cellKey: r.cell_key,
+      cellTitle: r.cell_title,
+      axisValues: r.axis_values,
+      recommendationMd: r.recommendation_md,
+      advisorNotes: r.advisor_notes,
+      scoredByName: r.scored_by_name,
+      scoredAt: r.scored_at.toISOString(),
+      validUntil: r.valid_until?.toISOString() ?? null,
+    };
+  });
+
+// Parent view: full review history for the timeline (Module 3). Returns every
+// categorisation for the child (newest first) plus the profile-created event.
+export type JourneyEvent = {
+  kind: "created" | "review";
+  date: string;
+  title: string;
+  by: string | null;
+};
+
+export const getMyJourney = createServerFn({ method: "GET" })
+  .inputValidator((d: unknown) => MyProfileInput.parse(d ?? {}))
+  .handler(async ({ data }): Promise<JourneyEvent[]> => {
+    const user = await getSessionUser();
+    if (!user) return [];
+    const profileId = await resolveOwnedProfileId(user, data.profileId);
+    if (!profileId) return [];
+
+    const cats = await sql<{ cell_title: string; scored_by_name: string; scored_at: Date }[]>`
+      SELECT cell_title, scored_by_name, scored_at
+      FROM categorisations
+      WHERE profile_id = ${profileId}
+      ORDER BY scored_at DESC
+    `;
+    const prof = await sql<{ created_at: Date }[]>`
+      SELECT created_at FROM parent_child_profiles WHERE id = ${profileId} LIMIT 1
+    `;
+
+    const events: JourneyEvent[] = cats.map(c => ({
+      kind: "review" as const,
+      date: c.scored_at.toISOString(),
+      title: c.cell_title || "Recommendation updated",
+      by: c.scored_by_name || null,
+    }));
+    if (prof[0]) {
+      events.push({
+        kind: "created",
+        date: prof[0].created_at.toISOString(),
+        title: "Profile created",
+        by: null,
+      });
+    }
+    return events; // newest first; the created event sits at the bottom
+  });
 
 // Admin: get a specific profile's current categorisation (for the scoring page)
 const GetProfileCatInput = z.object({ profileId: z.string().uuid() });
@@ -442,6 +515,9 @@ export type AdminProfileDetail = {
   answers: Record<string, number>;
   // Exact option text chosen per question (qid → label), when available (0013).
   answerChoices: Record<string, string>;
+  // Full Parent Journey SOP responses (0014). Present for profiles submitted via
+  // the new 4-section SOP; null for legacy 8-question rows.
+  sopResponses: SopResponses | null;
   uploads: { id: string; assessmentKey: string; assessmentTitle: string; fileName: string; mimeType: string; status: string; uploadedAt: string }[];
   // Mentor-help requests for this profile (Module E). Empty if none / table absent.
   assistanceRequests: { id: string; message: string; missingKeys: string[]; status: string; createdAt: string }[];
@@ -483,6 +559,10 @@ export const getAdminProfileDetail = createServerFn({ method: "GET" })
     const choiceRows = await sql<{ answer_choices: Record<string, string> | null }[]>`
       SELECT answer_choices FROM parent_child_profiles WHERE id = ${data.profileId} LIMIT 1
     `.catch(() => [] as { answer_choices: Record<string, string> | null }[]);
+    // Full SOP responses (0014). Guarded so the page loads before the migration.
+    const sopRows = await sql<{ sop_responses: SopResponses | null }[]>`
+      SELECT sop_responses FROM parent_child_profiles WHERE id = ${data.profileId} LIMIT 1
+    `.catch(() => [] as { sop_responses: SopResponses | null }[]);
     return {
       id: p.id,
       childName: p.child_name,
@@ -497,6 +577,7 @@ export const getAdminProfileDetail = createServerFn({ method: "GET" })
       submittedAt: p.created_at.toISOString(),
       answers: p.answers ?? {},
       answerChoices: choiceRows[0]?.answer_choices ?? {},
+      sopResponses: sopRows[0]?.sop_responses ?? null,
       assistanceRequests: arows.map(a => ({
         id: a.id,
         message: a.message,

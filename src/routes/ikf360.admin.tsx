@@ -74,7 +74,7 @@ function AdminList() {
   return (
     <div className="space-y-8">
       <header>
-        <div className="text-[11px] uppercase tracking-[0.18em] mb-2" style={{ color: "var(--ikf-brand)" }}>Advisor console</div>
+        <div className="text-[11px] uppercase tracking-[0.18em] mb-2" style={{ color: "var(--ikf-brand-ink)" }}>Advisor console</div>
         <h1 className="text-[34px] leading-tight">Profiles</h1>
         <p className="mt-2 text-[14px]" style={{ color: "var(--ikf-text-dim)" }}>
           Every parent–child pair across every stage. Live from Postgres.
@@ -169,7 +169,7 @@ function AdminList() {
               {filtered.map(p => (
                 <tr key={p.id} className="border-t hover:bg-white/5" style={{ borderColor: "var(--ikf-border)" }}>
                   <td className="p-4 font-semibold">
-                    <Link to="/ikf360/admin/profiles/$id" params={{ id: p.id }} className="hover:underline" style={{ color: "var(--ikf-brand)" }}>
+                    <Link to="/ikf360/admin/profiles/$id" params={{ id: p.id }} className="hover:underline" style={{ color: "var(--ikf-brand-ink)" }}>
                       {p.childName}
                     </Link>
                   </td>
@@ -199,7 +199,7 @@ function AdminLink({ to, icon, label, hint }: { to: string; icon: React.ReactNod
       to={to}
       className="ikf-card p-4 flex items-start gap-3 hover:opacity-100 transition-opacity"
     >
-      <div className="p-2 rounded-md" style={{ background: "var(--ikf-surface-2)", color: "var(--ikf-brand)" }}>
+      <div className="p-2 rounded-md" style={{ background: "var(--ikf-surface-2)", color: "var(--ikf-brand-ink)" }}>
         {icon}
       </div>
       <div>

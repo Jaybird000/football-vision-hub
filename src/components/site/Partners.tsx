@@ -12,7 +12,7 @@ export function Partners() {
   return (
     <section className="py-20 border-y border-chalk/10 bg-pitch-black">
       <div className="max-w-7xl mx-auto px-6">
-        <p className="text-center text-[10px] font-bold uppercase tracking-[0.3em] mb-10 text-chalk/40">Supported By</p>
+        <p className="text-center text-[10px] font-bold uppercase tracking-[0.3em] mb-10 text-chalk/72">Supported By</p>
         <div className="flex flex-wrap justify-center items-center gap-x-10 md:gap-x-14 gap-y-8">
           {partners.map(p => (
             <img

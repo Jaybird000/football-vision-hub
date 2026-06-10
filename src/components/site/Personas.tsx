@@ -19,12 +19,12 @@ export function Personas() {
         <h2 className="font-display text-5xl md:text-7xl uppercase mb-16 leading-[0.9]">{t("home", "personasTitle")}</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {personas.map(p => (
-            <Link key={p.to} to={p.to} className="group relative aspect-[3/4] overflow-hidden bg-pitch-green block">
-              <img src={p.img} alt="" loading="lazy" width={800} height={1100} className="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700" />
-              <div className="absolute inset-0 bg-gradient-to-t from-pitch-black via-pitch-black/40 to-transparent" />
+            <Link key={p.to} to={p.to} className="on-dark group relative aspect-[3/4] overflow-hidden bg-pitch-green block">
+              <img src={p.img} alt="" loading="lazy" width={800} height={1100} className="w-full h-full object-cover grayscale-[0.35] group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700" />
+              <div className="absolute inset-0 bg-gradient-to-t from-pitch-black via-pitch-black/30 to-transparent" />
               <div className="absolute bottom-6 left-6 right-6">
                 <h4 className="font-display text-4xl uppercase">{lang === "hi" ? p.hi : p.en}</h4>
-                <span className="text-neon-strike text-[10px] font-bold uppercase tracking-widest mt-2 inline-block">
+                <span className="text-gold-ink text-[10px] font-bold uppercase tracking-widest mt-2 inline-block">
                   {lang === "hi" ? p.cta_hi : p.cta_en} →
                 </span>
               </div>

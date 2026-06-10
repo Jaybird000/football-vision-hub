@@ -132,7 +132,7 @@ function ParentPathway() {
     <>
       <PageHero
         eyebrow={L(C.hero.eyebrow)}
-        title={<>IKF <span className="text-neon-strike not-italic mx-[0.1em]">Pathway 360</span></>}
+        title={<>IKF <span className="text-gold-ink not-italic mx-[0.1em]">Pathway 360</span></>}
         sub={L(C.hero.sub)}
         image={img}
       />
@@ -140,35 +140,35 @@ function ParentPathway() {
       {/* Primary CTAs */}
       <Section className="!pt-12 md:!pt-16">
         <div className="flex flex-col sm:flex-row gap-4 sm:items-center">
-          <Link to="/signup" search={{ next: "/ikf360/intent" }} className="inline-flex items-center justify-center gap-2 bg-neon-strike text-pitch-black px-7 py-3.5 rounded-full font-bold text-sm uppercase tracking-wider hover:bg-chalk transition-colors">
+          <Link to="/signup" search={{ next: "/ikf360/intent" }} className="inline-flex items-center justify-center gap-2 bg-neon-strike text-ink px-7 py-3.5 rounded-full font-bold text-sm uppercase tracking-wider hover:brightness-95 transition-all">
             {L(C.ctaPrimary)} <ArrowRight size={16} />
           </Link>
-          <Link to="/login" className="inline-flex items-center justify-center gap-2 border border-chalk/25 text-chalk px-7 py-3.5 rounded-full font-bold text-sm uppercase tracking-wider hover:border-neon-strike hover:text-neon-strike transition-colors">
+          <Link to="/login" className="inline-flex items-center justify-center gap-2 bg-neon-strike text-ink px-7 py-3.5 rounded-full font-bold text-sm uppercase tracking-wider hover:brightness-95 transition-all">
             {L(C.ctaSecondary)}
           </Link>
         </div>
-        <p className="mt-4 text-sm text-chalk/55">{L(C.ctaHelper)}</p>
+        <p className="mt-4 text-sm text-chalk/78">{L(C.ctaHelper)}</p>
       </Section>
 
       {/* What is it */}
       <Section className="!pt-0">
         <div className="max-w-3xl">
-          <span className="text-neon-strike font-bold text-xs uppercase tracking-[0.3em]">{L(C.aboutEyebrow)}</span>
+          <span className="text-gold-ink font-bold text-xs uppercase tracking-[0.3em]">{L(C.aboutEyebrow)}</span>
           <h2 className="font-display text-4xl md:text-5xl uppercase mt-4 mb-6">{L(C.aboutTitle)}</h2>
-          <p className="text-lg text-chalk/75 leading-relaxed">{L(C.aboutBody)}</p>
+          <p className="text-lg text-chalk/86 leading-relaxed">{L(C.aboutBody)}</p>
         </div>
       </Section>
 
       {/* The journey */}
       <Section className="border-t border-chalk/10">
-        <span className="text-neon-strike font-bold text-xs uppercase tracking-[0.3em]">{L(C.journeyEyebrow)}</span>
+        <span className="text-gold-ink font-bold text-xs uppercase tracking-[0.3em]">{L(C.journeyEyebrow)}</span>
         <h2 className="font-display text-4xl md:text-5xl uppercase mt-4 mb-10 md:mb-12">{L(C.journeyTitle)}</h2>
         <div className="grid md:grid-cols-3 gap-6">
           {C.stages.map((s) => (
             <div key={s.n} className="bg-pitch-green/10 border border-chalk/10 p-7 hover:border-neon-strike/40 transition-colors">
-              <div className="font-display text-5xl text-neon-strike/30">{s.n}</div>
+              <div className="font-display text-5xl text-gold-ink/30">{s.n}</div>
               <h3 className="font-display text-2xl uppercase mt-3 mb-3">{L(s.title)}</h3>
-              <p className="text-chalk/70 leading-relaxed">{L(s.body)}</p>
+              <p className="text-chalk/86 leading-relaxed">{L(s.body)}</p>
             </div>
           ))}
         </div>
@@ -177,25 +177,25 @@ function ParentPathway() {
       {/* Parent SOP intro */}
       <Section className="border-t border-chalk/10">
         <div className="max-w-3xl">
-          <span className="text-neon-strike font-bold text-xs uppercase tracking-[0.3em]">{L(C.sopEyebrow)}</span>
+          <span className="text-gold-ink font-bold text-xs uppercase tracking-[0.3em]">{L(C.sopEyebrow)}</span>
           <h2 className="font-display text-4xl md:text-5xl uppercase mt-4 mb-6">{L(C.sopTitle)}</h2>
-          <p className="text-lg text-chalk/75 leading-relaxed">{L(C.sopBody)}</p>
+          <p className="text-lg text-chalk/86 leading-relaxed">{L(C.sopBody)}</p>
         </div>
       </Section>
 
       {/* Deliverables */}
       <Section className="border-t border-chalk/10">
-        <span className="text-neon-strike font-bold text-xs uppercase tracking-[0.3em]">{L(C.deliverEyebrow)}</span>
+        <span className="text-gold-ink font-bold text-xs uppercase tracking-[0.3em]">{L(C.deliverEyebrow)}</span>
         <h2 className="font-display text-4xl md:text-5xl uppercase mt-4 mb-10 md:mb-12">{L(C.deliverTitle)}</h2>
         <div className="grid sm:grid-cols-2 gap-6">
           {C.deliverables.map((d, i) => {
             const Icon = d.icon;
             return (
               <div key={i} className="flex gap-5 bg-pitch-green/10 border border-chalk/10 p-7">
-                <Icon className="text-neon-strike shrink-0" size={28} />
+                <Icon className="text-gold-ink shrink-0" size={28} />
                 <div>
                   <h3 className="font-display text-xl uppercase mb-2">{L(d.title)}</h3>
-                  <p className="text-chalk/70 leading-relaxed">{L(d.body)}</p>
+                  <p className="text-chalk/86 leading-relaxed">{L(d.body)}</p>
                 </div>
               </div>
             );
@@ -205,7 +205,7 @@ function ParentPathway() {
 
       {/* FAQ */}
       <Section className="border-t border-chalk/10">
-        <span className="text-neon-strike font-bold text-xs uppercase tracking-[0.3em]">{L(C.faqEyebrow)}</span>
+        <span className="text-gold-ink font-bold text-xs uppercase tracking-[0.3em]">{L(C.faqEyebrow)}</span>
         <h2 className="font-display text-4xl md:text-5xl uppercase mt-4 mb-10 md:mb-12">{L(C.faqTitle)}</h2>
         <div className="space-y-1">
           {C.faqs.map((f, i) => {
@@ -213,10 +213,10 @@ function ParentPathway() {
             return (
               <details key={i} className="group bg-pitch-green/10 border border-chalk/10 p-6 open:bg-pitch-green/20">
                 <summary className="cursor-pointer flex justify-between items-center gap-4 font-display text-xl md:text-2xl uppercase">
-                  <span className="flex items-center gap-3"><Icon className="text-neon-strike shrink-0" size={20} />{L(f.q)}</span>
-                  <span className="text-neon-strike text-3xl group-open:rotate-45 transition-transform shrink-0">+</span>
+                  <span className="flex items-center gap-3"><Icon className="text-gold-ink shrink-0" size={20} />{L(f.q)}</span>
+                  <span className="text-gold-ink text-3xl group-open:rotate-45 transition-transform shrink-0">+</span>
                 </summary>
-                <p className="mt-4 text-chalk/70 leading-relaxed">{L(f.a)}</p>
+                <p className="mt-4 text-chalk/86 leading-relaxed">{L(f.a)}</p>
               </details>
             );
           })}
@@ -225,13 +225,13 @@ function ParentPathway() {
 
       {/* Stories */}
       <Section className="border-t border-chalk/10">
-        <span className="text-neon-strike font-bold text-xs uppercase tracking-[0.3em]">{L(C.storiesEyebrow)}</span>
+        <span className="text-gold-ink font-bold text-xs uppercase tracking-[0.3em]">{L(C.storiesEyebrow)}</span>
         <h2 className="font-display text-4xl md:text-5xl uppercase mt-4 mb-10 md:mb-12">{L(C.storiesTitle)}</h2>
         <div className="grid md:grid-cols-2 gap-6">
           {C.stories.map((s, i) => (
             <figure key={i} className="border-l-4 border-neon-strike pl-6 py-2">
               <blockquote className="font-display italic text-2xl md:text-3xl leading-tight">&ldquo;{L(s.quote)}&rdquo;</blockquote>
-              <figcaption className="mt-4 text-xs uppercase tracking-[0.25em] text-chalk/55">— {L(s.author)}</figcaption>
+              <figcaption className="mt-4 text-xs uppercase tracking-[0.25em] text-chalk/78">— {L(s.author)}</figcaption>
             </figure>
           ))}
         </div>
@@ -239,14 +239,14 @@ function ParentPathway() {
 
       {/* Final CTA */}
       <Section className="border-t border-chalk/10">
-        <div className="bg-neon-strike text-pitch-black p-10 md:p-14 rounded-sm">
+        <div className="bg-neon-strike text-ink p-10 md:p-14 rounded-sm">
           <h2 className="font-display text-4xl md:text-6xl uppercase leading-none">{L(C.finalTitle)}</h2>
-          <p className="mt-4 text-lg max-w-2xl text-pitch-black/80">{L(C.finalBody)}</p>
+          <p className="mt-4 text-lg max-w-2xl text-ink/80">{L(C.finalBody)}</p>
           <div className="mt-8 flex flex-col sm:flex-row gap-4">
-            <Link to="/signup" search={{ next: "/ikf360/intent" }} className="inline-flex items-center justify-center gap-2 bg-pitch-black text-chalk px-7 py-3.5 rounded-full font-bold text-sm uppercase tracking-wider hover:bg-pitch-green transition-colors">
+            <Link to="/signup" search={{ next: "/ikf360/intent" }} className="inline-flex items-center justify-center gap-2 border border-ink text-ink px-7 py-3.5 rounded-full font-bold text-sm uppercase tracking-wider hover:bg-ink hover:text-paper transition-colors">
               {L(C.ctaPrimary)} <ArrowRight size={16} />
             </Link>
-            <Link to="/login" className="inline-flex items-center justify-center gap-2 border border-pitch-black/30 text-pitch-black px-7 py-3.5 rounded-full font-bold text-sm uppercase tracking-wider hover:bg-pitch-black/5 transition-colors">
+            <Link to="/login" className="inline-flex items-center justify-center gap-2 border border-ink text-ink px-7 py-3.5 rounded-full font-bold text-sm uppercase tracking-wider hover:bg-ink hover:text-paper transition-colors">
               {L(C.ctaSecondary)}
             </Link>
           </div>

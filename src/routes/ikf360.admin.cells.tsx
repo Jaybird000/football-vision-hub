@@ -46,7 +46,7 @@ function CellsAdmin() {
         <p className="mt-3 text-[15px] leading-relaxed" style={{ color: "var(--ikf-text-dim)" }}>
           Each row is one combination of axis values. Edit and publish a recommendation for every combination a parent might end up in. {cells.length === 0 ? "Define axes + values first." : (
             <span>
-              <span style={{ color: "var(--ikf-brand)" }} className="font-semibold">{publishedCount}</span> of {cells.length} published.
+              <span style={{ color: "var(--ikf-brand-ink)" }} className="font-semibold">{publishedCount}</span> of {cells.length} published.
             </span>
           )}
         </p>

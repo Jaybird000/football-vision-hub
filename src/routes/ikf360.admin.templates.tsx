@@ -69,7 +69,7 @@ function TemplatesAdmin() {
             <h1 className="text-[34px] leading-tight">Assessment templates</h1>
             <p className="mt-3 text-[15px] leading-relaxed" style={{ color: "var(--ikf-text-dim)" }}>
               Add, edit, or remove the assessments parents are asked for, and toggle which are required to unlock Stage 3.
-              Currently <span style={{ color: "var(--ikf-brand)" }} className="font-semibold">{requiredCount} required</span>.
+              Currently <span style={{ color: "var(--ikf-brand-ink)" }} className="font-semibold">{requiredCount} required</span>.
             </p>
           </div>
           <button
@@ -170,7 +170,7 @@ function TemplatesAdmin() {
 
       <div className="mt-6 text-[13px]" style={{ color: "var(--ikf-text-dim)" }}>
         Need to manage providers per assessment?{" "}
-        <Link to="/ikf360/admin/providers" className="underline" style={{ color: "var(--ikf-brand)" }}>
+        <Link to="/ikf360/admin/providers" className="underline" style={{ color: "var(--ikf-brand-ink)" }}>
           Open providers
         </Link>
       </div>

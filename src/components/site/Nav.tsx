@@ -60,7 +60,7 @@ export function Nav() {
       className="sticky top-0 z-50 border-b backdrop-blur-md"
       style={
         isIkf360
-          ? { background: "rgba(11, 18, 32, 0.92)", borderColor: "var(--ikf-border, rgba(255,255,255,0.08))" }
+          ? { background: "rgba(255, 255, 255, 0.92)", borderColor: "var(--ikf-border, rgba(0,0,0,0.08))" }
           : undefined
       }
     >
@@ -78,8 +78,8 @@ export function Nav() {
                   to={tab.to}
                   className="px-3 py-2 rounded-md text-[13px] font-semibold transition-colors"
                   style={active
-                    ? { background: "var(--ikf-brand, #DFFF5E)", color: "#0B1220" }
-                    : { color: "rgba(229,231,235,0.7)" }}
+                    ? { background: "var(--ikf-brand, #F5C518)", color: "#1E2A38" }
+                    : { color: "rgba(30,42,56,0.65)" }}
                 >
                   {tab.label}
                 </Link>
@@ -89,7 +89,7 @@ export function Nav() {
         ) : (
           <div className="hidden md:flex items-center gap-8 text-xs uppercase tracking-widest font-bold">
             {publicLinks.map(l => (
-              <Link key={l.to} to={l.to} className="text-chalk/80 hover:text-neon-strike transition-colors" activeProps={{ className: "text-neon-strike" }}>
+              <Link key={l.to} to={l.to} className="text-chalk/80 hover:text-gold-ink transition-colors" activeProps={{ className: "text-gold-ink" }}>
                 {l.label}
               </Link>
             ))}
@@ -101,7 +101,7 @@ export function Nav() {
           {isIkf360 && isAdmin && (
             <Link
               to={isAdminArea ? "/ikf360" : "/ikf360/admin"}
-              className="hidden md:inline-flex items-center gap-1.5 px-3 py-2 rounded-full text-[10px] uppercase tracking-widest font-bold border border-chalk/20 text-chalk/80 hover:border-neon-strike hover:text-neon-strike transition-colors"
+              className="hidden md:inline-flex items-center gap-1.5 px-3 py-2 rounded-full text-[10px] uppercase tracking-widest font-bold border border-chalk/20 text-chalk/80 hover:border-neon-strike hover:text-gold-ink transition-colors"
               title={isAdminArea ? "Switch to parent view" : "Switch to admin"}
             >
               {isAdminArea ? "Parent view" : "Admin console"}
@@ -112,7 +112,7 @@ export function Nav() {
               {!isIkf360 && (
                 <Link
                   to={isAdmin ? "/ikf360/admin" : "/ikf360"}
-                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full border border-neon-strike/40 text-neon-strike font-bold text-[10px] uppercase tracking-widest hover:bg-neon-strike hover:text-pitch-black transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full border border-neon-strike/40 text-ink/80 font-bold text-[10px] uppercase tracking-widest hover:bg-neon-strike hover:text-ink transition-colors"
                   title={isAdmin ? "Open admin console" : "Open my portal"}
                 >
                   {isAdmin ? "Admin console" : "My portal"} →
@@ -122,8 +122,8 @@ export function Nav() {
                 className="inline-flex items-center gap-2 px-3 py-2 rounded-full text-[11px] font-bold uppercase tracking-widest"
                 style={
                   isIkf360
-                    ? { background: "rgba(255,255,255,0.06)", color: "rgba(229,231,235,0.9)" }
-                    : { background: "rgba(255,255,255,0.04)", color: "rgba(229,231,235,0.85)", border: "1px solid rgba(255,255,255,0.12)" }
+                    ? { background: "rgba(0,0,0,0.05)", color: "var(--ikf-text, #1E2A38)" }
+                    : { background: "rgba(0,0,0,0.04)", color: "rgba(30,42,56,0.85)", border: "1px solid rgba(0,0,0,0.12)" }
                 }
               >
                 <User size={12} />
@@ -133,7 +133,7 @@ export function Nav() {
               </div>
               <button
                 onClick={handleLogout}
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full font-bold text-[10px] uppercase tracking-widest text-chalk/80 hover:text-neon-strike transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full font-bold text-[10px] uppercase tracking-widest text-chalk/80 hover:text-gold-ink transition-colors"
                 title="Log out"
               >
                 <LogOut size={12} /> Log out
@@ -143,15 +143,14 @@ export function Nav() {
             !isIkf360 && (
               <Link
                 to="/login"
-                className="hidden md:inline-flex text-chalk/80 px-3 py-2 rounded-full font-bold text-[10px] uppercase tracking-widest hover:text-neon-strike transition-colors"
-                activeProps={{ className: "text-neon-strike" }}
+                className="hidden md:inline-flex border border-neon-strike text-ink px-5 py-2 rounded-full font-bold text-xs uppercase tracking-wider hover:bg-neon-strike transition-colors"
               >
                 Log in
               </Link>
             )
           )}
           {!isIkf360 && (
-            <Link to="/donate" className="hidden sm:inline-flex bg-chalk text-pitch-black px-5 py-2 rounded-full font-bold text-xs uppercase tracking-wider hover:bg-neon-strike transition-colors">
+            <Link to="/donate" className="hidden sm:inline-flex bg-neon-strike text-ink px-5 py-2 rounded-full font-bold text-xs uppercase tracking-wider hover:brightness-95 transition-all">
               {t("nav", "donate")}
             </Link>
           )}
@@ -165,20 +164,20 @@ export function Nav() {
         <div className="md:hidden border-t border-chalk/10 bg-pitch-black px-6 py-6 flex flex-col gap-4 text-sm uppercase tracking-widest font-bold">
           {isIkf360
             ? activeTabs.map(tab => (
-                <Link key={tab.to} to={tab.to} className="text-chalk/80 hover:text-neon-strike" onClick={() => setOpen(false)}>
+                <Link key={tab.to} to={tab.to} className="text-chalk/80 hover:text-gold-ink" onClick={() => setOpen(false)}>
                   {tab.label}
                 </Link>
               ))
             : publicLinks.map(l => (
-                <Link key={l.to} to={l.to} className="text-chalk/80 hover:text-neon-strike" onClick={() => setOpen(false)}>
+                <Link key={l.to} to={l.to} className="text-chalk/80 hover:text-gold-ink" onClick={() => setOpen(false)}>
                   {l.label}
                 </Link>
               ))}
 
           {!isIkf360 && (
             <>
-              <Link to="/parents" className="text-chalk/80 hover:text-neon-strike" onClick={() => setOpen(false)}>{t("nav", "parents")}</Link>
-              <Link to="/partners" className="text-chalk/80 hover:text-neon-strike" onClick={() => setOpen(false)}>{t("nav", "partners")}</Link>
+              <Link to="/parents" className="text-chalk/80 hover:text-gold-ink" onClick={() => setOpen(false)}>{t("nav", "parents")}</Link>
+              <Link to="/partners" className="text-chalk/80 hover:text-gold-ink" onClick={() => setOpen(false)}>{t("nav", "partners")}</Link>
             </>
           )}
 
@@ -187,25 +186,25 @@ export function Nav() {
               {!isIkf360 && (
                 <Link
                   to={isAdmin ? "/ikf360/admin" : "/ikf360"}
-                  className="text-neon-strike"
+                  className="text-gold-ink"
                   onClick={() => setOpen(false)}
                 >
                   {isAdmin ? "Admin console →" : "My portal →"}
                 </Link>
               )}
               <div className="text-chalk/80">{user.fullName} · {user.role}</div>
-              <button onClick={handleLogout} className="text-left text-chalk/80 hover:text-neon-strike inline-flex items-center gap-2">
+              <button onClick={handleLogout} className="text-left text-chalk/80 hover:text-gold-ink inline-flex items-center gap-2">
                 <LogOut size={14} /> Log out
               </button>
             </>
           ) : (
             !isIkf360 && (
-              <Link to="/login" className="text-chalk/80 hover:text-neon-strike" onClick={() => setOpen(false)}>Log in</Link>
+              <Link to="/login" className="text-chalk/80 hover:text-gold-ink" onClick={() => setOpen(false)}>Log in</Link>
             )
           )}
 
           {!isIkf360 && (
-            <Link to="/donate" className="text-neon-strike" onClick={() => setOpen(false)}>{t("nav", "donate")}</Link>
+            <Link to="/donate" className="text-gold-ink" onClick={() => setOpen(false)}>{t("nav", "donate")}</Link>
           )}
         </div>
       )}

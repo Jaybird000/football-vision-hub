@@ -21,18 +21,18 @@ function Parents() {
   return (
     <>
       <PageHero eyebrow="For Parents"
-        title={<>Their <span className="text-neon-strike not-italic mx-[0.1em]">future</span><br />is in safe hands.</>}
+        title={<>Their <span className="text-gold-ink not-italic mx-[0.1em]">future</span><br />is in safe hands.</>}
         sub="Sending a child into competitive sport is a leap of faith. IKF makes it a structured, safe, and education-first journey — built for parents who care."
         image={img}
         quote={{ text: "We were terrified the day she left for camp. A year on, she's stronger, sharper at school, and chasing something real.", author: "Sunita Devi", role: "Mother of an IKF scholar, Patna" }} />
       <Section className="!pb-0">
         <div className="bg-pitch-green/10 border border-neon-strike/30 p-8 md:p-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="max-w-2xl">
-            <span className="text-neon-strike font-bold text-xs uppercase tracking-[0.3em]">IKF Pathway 360</span>
+            <span className="text-gold-ink font-bold text-xs uppercase tracking-[0.3em]">IKF Pathway 360</span>
             <h2 className="font-display text-3xl md:text-4xl uppercase mt-3">New here? Start with our parent guide.</h2>
-            <p className="mt-3 text-chalk/70 leading-relaxed">Understand exactly what IKF Pathway 360 is, the journey your child goes through, and what you can expect — before you sign up.</p>
+            <p className="mt-3 text-chalk/86 leading-relaxed">Understand exactly what IKF Pathway 360 is, the journey your child goes through, and what you can expect — before you sign up.</p>
           </div>
-          <Link to="/parents/pathway" className="inline-flex items-center justify-center gap-2 bg-neon-strike text-pitch-black px-7 py-3.5 rounded-full font-bold text-sm uppercase tracking-wider hover:bg-chalk transition-colors shrink-0">
+          <Link to="/parents/pathway" className="inline-flex items-center justify-center gap-2 bg-neon-strike text-ink px-7 py-3.5 rounded-full font-bold text-sm uppercase tracking-wider hover:brightness-95 transition-all shrink-0">
             Read the guide <ArrowRight size={16} />
           </Link>
         </div>
@@ -44,9 +44,9 @@ function Parents() {
             <details key={i} className="group bg-pitch-green/10 border border-chalk/10 p-6 open:bg-pitch-green/20">
               <summary className="cursor-pointer flex justify-between items-center font-display text-2xl uppercase">
                 {f.q}
-                <span className="text-neon-strike text-3xl group-open:rotate-45 transition-transform">+</span>
+                <span className="text-gold-ink text-3xl group-open:rotate-45 transition-transform">+</span>
               </summary>
-              <p className="mt-4 text-chalk/70 leading-relaxed">{f.a}</p>
+              <p className="mt-4 text-chalk/86 leading-relaxed">{f.a}</p>
             </details>
           ))}
         </div>

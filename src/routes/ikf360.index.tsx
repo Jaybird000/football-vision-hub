@@ -24,7 +24,7 @@ function Overview() {
         <h1 className="text-[40px] sm:text-[44px] leading-[1.05] tracking-tight">
           {hasStarted ? `Welcome back${firstName ? `, ${firstName}` : ""}.` : "Welcome to your child's IKF journey."}
           <br />
-          <span style={{ color: "var(--ikf-brand)" }}>
+          <span style={{ color: "var(--ikf-brand-ink)" }}>
             {hasStarted ? "Pick up where you left off." : "Let's begin."}
           </span>
         </h1>
@@ -36,7 +36,7 @@ function Overview() {
       </header>
 
       <section className="ikf-card p-6 sm:p-8 space-y-4">
-        <div className="text-[11px] uppercase tracking-[0.18em]" style={{ color: "var(--ikf-brand)" }}>What is IKF Pathway 360?</div>
+        <div className="text-[11px] uppercase tracking-[0.18em]" style={{ color: "var(--ikf-brand-ink)" }}>What is IKF Pathway 360?</div>
         <p className="text-[15px] leading-relaxed" style={{ color: "var(--ikf-text-dim)" }}>
           IKF Pathway 360 is your child's personalised football roadmap. You share a little about your child, add a few assessment reports when you're ready, and an IKF advisor gives you a clear, honest picture of where they stand today — and the best next step forward. No jargon, no pressure.
         </p>
@@ -45,7 +45,7 @@ function Overview() {
           <div><span className="font-semibold" style={{ color: "var(--ikf-text)" }}>2 · Deep Assessment</span><div style={{ color: "var(--ikf-text-dim)" }}>Add reports at your own pace.</div></div>
           <div><span className="font-semibold" style={{ color: "var(--ikf-text)" }}>3 · Recommendation</span><div style={{ color: "var(--ikf-text-dim)" }}>A clear, personalised plan.</div></div>
         </div>
-        <Link to="/parents/pathway" className="ikf-btn-ghost inline-flex items-center gap-2 text-[13px]">
+        <Link to="/parents/pathway" className="ikf-btn-primary inline-flex items-center gap-2 text-[13px]">
           Read the full parent guide <ArrowRight size={14} />
         </Link>
       </section>
@@ -53,12 +53,12 @@ function Overview() {
       <section className="ikf-card p-6 sm:p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-5" style={{ background: "var(--ikf-surface-2)", borderColor: "var(--ikf-brand)" }}>
         <div className="flex items-start gap-4">
           {hasStarted ? (
-            <CheckCircle2 size={28} className="mt-0.5 shrink-0" style={{ color: "var(--ikf-brand)" }} />
+            <CheckCircle2 size={28} className="mt-0.5 shrink-0" style={{ color: "var(--ikf-brand-ink)" }} />
           ) : (
-            <ClipboardList size={28} className="mt-0.5 shrink-0" style={{ color: "var(--ikf-brand)" }} />
+            <ClipboardList size={28} className="mt-0.5 shrink-0" style={{ color: "var(--ikf-brand-ink)" }} />
           )}
           <div>
-            <div className="text-[11px] uppercase tracking-[0.18em]" style={{ color: "var(--ikf-brand)" }}>
+            <div className="text-[11px] uppercase tracking-[0.18em]" style={{ color: "var(--ikf-brand-ink)" }}>
               {hasStarted ? "Stage 1 complete" : "Start here · Stage 1"}
             </div>
             <h2 className="mt-1 text-[20px] sm:text-[22px]">
@@ -96,10 +96,10 @@ function Overview() {
           <Link key={s.to} to={s.to} className="ikf-card p-7 group hover:border-[var(--ikf-brand)] transition-colors block">
             <div className="flex items-start justify-between">
               <div className="text-[12px] uppercase tracking-[0.18em]" style={{ color: "var(--ikf-text-dim)" }}>Stage {s.num}</div>
-              <s.icon size={20} style={{ color: "var(--ikf-brand)" }} />
+              <s.icon size={20} style={{ color: "var(--ikf-brand-ink)" }} />
             </div>
             <div className="mt-6 flex items-baseline gap-4">
-              <div className="text-[44px] font-black leading-none" style={{ color: "var(--ikf-brand)" }}>{s.num}</div>
+              <div className="text-[44px] font-black leading-none" style={{ color: "var(--ikf-brand-ink)" }}>{s.num}</div>
               <h3 className="text-[22px]">{s.title}</h3>
             </div>
             <p className="mt-3 text-[14px] leading-relaxed" style={{ color: "var(--ikf-text-dim)" }}>{s.desc}</p>
@@ -121,7 +121,7 @@ function Overview() {
         >
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1">
-              <div className="text-[12px] uppercase tracking-[0.18em]" style={{ color: "var(--ikf-brand)" }}>Parent community</div>
+              <div className="text-[12px] uppercase tracking-[0.18em]" style={{ color: "var(--ikf-brand-ink)" }}>Parent community</div>
               <h3 className="mt-3 text-[22px]">Parent Support Track</h3>
               <p className="mt-2 text-[14px] leading-relaxed max-w-2xl" style={{ color: "var(--ikf-text-dim)" }}>
                 A parallel space for parents in the network — circles, advisor office hours, peer mentors, and a curated library.
@@ -131,7 +131,7 @@ function Overview() {
                 Open <ArrowRight size={14} />
               </div>
             </div>
-            <MessagesSquare size={28} style={{ color: "var(--ikf-brand)" }} className="shrink-0" />
+            <MessagesSquare size={28} style={{ color: "var(--ikf-brand-ink)" }} className="shrink-0" />
           </div>
         </Link>
       </section>

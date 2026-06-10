@@ -36,7 +36,7 @@ function ParentSupport() {
       </Link>
 
       <header className="space-y-4 max-w-2xl">
-        <div className="ikf-chip" style={{ background: "var(--ikf-surface)", color: "var(--ikf-brand)" }}>Parent Support Track</div>
+        <div className="ikf-chip" style={{ background: "var(--ikf-surface)", color: "var(--ikf-brand-ink)" }}>Parent Support Track</div>
         <h1 className="text-[32px] sm:text-[44px] leading-[1.05] tracking-tight">You are not doing this alone.</h1>
         <p className="text-[16px] leading-relaxed" style={{ color: "var(--ikf-text-dim)" }}>
           The three stages of IKF Pathway 360 give your child a structured path. The Parent Support Track is a parallel space — for you,
@@ -54,7 +54,7 @@ function ParentSupport() {
           const Icon = p.icon;
           return (
             <div key={p.title} className="ikf-card p-7">
-              <Icon size={20} style={{ color: "var(--ikf-brand)" }} />
+              <Icon size={20} style={{ color: "var(--ikf-brand-ink)" }} />
               <h3 className="mt-4 text-[20px]">{p.title}</h3>
               <p className="mt-3 text-[14px] leading-relaxed" style={{ color: "var(--ikf-text-dim)" }}>{p.body}</p>
             </div>

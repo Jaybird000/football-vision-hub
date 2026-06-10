@@ -42,7 +42,7 @@ function Donate() {
   return (
     <>
       <PageHero eyebrow="Donate"
-        title={<>Fuel the <span className="text-neon-strike not-italic mx-[0.1em]">grassroots</span>.</>}
+        title={<>Fuel the <span className="text-gold-ink not-italic mx-[0.1em]">grassroots</span>.</>}
         sub="100% of donations go to player kits, trials, camps, and academy scholarships. Operating costs are covered by our corporate partners — your money goes straight to the pitch."
         image={img} />
 
@@ -51,25 +51,25 @@ function Donate() {
         <section className="border-y border-neon-strike/30 bg-pitch-green/15">
           <div className="max-w-7xl mx-auto px-6 py-10 grid md:grid-cols-3 gap-6 items-end">
             <div>
-              <div className="text-[10px] uppercase tracking-[0.3em] text-neon-strike font-bold mb-2">Live · {stats.month}</div>
+              <div className="text-[10px] uppercase tracking-[0.3em] text-gold-ink font-bold mb-2">Live · {stats.month}</div>
               <div className="font-display text-5xl md:text-6xl leading-none">
                 <Counter to={stats.raisedThisMonth} prefix="₹" />
               </div>
-              <div className="text-chalk/60 text-xs uppercase tracking-widest mt-2">raised this month</div>
+              <div className="text-chalk/82 text-xs uppercase tracking-widest mt-2">raised this month</div>
             </div>
             <div>
-              <div className="font-display text-5xl md:text-6xl leading-none text-neon-strike">
+              <div className="font-display text-5xl md:text-6xl leading-none text-gold-ink">
                 = <Counter to={stats.kitsDelivered} />
               </div>
-              <div className="text-chalk/60 text-xs uppercase tracking-widest mt-2">kits delivered to players</div>
+              <div className="text-chalk/82 text-xs uppercase tracking-widest mt-2">kits delivered to players</div>
             </div>
-            <div className="text-sm text-chalk/65">
+            <div className="text-sm text-chalk/82">
               <div className="flex items-center gap-2 mb-1">
                 <span className="inline-block w-2 h-2 rounded-full bg-neon-strike animate-pulse" />
-                <span className="text-[10px] uppercase tracking-[0.3em] text-chalk/50 font-bold">Last donation</span>
+                <span className="text-[10px] uppercase tracking-[0.3em] text-chalk/74 font-bold">Last donation</span>
               </div>
               <div className="font-display text-2xl">{stats.lastDonor}</div>
-              <div className="text-chalk/45 text-xs">{stats.minutesAgo} min ago · {stats.trialsFunded} trials funded this month</div>
+              <div className="text-chalk/72 text-xs">{stats.minutesAgo} min ago · {stats.trialsFunded} trials funded this month</div>
             </div>
           </div>
         </section>
@@ -85,34 +85,34 @@ function Donate() {
                 return (
                   <button key={tier.amt} onClick={() => { setSelected(tier.amt); setCustom(""); }}
                     className={`text-left p-6 border transition-colors ${active ? "border-neon-strike bg-pitch-green/20" : "border-chalk/15 bg-pitch-green/5 hover:border-chalk/40"}`}>
-                    <div className="font-display text-4xl text-neon-strike">₹{tier.amt.toLocaleString("en-IN")}</div>
+                    <div className="font-display text-4xl text-gold-ink">₹{tier.amt.toLocaleString("en-IN")}</div>
                     <h3 className="font-display text-xl uppercase mt-2">{tier.t}</h3>
-                    <p className="text-chalk/65 text-sm mt-2">{tier.b}</p>
+                    <p className="text-chalk/82 text-sm mt-2">{tier.b}</p>
                   </button>
                 );
               })}
             </div>
           </div>
-          <aside className="lg:col-span-5 bg-pitch-black border border-chalk/15 p-8 lg:self-start lg:sticky lg:top-28">
+          <aside className="lg:col-span-5 bg-paper-2 border border-black/10 shadow-sm p-8 lg:self-start lg:sticky lg:top-28">
             <h3 className="font-display text-3xl uppercase">Your donation</h3>
             <div className="mt-6">
-              <label className="text-xs uppercase tracking-widest text-chalk/60 font-bold">Custom amount (₹)</label>
+              <label className="text-xs uppercase tracking-widest text-chalk/82 font-bold">Custom amount (₹)</label>
               <input type="number" value={custom} onChange={e => setCustom(e.target.value)} placeholder="Any amount"
                 className="mt-2 w-full bg-pitch-green/10 border border-chalk/15 px-4 py-3 font-display text-2xl text-chalk focus:outline-none focus:border-neon-strike" />
             </div>
-            <div className="mt-6 flex justify-between text-sm text-chalk/70">
+            <div className="mt-6 flex justify-between text-sm text-chalk/86">
               <span>Total</span>
-              <span className="font-display text-3xl text-neon-strike">₹{(custom ? Number(custom) || 0 : selected).toLocaleString("en-IN")}</span>
+              <span className="font-display text-3xl text-gold-ink">₹{(custom ? Number(custom) || 0 : selected).toLocaleString("en-IN")}</span>
             </div>
             {stats && (
-              <div className="mt-2 text-xs text-chalk/55">
-                ≈ <span className="text-neon-strike font-bold">{Math.max(1, Math.floor((custom ? Number(custom) || 0 : selected) / stats.rupeesPerKit))}</span> player kit{Math.floor((custom ? Number(custom) || 0 : selected) / stats.rupeesPerKit) === 1 ? "" : "s"} delivered
+              <div className="mt-2 text-xs text-chalk/78">
+                ≈ <span className="text-gold-ink font-bold">{Math.max(1, Math.floor((custom ? Number(custom) || 0 : selected) / stats.rupeesPerKit))}</span> player kit{Math.floor((custom ? Number(custom) || 0 : selected) / stats.rupeesPerKit) === 1 ? "" : "s"} delivered
               </div>
             )}
-            <button {...ctaSoundProps} className="cta-cursor mt-6 w-full bg-neon-strike text-pitch-black px-8 py-4 font-display text-2xl uppercase tracking-wide hover:scale-[1.01] transition-transform">
+            <button {...ctaSoundProps} className="cta-cursor mt-6 w-full bg-neon-strike text-ink px-8 py-4 font-display text-2xl uppercase tracking-wide hover:scale-[1.01] transition-transform">
               Donate Now
             </button>
-            <p className="mt-4 text-[10px] text-chalk/40 uppercase tracking-widest text-center">80G Tax Deductible · Registered Non-Profit</p>
+            <p className="mt-4 text-[10px] text-chalk/72 uppercase tracking-widest text-center">80G Tax Deductible · Registered Non-Profit</p>
           </aside>
         </div>
       </Section>

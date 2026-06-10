@@ -36,7 +36,7 @@ function UploadPortal() {
     return (
       <div className="max-w-2xl mx-auto py-10">
         <div className="ikf-card p-8 text-center space-y-4">
-          <AlertCircle size={40} className="mx-auto" style={{ color: "var(--ikf-brand)" }} />
+          <AlertCircle size={40} className="mx-auto" style={{ color: "var(--ikf-brand-ink)" }} />
           <h1 className="text-[22px] sm:text-[28px] leading-tight">Complete the Parent SOP first</h1>
           <p className="text-[14px]" style={{ color: "var(--ikf-text-dim)" }}>
             Stage 2 unlocks automatically as soon as you've finished Stage 1.
@@ -102,7 +102,7 @@ function Portal({ state, onChanged }: { state: Stage2State; onChanged: () => voi
           style={{ borderColor: "var(--ikf-brand)" }}
         >
           <div className="flex items-center gap-3">
-            <ShieldCheck size={22} style={{ color: "var(--ikf-brand)" }} />
+            <ShieldCheck size={22} style={{ color: "var(--ikf-brand-ink)" }} />
             <span className="text-[14px]">
               Minimum required dataset reached. Your advisor has been notified — Stage 3 recommendation will be issued within 48 hours.
             </span>
@@ -161,7 +161,7 @@ function MentorAssistancePanel({
   if (state.assistanceRequestedAt || mutation.isSuccess) {
     return (
       <div className="ikf-card p-6 mb-8 flex items-start gap-3" style={{ borderColor: "var(--ikf-brand)" }}>
-        <CheckCircle2 size={22} className="mt-0.5 shrink-0" style={{ color: "var(--ikf-brand)" }} />
+        <CheckCircle2 size={22} className="mt-0.5 shrink-0" style={{ color: "var(--ikf-brand-ink)" }} />
         <div>
           <h3 className="text-[16px] font-bold">Your request is in.</h3>
           <p className="mt-1 text-[13px] leading-relaxed" style={{ color: "var(--ikf-text-dim)" }}>
@@ -175,7 +175,7 @@ function MentorAssistancePanel({
   return (
     <div className="ikf-card p-6 mb-8" style={{ borderColor: "var(--ikf-brand)", borderStyle: "dashed" }}>
       <div className="flex items-start gap-3">
-        <LifeBuoy size={22} className="mt-0.5 shrink-0" style={{ color: "var(--ikf-brand)" }} />
+        <LifeBuoy size={22} className="mt-0.5 shrink-0" style={{ color: "var(--ikf-brand-ink)" }} />
         <div className="flex-1">
           <h3 className="text-[16px] font-bold">Don't have these documents?</h3>
           <p className="mt-1 text-[13px] leading-relaxed" style={{ color: "var(--ikf-text-dim)" }}>
@@ -285,7 +285,7 @@ function AssessmentCard({
         <div className="flex-1">
           <h3 className="text-[16px] font-bold leading-tight">{template.title}</h3>
           {isRequired ? (
-            <div className="text-[10px] uppercase tracking-[0.14em] mt-1.5 font-bold" style={{ color: "var(--ikf-brand)" }}>
+            <div className="text-[10px] uppercase tracking-[0.14em] mt-1.5 font-bold" style={{ color: "var(--ikf-brand-ink)" }}>
               Required
             </div>
           ) : (
@@ -318,7 +318,7 @@ function AssessmentCard({
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1.5 hover:underline"
-                    style={{ color: "var(--ikf-brand)" }}
+                    style={{ color: "var(--ikf-brand-ink)" }}
                   >
                     {p.name}{p.city ? ` · ${p.city}` : ""} <ExternalLink size={11} />
                   </a>
@@ -408,7 +408,7 @@ function AssessmentCard({
 function StatusBadge({ status }: { status: "verified" | "uploaded" | "pending" | "rejected" }) {
   const map = {
     verified:  { bg: "rgba(34,197,94,0.12)",  color: "#22c55e", label: "Verified", icon: <Check size={11} /> },
-    uploaded:  { bg: "rgba(223,255,94,0.12)", color: "#DFFF5E", label: "Uploaded", icon: <FileUp size={11} /> },
+    uploaded:  { bg: "rgba(245,197,24,0.18)", color: "#8A6D08", label: "Uploaded", icon: <FileUp size={11} /> },
     pending:   { bg: "rgba(160,160,160,0.12)", color: "#9ca3af", label: "Pending",  icon: <Clock size={11} /> },
     rejected:  { bg: "rgba(220,38,38,0.12)",  color: "#dc2626", label: "Rejected", icon: <AlertCircle size={11} /> },
   } as const;

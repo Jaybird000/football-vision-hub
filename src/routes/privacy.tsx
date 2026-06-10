@@ -13,9 +13,9 @@ function Privacy() {
   return (
     <Section>
       <div className="max-w-3xl">
-        <span className="text-neon-strike font-bold text-xs uppercase tracking-[0.3em]">Privacy</span>
+        <span className="text-gold-ink font-bold text-xs uppercase tracking-[0.3em]">Privacy</span>
         <h1 className="font-display uppercase italic text-5xl md:text-6xl mt-3 leading-[0.95]">IKF Pathway 360 privacy policy</h1>
-        <p className="mt-3 text-sm text-chalk/50 uppercase tracking-widest">Last updated: 26 May 2026</p>
+        <p className="mt-3 text-sm text-chalk/74 uppercase tracking-widest">Last updated: 26 May 2026</p>
 
         <div className="mt-8 border-l-4 border-neon-strike bg-pitch-green/10 p-5 text-sm text-chalk/80 leading-relaxed">
           <strong className="text-chalk">Draft pending legal review.</strong> This page is a working version. The structure
@@ -45,8 +45,8 @@ function Privacy() {
           </Block>
 
           <Block title="Contact">
-            <p>India Khelo Football · <a href="https://indiakhelofootball.com" className="text-neon-strike underline">indiakhelofootball.com</a></p>
-            <p className="mt-1 text-chalk/50 text-sm">A dedicated privacy contact address will be added before public launch.</p>
+            <p>India Khelo Football · <a href="https://indiakhelofootball.com" className="text-gold-ink underline">indiakhelofootball.com</a></p>
+            <p className="mt-1 text-chalk/74 text-sm">A dedicated privacy contact address will be added before public launch.</p>
           </Block>
         </div>
       </div>
