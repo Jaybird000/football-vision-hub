@@ -47,11 +47,9 @@ export function Nav() {
     router.navigate({ to: "/" });
   }
 
-  const publicLinks: Array<{ to: "/players" | "/coaches" | "/initiatives" | "/about" | "/parents/pathway"; label: string }> = [
+  const publicLinks: Array<{ to: "/players" | "/about" | "/parents/pathway"; label: string }> = [
     { to: "/parents/pathway", label: t("nav", "parentPathway") },
     { to: "/players", label: t("nav", "players") },
-    { to: "/coaches", label: t("nav", "coaches") },
-    { to: "/initiatives", label: t("nav", "initiatives") },
     { to: "/about", label: t("nav", "about") },
   ];
 
@@ -78,7 +76,7 @@ export function Nav() {
                   to={tab.to}
                   className="px-3 py-2 rounded-md text-[13px] font-semibold transition-colors"
                   style={active
-                    ? { background: "var(--ikf-brand, #F5C518)", color: "#1E2A38" }
+                    ? { background: "var(--ikf-brand, #FDFE00)", color: "#1E2A38" }
                     : { color: "rgba(30,42,56,0.65)" }}
                 >
                   {tab.label}
@@ -149,11 +147,6 @@ export function Nav() {
               </Link>
             )
           )}
-          {!isIkf360 && (
-            <Link to="/donate" className="hidden sm:inline-flex bg-neon-strike text-ink px-5 py-2 rounded-full font-bold text-xs uppercase tracking-wider hover:brightness-95 transition-all">
-              {t("nav", "donate")}
-            </Link>
-          )}
           <button onClick={() => setOpen(!open)} className="md:hidden text-chalk p-2" aria-label="menu">
             {open ? <X size={20} /> : <Menu size={20} />}
           </button>
@@ -201,10 +194,6 @@ export function Nav() {
             !isIkf360 && (
               <Link to="/login" className="text-chalk/80 hover:text-gold-ink" onClick={() => setOpen(false)}>Log in</Link>
             )
-          )}
-
-          {!isIkf360 && (
-            <Link to="/donate" className="text-gold-ink" onClick={() => setOpen(false)}>{t("nav", "donate")}</Link>
           )}
         </div>
       )}

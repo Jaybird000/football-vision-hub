@@ -54,16 +54,23 @@
        --neon-strike  = IKF gold accent
      Genuine dark-text-on-accent / dark-surface usages are fixed per-component
      to --ink / --paper-2 below. */
-  --pitch-black: #FCF8EC;   /* page background — warm cream/ivory */
-  --pitch-green: #F3EAD0;   /* subtle warm panel tint (used at low opacity) */
-  --neon-strike: #F5C518;   /* IKF gold (primary accent) */
-  --chalk: #1E2A38;         /* navy ink (primary text) */
-  --ikf-yellow: #F5C518;    /* IKF gold (same brand yellow) */
+  /* Official IKF brand kit: NAVY workhorse (#144A6C), BLUE interactive
+     (#0F75BD), YELLOW scarce accent (#FDFE00 — CTA/badge/underline only, never
+     text, never large fields), on white / gray-100 surfaces. Legacy token NAMES
+     kept; values remapped:
+       --pitch-black = white page bg      --chalk    = gray-900 body text
+       --neon-strike = yellow CTA fill    --gold-ink = blue link/accent TEXT
+       --ink         = navy (dark surfaces + text on yellow) */
+  --pitch-black: #FFFFFF;   /* page background — white */
+  --pitch-green: #F2F5F7;   /* gray-100 — subtle alt surface */
+  --neon-strike: #FDFE00;   /* IKF yellow — scarce CTA/accent fill (navy text on top) */
+  --chalk: #1A2229;         /* gray-900 — primary body text */
+  --ikf-yellow: #FDFE00;
 
-  --ink: #1E2A38;           /* explicit navy — text on gold, dark surfaces */
-  --paper: #FCF8EC;         /* cream */
-  --paper-2: #FFFFFF;       /* white card surface */
-  --gold-ink: #8A6608;      /* DEEP gold — for gold TEXT on light bg (legible) */
+  --ink: #144A6C;           /* IKF navy — dark surfaces + text on yellow */
+  --paper: #FFFFFF;
+  --paper-2: #FFFFFF;       /* white cards (gray-300 borders give definition) */
+  --gold-ink: #0A5A94;      /* IKF blue — link/accent TEXT (AA on white) */
 
   --background: var(--pitch-black);
   --foreground: var(--chalk);
@@ -71,19 +78,19 @@
   --card-foreground: var(--chalk);
   --popover: #FFFFFF;
   --popover-foreground: var(--chalk);
-  --primary: var(--neon-strike);
-  --primary-foreground: var(--ink);
-  --secondary: #F0E7CF;
+  --primary: #144A6C;
+  --primary-foreground: #FFFFFF;
+  --secondary: #F2F5F7;
   --secondary-foreground: var(--chalk);
-  --muted: #F0E7CF;
-  --muted-foreground: #5B6675;
-  --accent: var(--neon-strike);
-  --accent-foreground: var(--ink);
+  --muted: #F2F5F7;
+  --muted-foreground: #3A4754;
+  --accent: #0F75BD;
+  --accent-foreground: #FFFFFF;
   --destructive: oklch(0.6 0.22 25);
   --destructive-foreground: #FFFFFF;
-  --border: oklch(0 0 0 / 10%);
-  --input: oklch(0 0 0 / 14%);
-  --ring: var(--neon-strike);
+  --border: #C6CED5;
+  --input: #C6CED5;
+  --ring: #0F75BD;
   --radius: 4px;
 }
 
@@ -92,12 +99,12 @@
    legacy tokens back to dark values means text-chalk reads light and
    pitch-black backgrounds/gradients read dark — no per-line rewrites needed. */
 .on-dark {
-  --pitch-black: #0B1220;   /* dark navy background / gradient */
-  --pitch-green: #1B2538;   /* dark panel */
-  --chalk: #FCF8EC;         /* light text */
-  --ink: #0B1220;           /* text-on-gold stays dark */
-  --gold-ink: #F5C518;      /* on dark, gold text is bright again */
-  --border: oklch(1 0 0 / 12%);
+  --pitch-black: #0C2E44;   /* IKF navy-900 — dark hero/footer */
+  --pitch-green: #144A6C;   /* navy panel */
+  --chalk: #FFFFFF;         /* white text (9.4:1 on navy) */
+  --ink: #144A6C;           /* text-on-yellow stays navy */
+  --gold-ink: #FDFE00;      /* yellow accent text on navy (high-contrast) */
+  --border: oklch(1 0 0 / 14%);
   color: var(--chalk);
 }
 
@@ -176,16 +183,16 @@
    re-skin the entire platform mockup.
    ============================================================ */
 .ikf360-theme {
-  /* IKF LIGHT theme — cream page, white cards, navy ink, gold accent. */
-  --ikf-bg:        #FCF8EC;   /* page background — cream */
+  /* Official IKF kit — gray-100 page, white cards, navy/gray text, blue links, yellow CTA. */
+  --ikf-bg:        #F2F5F7;   /* page background — gray-100 */
   --ikf-surface:   #FFFFFF;   /* cards, panels */
-  --ikf-surface-2: #F4ECD6;   /* nested surfaces, inputs — warm light */
-  --ikf-border:    #E7DEC4;   /* hairlines — warm */
-  --ikf-text:      #1E2A38;   /* primary text — navy ink */
-  --ikf-text-dim:  #5B6675;   /* secondary text — muted navy */
-  --ikf-brand:     #F5C518;   /* IKF gold (primary CTA fills) */
-  --ikf-brand-ink: #8A6608;   /* DEEP gold for gold TEXT on the light portal */
-  --ikf-accent:    #F5C518;   /* IKF gold */
+  --ikf-surface-2: #ECF1F5;   /* nested surfaces, inputs */
+  --ikf-border:    #C6CED5;   /* hairlines — gray-300 */
+  --ikf-text:      #1A2229;   /* primary text — gray-900 */
+  --ikf-text-dim:  #3A4754;   /* secondary text — gray-700 */
+  --ikf-brand:     #FDFE00;   /* IKF yellow — CTA fills (navy text on top) */
+  --ikf-brand-ink: #0A5A94;   /* IKF blue — link/accent TEXT */
+  --ikf-accent:    #0F75BD;   /* IKF blue */
   --ikf-success:   #15803D;   /* legible greens/ambers/reds on light bg */
   --ikf-warning:   #B45309;
   --ikf-danger:    #DC2626;

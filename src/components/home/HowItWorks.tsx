@@ -26,7 +26,7 @@ const STEPS = [
  */
 export function HowItWorks() {
   return (
-    <section className="bg-[#FAF8F3] text-[#1C1C19]">
+    <section className="bg-[#FFFFFF] text-[#144A6C]">
       <div className="mx-auto max-w-6xl px-6 py-24 md:py-32">
         <Reveal as="h2" className="max-w-2xl font-serif text-[clamp(1.8rem,4vw,3rem)] font-medium leading-[1.1] tracking-[-0.015em]">
           Three steps. One honest picture.
@@ -34,21 +34,21 @@ export function HowItWorks() {
 
         <div className="mt-16 grid grid-cols-1 gap-y-12 md:grid-cols-3 md:gap-x-10 md:gap-y-0">
           {STEPS.map((step, i) => (
-            <Reveal key={step.n} delay={i * 120} className="md:border-l md:border-[#E2DCD0] md:pl-7 md:first:border-l-0 md:first:pl-0">
-              <span className="font-serif text-4xl font-medium text-[#C99700]">{step.n}</span>
-              <p className="mt-5 font-sans text-lg font-semibold leading-snug text-[#1C1C19]">
+            <Reveal key={step.n} delay={i * 120} className="md:border-l md:border-[#E9EEF2] md:pl-7 md:first:border-l-0 md:first:pl-0">
+              <span className="font-serif text-4xl font-medium text-[#0A5A94]">{step.n}</span>
+              <p className="mt-5 font-sans text-lg font-semibold leading-snug text-[#144A6C]">
                 {step.lead}
               </p>
-              <p className="mt-3 font-sans text-base leading-relaxed text-[#5C5A53]">
+              <p className="mt-3 font-sans text-base leading-relaxed text-[#3A4754]">
                 {step.body}
               </p>
             </Reveal>
           ))}
         </div>
 
-        <Reveal delay={120} className="mt-16 border-t border-[#E2DCD0] pt-8">
-          <p className="max-w-3xl font-sans text-base leading-relaxed text-[#5C5A53]">
-            <span className="font-semibold text-[#1E2A38]">Every six months, we check in.</span>{" "}
+        <Reveal delay={120} className="mt-16 border-t border-[#E9EEF2] pt-8">
+          <p className="max-w-3xl font-sans text-base leading-relaxed text-[#3A4754]">
+            <span className="font-semibold text-[#1A2229]">Every six months, we check in.</span>{" "}
             Because situations change — and your child's pathway should reflect
             where you are, not where you were.
           </p>

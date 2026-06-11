@@ -239,14 +239,14 @@ function ParentPathway() {
 
       {/* Final CTA */}
       <Section className="border-t border-chalk/10">
-        <div className="bg-neon-strike text-ink p-10 md:p-14 rounded-sm">
+        <div className="bg-ink text-paper p-10 md:p-14 rounded-sm">
           <h2 className="font-display text-4xl md:text-6xl uppercase leading-none">{L(C.finalTitle)}</h2>
-          <p className="mt-4 text-lg max-w-2xl text-ink/80">{L(C.finalBody)}</p>
+          <p className="mt-4 text-lg max-w-2xl text-paper/80">{L(C.finalBody)}</p>
           <div className="mt-8 flex flex-col sm:flex-row gap-4">
-            <Link to="/signup" search={{ next: "/ikf360/intent" }} className="inline-flex items-center justify-center gap-2 border border-ink text-ink px-7 py-3.5 rounded-full font-bold text-sm uppercase tracking-wider hover:bg-ink hover:text-paper transition-colors">
+            <Link to="/signup" search={{ next: "/ikf360/intent" }} className="inline-flex items-center justify-center gap-2 bg-neon-strike text-ink px-7 py-3.5 rounded-full font-bold text-sm uppercase tracking-wider hover:brightness-95 transition-all">
               {L(C.ctaPrimary)} <ArrowRight size={16} />
             </Link>
-            <Link to="/login" className="inline-flex items-center justify-center gap-2 border border-ink text-ink px-7 py-3.5 rounded-full font-bold text-sm uppercase tracking-wider hover:bg-ink hover:text-paper transition-colors">
+            <Link to="/login" className="inline-flex items-center justify-center gap-2 border border-paper/50 text-paper px-7 py-3.5 rounded-full font-bold text-sm uppercase tracking-wider hover:bg-paper hover:text-ink transition-colors">
               {L(C.ctaSecondary)}
             </Link>
           </div>

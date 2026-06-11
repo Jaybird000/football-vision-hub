@@ -93,7 +93,7 @@ export async function sendParentIntentAck(args: {
       <li style="margin-bottom:6px;">You'll then be guided through the next step — gathering a small set of assessments so we can build a real picture of ${args.childName}'s pathway.</li>
       <li>Your dashboard will fill in as that picture comes together.</li>
     </ul>
-    <p style="margin:0 0 16px;"><a href="${APP_BASE_URL}/login" style="display:inline-block;padding:10px 16px;background:#F5C518;color:#0B1220;text-decoration:none;border-radius:6px;font-weight:600;font-size:13px;">Open your dashboard</a></p>
+    <p style="margin:0 0 16px;"><a href="${APP_BASE_URL}/login" style="display:inline-block;padding:10px 16px;background:#144A6C;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:600;font-size:13px;">Open your dashboard</a></p>
     <p style="margin:0;">We are with you in this.<br/>— The IKF Pathway 360 team</p>
   `);
   await sendEmail({ to: args.to, subject, html, text });
@@ -136,7 +136,7 @@ export async function sendAdvisorNewIntent(args: {
       ${args.parentPhone ? `<tr><td style="color:#6b7280;">Phone</td><td>${args.parentPhone}</td></tr>` : ""}
       <tr><td style="color:#6b7280;">Readiness</td><td><strong>${args.readiness}</strong></td></tr>
     </table>
-    <p style="margin:0;"><a href="${profileUrl}" style="display:inline-block;padding:10px 16px;background:#F5C518;color:#0B1220;text-decoration:none;border-radius:6px;font-weight:600;font-size:13px;">Open profile</a></p>
+    <p style="margin:0;"><a href="${profileUrl}" style="display:inline-block;padding:10px 16px;background:#144A6C;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:600;font-size:13px;">Open profile</a></p>
   `);
   await sendEmail({ to: ADVISOR_EMAIL, subject, html, text });
 }
@@ -162,7 +162,7 @@ export async function sendAdvisorReadyToScore(args: {
   const html = shell(`
     <p style="margin:0 0 12px;font-weight:600;">Ready to categorise</p>
     <p style="margin:0 0 16px;"><strong>${args.childName}</strong>'s required assessments are all uploaded. ${args.parentName} is ready for Stage 3 categorisation.</p>
-    <p style="margin:0;"><a href="${profileUrl}" style="display:inline-block;padding:10px 16px;background:#F5C518;color:#0B1220;text-decoration:none;border-radius:6px;font-weight:600;font-size:13px;">Review &amp; score</a></p>
+    <p style="margin:0;"><a href="${profileUrl}" style="display:inline-block;padding:10px 16px;background:#144A6C;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:600;font-size:13px;">Review &amp; score</a></p>
   `);
   await sendEmail({ to: ADVISOR_EMAIL, subject, html, text });
 }
@@ -195,7 +195,7 @@ export async function sendParentRecommendationReady(args: {
   const html = shell(`
     <p style="margin:0 0 12px;">Hi ${fn},</p>
     <p style="margin:0 0 16px;"><strong>${advisorLabel}</strong> has reviewed everything you've shared and prepared a pathway recommendation for <strong>${args.childName}</strong>.</p>
-    <p style="margin:0 0 16px;"><a href="${dashboardUrl}" style="display:inline-block;padding:10px 16px;background:#F5C518;color:#0B1220;text-decoration:none;border-radius:6px;font-weight:600;font-size:13px;">Read the recommendation</a></p>
+    <p style="margin:0 0 16px;"><a href="${dashboardUrl}" style="display:inline-block;padding:10px 16px;background:#144A6C;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:600;font-size:13px;">Read the recommendation</a></p>
     <p style="margin:0 0 12px;">Take your time with it. If anything in the recommendation surprises you, that's exactly the kind of thing to raise with ${advisorLabel.toLowerCase().startsWith("your") ? advisorLabel.toLowerCase() : args.advisorName} in your next conversation.</p>
     <p style="margin:0;">— The IKF Pathway 360 team</p>
   `);
@@ -232,7 +232,7 @@ export async function sendAdvisorReviewDue(args: {
   const html = shell(`
     <p style="margin:0 0 12px;font-weight:600;">Review due — ${args.childName}</p>
     <p style="margin:0 0 16px;">The 6-month categorisation review for <strong>${args.childName}</strong> is due in <strong>${args.daysRemaining} days</strong> (by ${dueOn}). ${args.parentName} should be re-engaged to refresh assessment data and re-score the profile.</p>
-    <p style="margin:0;"><a href="${profileUrl}" style="display:inline-block;padding:10px 16px;background:#F5C518;color:#0B1220;text-decoration:none;border-radius:6px;font-weight:600;font-size:13px;">Open profile</a></p>
+    <p style="margin:0;"><a href="${profileUrl}" style="display:inline-block;padding:10px 16px;background:#144A6C;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:600;font-size:13px;">Open profile</a></p>
   `);
   await sendEmail({ to: ADVISOR_EMAIL, subject, html, text });
 }
@@ -263,7 +263,7 @@ export async function sendParentStage2Nudge(args: {
     <p style="margin:0 0 12px;">Hi ${fn},</p>
     <p style="margin:0 0 16px;">It's been ${args.daysSinceIntent} days since you completed the Parent SOP for <strong>${args.childName}</strong>. The next step is uploading the assessment reports so an IKF advisor can build a recommendation.</p>
     <p style="margin:0 0 16px;">If you've run into anything that's making it hard to gather them, your advisor would rather hear about it than have you stuck. Reply to this email and we'll work through it together.</p>
-    <p style="margin:0 0 16px;"><a href="${uploadUrl}" style="display:inline-block;padding:10px 16px;background:#F5C518;color:#0B1220;text-decoration:none;border-radius:6px;font-weight:600;font-size:13px;">Open upload portal</a></p>
+    <p style="margin:0 0 16px;"><a href="${uploadUrl}" style="display:inline-block;padding:10px 16px;background:#144A6C;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:600;font-size:13px;">Open upload portal</a></p>
     <p style="margin:0;">— The IKF Pathway 360 team</p>
   `);
   await sendEmail({ to: args.to, subject, html, text });
@@ -314,7 +314,7 @@ export async function sendAdvisorAssistanceRequested(args: {
       ${missingList.map(t => `<li style="margin-bottom:4px;">${t}</li>`).join("")}
     </ul>
     ${args.message ? `<p style="margin:0 0 6px;font-weight:600;">Their message</p><p style="margin:0 0 16px;padding:12px;background:#f5f6f7;border-radius:6px;">${args.message}</p>` : `<p style="margin:0 0 16px;color:#6b7280;">No message left.</p>`}
-    <p style="margin:0;"><a href="${profileUrl}" style="display:inline-block;padding:10px 16px;background:#F5C518;color:#0B1220;text-decoration:none;border-radius:6px;font-weight:600;font-size:13px;">Open profile</a></p>
+    <p style="margin:0;"><a href="${profileUrl}" style="display:inline-block;padding:10px 16px;background:#144A6C;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:600;font-size:13px;">Open profile</a></p>
   `);
   await sendEmail({ to: ADVISOR_EMAIL, subject, html, text });
 }
@@ -352,7 +352,7 @@ export async function sendAdvisorSopReviewFlag(args: {
       <tr><td style="color:#6b7280;">Email</td><td><a href="mailto:${args.parentEmail}" style="color:#0B1220;">${args.parentEmail}</a></td></tr>
     </table>
     ${args.note ? `<p style="margin:0 0 6px;font-weight:600;">What changed</p><p style="margin:0 0 16px;padding:12px;background:#f5f6f7;border-radius:6px;">${args.note}</p>` : `<p style="margin:0 0 16px;color:#6b7280;">No detail left.</p>`}
-    <p style="margin:0;"><a href="${profileUrl}" style="display:inline-block;padding:10px 16px;background:#F5C518;color:#0B1220;text-decoration:none;border-radius:6px;font-weight:600;font-size:13px;">Open profile</a></p>
+    <p style="margin:0;"><a href="${profileUrl}" style="display:inline-block;padding:10px 16px;background:#144A6C;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:600;font-size:13px;">Open profile</a></p>
   `);
   await sendEmail({ to: ADVISOR_EMAIL, subject, html, text });
 }
@@ -385,7 +385,7 @@ export async function sendParentReviewReminder(args: {
     <p style="margin:0 0 12px;">Hi ${fn},</p>
     <p style="margin:0 0 16px;"><strong>${args.childName}</strong>'s next review is coming up in about <strong>${weeks} ${weeks === 1 ? "week" : "weeks"}</strong>. Before we update the profile, we'd like to check in on a few things.</p>
     <p style="margin:0 0 16px;">It's five short questions, about five minutes — just anything that's changed since you last told us about your situation.</p>
-    <p style="margin:0;"><a href="${preReviewUrl}" style="display:inline-block;padding:10px 16px;background:#F5C518;color:#0B1220;text-decoration:none;border-radius:6px;font-weight:600;font-size:13px;">Start the check-in</a></p>
+    <p style="margin:0;"><a href="${preReviewUrl}" style="display:inline-block;padding:10px 16px;background:#144A6C;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:600;font-size:13px;">Start the check-in</a></p>
   `);
   await sendEmail({ to: args.to, subject, html, text });
 }
@@ -419,7 +419,7 @@ export async function sendParentContent(args: {
     <p style="margin:0 0 16px;">One thing worth reading this month, chosen for where <strong>${args.childName}</strong> is right now:</p>
     <p style="margin:0 0 6px;font-weight:600;font-size:16px;">${args.contentTitle}</p>
     ${args.contentSummary ? `<p style="margin:0 0 16px;color:#5B6675;">${args.contentSummary}</p>` : ""}
-    <p style="margin:0;"><a href="${args.contentUrl}" style="display:inline-block;padding:10px 16px;background:#F5C518;color:#0B1220;text-decoration:none;border-radius:6px;font-weight:600;font-size:13px;">Read it</a></p>
+    <p style="margin:0;"><a href="${args.contentUrl}" style="display:inline-block;padding:10px 16px;background:#144A6C;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:600;font-size:13px;">Read it</a></p>
   `);
   await sendEmail({ to: args.to, subject, html, text });
 }
@@ -448,7 +448,7 @@ export async function sendAdvisorPreReview(args: {
     <p style="margin:0 0 12px;font-weight:600;">Pre-review check-in — ${args.childName}</p>
     <p style="margin:0 0 16px;"><strong>${args.parentName}</strong> completed the pre-review check-in ahead of the next review.</p>
     ${args.lines.map(l => `<p style="margin:0 0 4px;color:#6b7280;font-size:13px;">${l.q}</p><p style="margin:0 0 14px;">${l.a || "—"}</p>`).join("")}
-    <p style="margin:0;"><a href="${profileUrl}" style="display:inline-block;padding:10px 16px;background:#F5C518;color:#0B1220;text-decoration:none;border-radius:6px;font-weight:600;font-size:13px;">Open profile</a></p>
+    <p style="margin:0;"><a href="${profileUrl}" style="display:inline-block;padding:10px 16px;background:#144A6C;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:600;font-size:13px;">Open profile</a></p>
   `);
   await sendEmail({ to: ADVISOR_EMAIL, subject, html, text });
 }

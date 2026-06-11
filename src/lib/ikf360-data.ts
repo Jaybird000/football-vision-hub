@@ -272,9 +272,9 @@ export const PROFILES: ParentChildProfile[] = [
 ];
 
 export const READINESS_META: Record<Readiness, { label: string; color: string; bg: string }> = {
-  high:    { label: "High Readiness",    color: "#1E2A38", bg: "#F5C518" },
-  medium:  { label: "Medium Readiness",  color: "#1E2A38", bg: "#FBE7A1" },
-  forming: { label: "Forming",           color: "#1E2A38", bg: "#E7DEC4" },
+  high:    { label: "High Readiness",    color: "#144A6C", bg: "#DCE9F1" },
+  medium:  { label: "Medium Readiness",  color: "#7A5A00", bg: "#FFFBD1" },
+  forming: { label: "Forming",           color: "#3A4754", bg: "#F2F5F7" },
 };
 
 // Parent-facing explanation of the readiness signal (BRD Module D). Kept separate

@@ -179,7 +179,7 @@ function ProviderRow({ p, onEdit, onDelete, deleting }: {
           <span className="font-semibold">{p.name}</span>
           {p.city && <span className="text-[12px]" style={{ color: "var(--ikf-text-dim)" }}>· {p.city}</span>}
           {p.chargeInr != null && (
-            <span className="text-[11px] font-bold px-2 py-0.5 rounded-full" style={{ background: "rgba(245,197,24,0.14)", color: "#F5C518" }}>
+            <span className="text-[11px] font-bold px-2 py-0.5 rounded-full" style={{ background: "rgba(15,117,189,0.12)", color: "#0A5A94" }}>
               ₹{p.chargeInr.toLocaleString("en-IN")}
             </span>
           )}

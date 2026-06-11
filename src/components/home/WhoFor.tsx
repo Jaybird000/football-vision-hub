@@ -23,7 +23,7 @@ const PARENTS = [
  */
 export function WhoFor() {
   return (
-    <section className="bg-[#FAF8F3] text-[#1C1C19]">
+    <section className="bg-[#FFFFFF] text-[#144A6C]">
       <div className="mx-auto max-w-6xl px-6 py-24 md:py-32">
         <Reveal as="h2" className="max-w-3xl font-serif text-[clamp(1.8rem,4vw,3rem)] font-medium leading-[1.12] tracking-[-0.015em]">
           This is for every football parent — not just the ones funding a
@@ -32,9 +32,9 @@ export function WhoFor() {
 
         <div className="mt-16 grid grid-cols-1 gap-10 md:grid-cols-3 md:gap-8">
           {PARENTS.map((p, i) => (
-            <Reveal key={p.lead} delay={i * 120} className="border-t-2 border-[#F5C518] pt-6">
-              <h3 className="font-serif text-xl font-medium text-[#1E2A38]">{p.lead}</h3>
-              <p className="mt-4 font-sans text-base leading-relaxed text-[#5C5A53]">
+            <Reveal key={p.lead} delay={i * 120} className="border-t-2 border-[#FDFE00] pt-6">
+              <h3 className="font-serif text-xl font-medium text-[#1A2229]">{p.lead}</h3>
+              <p className="mt-4 font-sans text-base leading-relaxed text-[#3A4754]">
                 {p.body}
               </p>
             </Reveal>
