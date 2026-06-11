@@ -4,6 +4,7 @@ import { z } from "zod";
 import { sql } from "./db";
 import { sendParentRecommendationReady } from "./email";
 import { logAudit } from "./audit";
+import { createNotification } from "./notifications";
 import type { SopResponses } from "@/lib/ikf360-data";
 
 type Role = "parent" | "advisor" | "admin";
@@ -80,11 +81,22 @@ export type Axis = {
   values: AxisValue[];
 };
 
+// Structured plain-language authoring (migration 0016). Replaces the
+// markdown-parse hybrid: advisors author these per cell; snapshotted into the
+// categorisation at score time. Dashboard prefers this, falls back to parsing
+// recommendation_md when absent.
+export type StructuredContent = {
+  situation: string;
+  meaning: string;
+  focus: { football: string; academics: string; physical: string; mindset: string };
+};
+
 export type Cell = {
   id: string | null;
   cellKey: string;
   title: string;
   recommendationMd: string;
+  structuredContent: StructuredContent | null;
   isPublished: boolean;
   axisValues: { axisKey: string; axisName: string; valueKey: string; valueLabel: string }[];
 };
@@ -95,6 +107,7 @@ export type CategorisationSnapshot = {
   cellTitle: string;
   axisValues: { axisKey: string; axisName: string; valueKey: string; valueLabel: string }[];
   recommendationMd: string;
+  structuredContent: StructuredContent | null;
   advisorNotes: string;
   scoredByName: string;
   scoredAt: string;
@@ -225,6 +238,13 @@ export const listCells = createServerFn({ method: "GET" }).handler(async (): Pro
   `;
   const byKey = new Map(cellRows.map(c => [c.cell_key, c]));
 
+  // structured_content lives in the 0016 column — read it guarded so the admin
+  // cell list loads before that migration is applied.
+  const scRows = await sql<{ cell_key: string; structured_content: StructuredContent | null }[]>`
+    SELECT cell_key, structured_content FROM recommendation_cells
+  `.catch(() => [] as { cell_key: string; structured_content: StructuredContent | null }[]);
+  const scByKey = new Map(scRows.map(r => [r.cell_key, r.structured_content ?? null]));
+
   // Cross-product of axis values
   const combos = cartesian(axes.map(a => a.values.map(v => ({ axis: a, value: v }))));
 
@@ -236,6 +256,7 @@ export const listCells = createServerFn({ method: "GET" }).handler(async (): Pro
       cellKey,
       title: existing?.title ?? "",
       recommendationMd: existing?.recommendation_md ?? "",
+      structuredContent: scByKey.get(cellKey) ?? null,
       isPublished: existing?.is_published ?? false,
       axisValues: combo.map(c => ({
         axisKey: c.axis.key,
@@ -247,10 +268,22 @@ export const listCells = createServerFn({ method: "GET" }).handler(async (): Pro
   });
 });
 
+const StructuredContentInput = z.object({
+  situation: z.string().trim().max(2000).optional().default(""),
+  meaning: z.string().trim().max(2000).optional().default(""),
+  focus: z.object({
+    football: z.string().trim().max(2000).optional().default(""),
+    academics: z.string().trim().max(2000).optional().default(""),
+    physical: z.string().trim().max(2000).optional().default(""),
+    mindset: z.string().trim().max(2000).optional().default(""),
+  }).optional().default({ football: "", academics: "", physical: "", mindset: "" }),
+});
+
 const UpsertCellInput = z.object({
   cellKey: z.string().min(1),
   title: z.string().trim().max(200).optional().default(""),
   recommendationMd: z.string().max(10_000).optional().default(""),
+  structuredContent: StructuredContentInput.optional(),
   isPublished: z.boolean().optional().default(false),
 });
 
@@ -268,6 +301,12 @@ export const upsertCell = createServerFn({ method: "POST" })
             updated_at = now()
       RETURNING id
     `;
+    // structured_content lives in the 0016 column — write it guarded (separate
+    // statement) so the upsert still succeeds before that migration is applied.
+    if (data.structuredContent) {
+      await sql`UPDATE recommendation_cells SET structured_content = ${sql.json(data.structuredContent)} WHERE cell_key = ${data.cellKey}`
+        .catch(e => console.warn("[stage3] structured_content write skipped (migration 0016 applied?):", e instanceof Error ? e.message : e));
+    }
     await logAudit({
       action: "cell.upsert",
       entityType: "cell",
@@ -326,6 +365,13 @@ export const scoreProfile = createServerFn({ method: "POST" })
     const recommendationMd = cell?.is_published ? cell.recommendation_md : "(No published recommendation yet for this category. An advisor will follow up shortly.)";
     const cellTitle = cell?.title ?? "";
 
+    // Structured plain-language content (0016) — read guarded so scoring works
+    // before that migration is applied. Only carried through when published.
+    const scRows = await sql<{ structured_content: StructuredContent | null }[]>`
+      SELECT structured_content FROM recommendation_cells WHERE cell_key = ${cellKey} LIMIT 1
+    `.catch(() => [] as { structured_content: StructuredContent | null }[]);
+    const structuredContent = cell?.is_published ? (scRows[0]?.structured_content ?? null) : null;
+
     // Mark prior current categorisation as not current
     await sql`UPDATE categorisations SET is_current = false WHERE profile_id = ${data.profileId} AND is_current = true`;
 
@@ -340,6 +386,12 @@ export const scoreProfile = createServerFn({ method: "POST" })
          ${data.advisorNotes}, ${user.id}, ${user.fullName}, ${validUntil}, true)
       RETURNING id
     `;
+
+    // Snapshot the structured content into this categorisation (guarded, 0016).
+    if (structuredContent) {
+      await sql`UPDATE categorisations SET structured_content = ${sql.json(structuredContent)} WHERE id = ${rows[0].id}`
+        .catch(e => console.warn("[stage3] categorisation structured_content write skipped (migration 0016 applied?):", e instanceof Error ? e.message : e));
+    }
 
     // Bump profile to stage 3
     await sql`UPDATE parent_child_profiles SET stage = 3, updated_at = now() WHERE id = ${data.profileId}`;
@@ -362,10 +414,10 @@ export const scoreProfile = createServerFn({ method: "POST" })
     // placeholder copy). Fires on every fresh score AND re-score, which matches the
     // brief: parents should be notified of material changes to their categorisation.
     if (cell?.is_published) {
-      const profileRows = await sql<{ parent_email: string; parent_name: string; child_name: string }[]>`
-        SELECT parent_email, parent_name, child_name
+      const profileRows = await sql<{ parent_email: string; parent_name: string; child_name: string; user_id: string | null }[]>`
+        SELECT parent_email, parent_name, child_name, user_id
         FROM parent_child_profiles WHERE id = ${data.profileId} LIMIT 1
-      `;
+      `.catch(() => [] as { parent_email: string; parent_name: string; child_name: string; user_id: string | null }[]);
       const p = profileRows[0];
       if (p) {
         void sendParentRecommendationReady({
@@ -375,6 +427,17 @@ export const scoreProfile = createServerFn({ method: "POST" })
           cellTitle,
           advisorName: user.fullName,
         }).catch(err => console.error("[stage3] parent recommendation-ready send failed:", err));
+        // Notification Type 2 — in-app "recommendation updated" → Module 1.
+        if (p.user_id) {
+          void createNotification({
+            userId: p.user_id,
+            profileId: data.profileId,
+            type: "recommendation_update",
+            title: `${p.child_name}'s profile has been updated`,
+            body: "Here's what's changed and what it means for the next six months.",
+            link: "/ikf360/dashboard",
+          });
+        }
       }
     }
 
@@ -406,12 +469,18 @@ export const getMyCategorisation = createServerFn({ method: "GET" })
     `;
     if (rows.length === 0) return null;
     const r = rows[0];
+    // structured_content (0016) — read guarded so the dashboard loads before the
+    // migration; the dashboard falls back to parsing recommendation_md when null.
+    const scRows = await sql<{ structured_content: StructuredContent | null }[]>`
+      SELECT structured_content FROM categorisations WHERE id = ${r.id} LIMIT 1
+    `.catch(() => [] as { structured_content: StructuredContent | null }[]);
     return {
       id: r.id,
       cellKey: r.cell_key,
       cellTitle: r.cell_title,
       axisValues: r.axis_values,
       recommendationMd: r.recommendation_md,
+      structuredContent: scRows[0]?.structured_content ?? null,
       advisorNotes: r.advisor_notes,
       scoredByName: r.scored_by_name,
       scoredAt: r.scored_at.toISOString(),
@@ -483,12 +552,16 @@ export const getProfileCategorisation = createServerFn({ method: "GET" })
     `;
     if (rows.length === 0) return null;
     const r = rows[0];
+    const scRows = await sql<{ structured_content: StructuredContent | null }[]>`
+      SELECT structured_content FROM categorisations WHERE id = ${r.id} LIMIT 1
+    `.catch(() => [] as { structured_content: StructuredContent | null }[]);
     return {
       id: r.id,
       cellKey: r.cell_key,
       cellTitle: r.cell_title,
       axisValues: r.axis_values,
       recommendationMd: r.recommendation_md,
+      structuredContent: scRows[0]?.structured_content ?? null,
       advisorNotes: r.advisor_notes,
       scoredByName: r.scored_by_name,
       scoredAt: r.scored_at.toISOString(),

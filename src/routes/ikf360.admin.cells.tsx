@@ -29,10 +29,18 @@ function CellsAdmin() {
 
   const save = useMutation({
     mutationFn: (c: Cell) => upsertCell({
-      data: { cellKey: c.cellKey, title: c.title, recommendationMd: c.recommendationMd, isPublished: c.isPublished },
+      data: {
+        cellKey: c.cellKey,
+        title: c.title,
+        recommendationMd: c.recommendationMd,
+        structuredContent: c.structuredContent ?? undefined,
+        isPublished: c.isPublished,
+      },
     }),
     onSuccess: () => { setEditing(null); qc.invalidateQueries({ queryKey: ["admin", "cells"] }); },
   });
+
+  const EMPTY_SC = { situation: "", meaning: "", focus: { football: "", academics: "", physical: "", mindset: "" } };
 
   const publishedCount = cells.filter((c: Cell) => c.isPublished).length;
 
@@ -104,7 +112,7 @@ function CellsAdmin() {
                     )}
                   </td>
                   <td className="p-4 text-right align-top">
-                    <button onClick={() => setEditing({ ...c })} className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-[12px] font-semibold" style={{ background: "var(--ikf-surface-2)" }}>
+                    <button onClick={() => setEditing({ ...c, structuredContent: c.structuredContent ?? EMPTY_SC })} className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-[12px] font-semibold" style={{ background: "var(--ikf-surface-2)" }}>
                       <Edit3 size={12} /> Edit
                     </button>
                   </td>
@@ -125,6 +133,42 @@ function CellsAdmin() {
           error={save.error instanceof Error ? save.error.message : null}
         />
       )}
+    </div>
+  );
+}
+
+// Structured plain-language authoring (preferred over the markdown blob). These
+// feed Module 1 (situation + what-this-means) and Module 2 (focus cards) on the
+// parent dashboard. Leave a field blank to omit that card.
+function StructuredFields({ cell, onChange }: { cell: Cell; onChange: (p: Partial<Cell>) => void }) {
+  const sc = cell.structuredContent ?? { situation: "", meaning: "", focus: { football: "", academics: "", physical: "", mindset: "" } };
+  const setSc = (p: Partial<typeof sc>) => onChange({ structuredContent: { ...sc, ...p } });
+  const setFocus = (k: keyof typeof sc.focus, v: string) => onChange({ structuredContent: { ...sc, focus: { ...sc.focus, [k]: v } } });
+  const FocusBox = ({ k, label, placeholder }: { k: keyof typeof sc.focus; label: string; placeholder: string }) => (
+    <label className="block">
+      <div className="text-[11px] font-semibold mb-1" style={{ color: "var(--ikf-text-dim)" }}>{label}</div>
+      <textarea className="ikf-input text-[12.5px]" rows={3} value={sc.focus[k]} onChange={e => setFocus(k, e.target.value)} placeholder={placeholder} />
+    </label>
+  );
+  return (
+    <div className="rounded-lg p-4 space-y-4" style={{ background: "var(--ikf-surface-2)" }}>
+      <div className="text-[11px] font-bold uppercase tracking-[0.12em]" style={{ color: "var(--ikf-brand-ink)" }}>
+        Plain-language content (shown to parents)
+      </div>
+      <label className="block">
+        <div className="text-[11px] font-semibold mb-1" style={{ color: "var(--ikf-text-dim)" }}>Situation statement — one plain sentence</div>
+        <textarea className="ikf-input text-[12.5px]" rows={2} value={sc.situation} onChange={e => setSc({ situation: e.target.value })} placeholder="e.g. Arjun is a developing player with clear potential. Your situation means the focus right now should be consistent development — not acceleration." />
+      </label>
+      <label className="block">
+        <div className="text-[11px] font-semibold mb-1" style={{ color: "var(--ikf-text-dim)" }}>What this means</div>
+        <textarea className="ikf-input text-[12.5px]" rows={3} value={sc.meaning} onChange={e => setSc({ meaning: e.target.value })} placeholder="The right move, and why. Recommendation language — no motivation, no scores." />
+      </label>
+      <div className="grid sm:grid-cols-2 gap-3">
+        <FocusBox k="football" label="Focus — Football development" placeholder="What to work on, and what to ask the coach." />
+        <FocusBox k="academics" label="Focus — Academics" placeholder="How to keep academics on track alongside football." />
+        <FocusBox k="physical" label="Focus — Physical development" placeholder="Age-appropriate physical priorities." />
+        <FocusBox k="mindset" label="Focus — Mindset & resilience" placeholder="The mental side — setbacks, motivation, the question to ask." />
+      </div>
     </div>
   );
 }
@@ -166,9 +210,11 @@ function CellEditorModal({ cell, onClose, onChange, onSave, saving, error }: {
           <input className="ikf-input" value={cell.title} onChange={e => onChange({ title: e.target.value })} placeholder="e.g. The committed family with a high-potential child" />
         </label>
 
+        <StructuredFields cell={cell} onChange={onChange} />
+
         <label className="block">
           <div className="text-[11px] font-semibold uppercase tracking-[0.12em] mb-1.5" style={{ color: "var(--ikf-text-dim)" }}>
-            Recommendation (markdown / plain text)
+            Recommendation (markdown / plain text) — legacy fallback
           </div>
           <textarea
             className="ikf-input font-mono text-[12px]"

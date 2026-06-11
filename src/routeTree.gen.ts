@@ -26,17 +26,20 @@ import { Route as Ikf360IndexRouteImport } from './routes/ikf360.index'
 import { Route as ParentsPathwayRouteImport } from './routes/parents_.pathway'
 import { Route as Ikf360UploadRouteImport } from './routes/ikf360.upload'
 import { Route as Ikf360SupportRouteImport } from './routes/ikf360.support'
+import { Route as Ikf360PreReviewRouteImport } from './routes/ikf360.pre-review'
 import { Route as Ikf360IntentRouteImport } from './routes/ikf360.intent'
 import { Route as Ikf360DashboardRouteImport } from './routes/ikf360.dashboard'
 import { Route as Ikf360AdminRouteImport } from './routes/ikf360.admin'
 import { Route as Ikf360AdminTemplatesRouteImport } from './routes/ikf360.admin.templates'
 import { Route as Ikf360AdminProvidersRouteImport } from './routes/ikf360.admin.providers'
+import { Route as Ikf360AdminContentRouteImport } from './routes/ikf360.admin.content'
 import { Route as Ikf360AdminCellsRouteImport } from './routes/ikf360.admin.cells'
 import { Route as Ikf360AdminAxesRouteImport } from './routes/ikf360.admin.axes'
 import { Route as Ikf360AdminIdRouteImport } from './routes/ikf360.admin.$id'
 import { Route as ApiUploadsIdRouteImport } from './routes/api.uploads.$id'
 import { Route as ApiCronStage2NudgeRouteImport } from './routes/api.cron.stage2-nudge'
 import { Route as ApiCronReviewRemindersRouteImport } from './routes/api.cron.review-reminders'
+import { Route as ApiCronMonthlyContentRouteImport } from './routes/api.cron.monthly-content'
 import { Route as Ikf360AdminProfilesIdRouteImport } from './routes/ikf360.admin.profiles.$id'
 
 const SignupRoute = SignupRouteImport.update({
@@ -124,6 +127,11 @@ const Ikf360SupportRoute = Ikf360SupportRouteImport.update({
   path: '/support',
   getParentRoute: () => Ikf360Route,
 } as any)
+const Ikf360PreReviewRoute = Ikf360PreReviewRouteImport.update({
+  id: '/pre-review',
+  path: '/pre-review',
+  getParentRoute: () => Ikf360Route,
+} as any)
 const Ikf360IntentRoute = Ikf360IntentRouteImport.update({
   id: '/intent',
   path: '/intent',
@@ -147,6 +155,11 @@ const Ikf360AdminTemplatesRoute = Ikf360AdminTemplatesRouteImport.update({
 const Ikf360AdminProvidersRoute = Ikf360AdminProvidersRouteImport.update({
   id: '/providers',
   path: '/providers',
+  getParentRoute: () => Ikf360AdminRoute,
+} as any)
+const Ikf360AdminContentRoute = Ikf360AdminContentRouteImport.update({
+  id: '/content',
+  path: '/content',
   getParentRoute: () => Ikf360AdminRoute,
 } as any)
 const Ikf360AdminCellsRoute = Ikf360AdminCellsRouteImport.update({
@@ -179,6 +192,11 @@ const ApiCronReviewRemindersRoute = ApiCronReviewRemindersRouteImport.update({
   path: '/api/cron/review-reminders',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiCronMonthlyContentRoute = ApiCronMonthlyContentRouteImport.update({
+  id: '/api/cron/monthly-content',
+  path: '/api/cron/monthly-content',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const Ikf360AdminProfilesIdRoute = Ikf360AdminProfilesIdRouteImport.update({
   id: '/profiles/$id',
   path: '/profiles/$id',
@@ -202,16 +220,19 @@ export interface FileRoutesByFullPath {
   '/ikf360/admin': typeof Ikf360AdminRouteWithChildren
   '/ikf360/dashboard': typeof Ikf360DashboardRoute
   '/ikf360/intent': typeof Ikf360IntentRoute
+  '/ikf360/pre-review': typeof Ikf360PreReviewRoute
   '/ikf360/support': typeof Ikf360SupportRoute
   '/ikf360/upload': typeof Ikf360UploadRoute
   '/parents/pathway': typeof ParentsPathwayRoute
   '/ikf360/': typeof Ikf360IndexRoute
+  '/api/cron/monthly-content': typeof ApiCronMonthlyContentRoute
   '/api/cron/review-reminders': typeof ApiCronReviewRemindersRoute
   '/api/cron/stage2-nudge': typeof ApiCronStage2NudgeRoute
   '/api/uploads/$id': typeof ApiUploadsIdRoute
   '/ikf360/admin/$id': typeof Ikf360AdminIdRoute
   '/ikf360/admin/axes': typeof Ikf360AdminAxesRoute
   '/ikf360/admin/cells': typeof Ikf360AdminCellsRoute
+  '/ikf360/admin/content': typeof Ikf360AdminContentRoute
   '/ikf360/admin/providers': typeof Ikf360AdminProvidersRoute
   '/ikf360/admin/templates': typeof Ikf360AdminTemplatesRoute
   '/ikf360/admin/profiles/$id': typeof Ikf360AdminProfilesIdRoute
@@ -232,16 +253,19 @@ export interface FileRoutesByTo {
   '/ikf360/admin': typeof Ikf360AdminRouteWithChildren
   '/ikf360/dashboard': typeof Ikf360DashboardRoute
   '/ikf360/intent': typeof Ikf360IntentRoute
+  '/ikf360/pre-review': typeof Ikf360PreReviewRoute
   '/ikf360/support': typeof Ikf360SupportRoute
   '/ikf360/upload': typeof Ikf360UploadRoute
   '/parents/pathway': typeof ParentsPathwayRoute
   '/ikf360': typeof Ikf360IndexRoute
+  '/api/cron/monthly-content': typeof ApiCronMonthlyContentRoute
   '/api/cron/review-reminders': typeof ApiCronReviewRemindersRoute
   '/api/cron/stage2-nudge': typeof ApiCronStage2NudgeRoute
   '/api/uploads/$id': typeof ApiUploadsIdRoute
   '/ikf360/admin/$id': typeof Ikf360AdminIdRoute
   '/ikf360/admin/axes': typeof Ikf360AdminAxesRoute
   '/ikf360/admin/cells': typeof Ikf360AdminCellsRoute
+  '/ikf360/admin/content': typeof Ikf360AdminContentRoute
   '/ikf360/admin/providers': typeof Ikf360AdminProvidersRoute
   '/ikf360/admin/templates': typeof Ikf360AdminTemplatesRoute
   '/ikf360/admin/profiles/$id': typeof Ikf360AdminProfilesIdRoute
@@ -264,16 +288,19 @@ export interface FileRoutesById {
   '/ikf360/admin': typeof Ikf360AdminRouteWithChildren
   '/ikf360/dashboard': typeof Ikf360DashboardRoute
   '/ikf360/intent': typeof Ikf360IntentRoute
+  '/ikf360/pre-review': typeof Ikf360PreReviewRoute
   '/ikf360/support': typeof Ikf360SupportRoute
   '/ikf360/upload': typeof Ikf360UploadRoute
   '/parents_/pathway': typeof ParentsPathwayRoute
   '/ikf360/': typeof Ikf360IndexRoute
+  '/api/cron/monthly-content': typeof ApiCronMonthlyContentRoute
   '/api/cron/review-reminders': typeof ApiCronReviewRemindersRoute
   '/api/cron/stage2-nudge': typeof ApiCronStage2NudgeRoute
   '/api/uploads/$id': typeof ApiUploadsIdRoute
   '/ikf360/admin/$id': typeof Ikf360AdminIdRoute
   '/ikf360/admin/axes': typeof Ikf360AdminAxesRoute
   '/ikf360/admin/cells': typeof Ikf360AdminCellsRoute
+  '/ikf360/admin/content': typeof Ikf360AdminContentRoute
   '/ikf360/admin/providers': typeof Ikf360AdminProvidersRoute
   '/ikf360/admin/templates': typeof Ikf360AdminTemplatesRoute
   '/ikf360/admin/profiles/$id': typeof Ikf360AdminProfilesIdRoute
@@ -297,16 +324,19 @@ export interface FileRouteTypes {
     | '/ikf360/admin'
     | '/ikf360/dashboard'
     | '/ikf360/intent'
+    | '/ikf360/pre-review'
     | '/ikf360/support'
     | '/ikf360/upload'
     | '/parents/pathway'
     | '/ikf360/'
+    | '/api/cron/monthly-content'
     | '/api/cron/review-reminders'
     | '/api/cron/stage2-nudge'
     | '/api/uploads/$id'
     | '/ikf360/admin/$id'
     | '/ikf360/admin/axes'
     | '/ikf360/admin/cells'
+    | '/ikf360/admin/content'
     | '/ikf360/admin/providers'
     | '/ikf360/admin/templates'
     | '/ikf360/admin/profiles/$id'
@@ -327,16 +357,19 @@ export interface FileRouteTypes {
     | '/ikf360/admin'
     | '/ikf360/dashboard'
     | '/ikf360/intent'
+    | '/ikf360/pre-review'
     | '/ikf360/support'
     | '/ikf360/upload'
     | '/parents/pathway'
     | '/ikf360'
+    | '/api/cron/monthly-content'
     | '/api/cron/review-reminders'
     | '/api/cron/stage2-nudge'
     | '/api/uploads/$id'
     | '/ikf360/admin/$id'
     | '/ikf360/admin/axes'
     | '/ikf360/admin/cells'
+    | '/ikf360/admin/content'
     | '/ikf360/admin/providers'
     | '/ikf360/admin/templates'
     | '/ikf360/admin/profiles/$id'
@@ -358,16 +391,19 @@ export interface FileRouteTypes {
     | '/ikf360/admin'
     | '/ikf360/dashboard'
     | '/ikf360/intent'
+    | '/ikf360/pre-review'
     | '/ikf360/support'
     | '/ikf360/upload'
     | '/parents_/pathway'
     | '/ikf360/'
+    | '/api/cron/monthly-content'
     | '/api/cron/review-reminders'
     | '/api/cron/stage2-nudge'
     | '/api/uploads/$id'
     | '/ikf360/admin/$id'
     | '/ikf360/admin/axes'
     | '/ikf360/admin/cells'
+    | '/ikf360/admin/content'
     | '/ikf360/admin/providers'
     | '/ikf360/admin/templates'
     | '/ikf360/admin/profiles/$id'
@@ -388,6 +424,7 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRoute
   SignupRoute: typeof SignupRoute
   ParentsPathwayRoute: typeof ParentsPathwayRoute
+  ApiCronMonthlyContentRoute: typeof ApiCronMonthlyContentRoute
   ApiCronReviewRemindersRoute: typeof ApiCronReviewRemindersRoute
   ApiCronStage2NudgeRoute: typeof ApiCronStage2NudgeRoute
   ApiUploadsIdRoute: typeof ApiUploadsIdRoute
@@ -514,6 +551,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Ikf360SupportRouteImport
       parentRoute: typeof Ikf360Route
     }
+    '/ikf360/pre-review': {
+      id: '/ikf360/pre-review'
+      path: '/pre-review'
+      fullPath: '/ikf360/pre-review'
+      preLoaderRoute: typeof Ikf360PreReviewRouteImport
+      parentRoute: typeof Ikf360Route
+    }
     '/ikf360/intent': {
       id: '/ikf360/intent'
       path: '/intent'
@@ -547,6 +591,13 @@ declare module '@tanstack/react-router' {
       path: '/providers'
       fullPath: '/ikf360/admin/providers'
       preLoaderRoute: typeof Ikf360AdminProvidersRouteImport
+      parentRoute: typeof Ikf360AdminRoute
+    }
+    '/ikf360/admin/content': {
+      id: '/ikf360/admin/content'
+      path: '/content'
+      fullPath: '/ikf360/admin/content'
+      preLoaderRoute: typeof Ikf360AdminContentRouteImport
       parentRoute: typeof Ikf360AdminRoute
     }
     '/ikf360/admin/cells': {
@@ -591,6 +642,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiCronReviewRemindersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/cron/monthly-content': {
+      id: '/api/cron/monthly-content'
+      path: '/api/cron/monthly-content'
+      fullPath: '/api/cron/monthly-content'
+      preLoaderRoute: typeof ApiCronMonthlyContentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/ikf360/admin/profiles/$id': {
       id: '/ikf360/admin/profiles/$id'
       path: '/profiles/$id'
@@ -605,6 +663,7 @@ interface Ikf360AdminRouteChildren {
   Ikf360AdminIdRoute: typeof Ikf360AdminIdRoute
   Ikf360AdminAxesRoute: typeof Ikf360AdminAxesRoute
   Ikf360AdminCellsRoute: typeof Ikf360AdminCellsRoute
+  Ikf360AdminContentRoute: typeof Ikf360AdminContentRoute
   Ikf360AdminProvidersRoute: typeof Ikf360AdminProvidersRoute
   Ikf360AdminTemplatesRoute: typeof Ikf360AdminTemplatesRoute
   Ikf360AdminProfilesIdRoute: typeof Ikf360AdminProfilesIdRoute
@@ -614,6 +673,7 @@ const Ikf360AdminRouteChildren: Ikf360AdminRouteChildren = {
   Ikf360AdminIdRoute: Ikf360AdminIdRoute,
   Ikf360AdminAxesRoute: Ikf360AdminAxesRoute,
   Ikf360AdminCellsRoute: Ikf360AdminCellsRoute,
+  Ikf360AdminContentRoute: Ikf360AdminContentRoute,
   Ikf360AdminProvidersRoute: Ikf360AdminProvidersRoute,
   Ikf360AdminTemplatesRoute: Ikf360AdminTemplatesRoute,
   Ikf360AdminProfilesIdRoute: Ikf360AdminProfilesIdRoute,
@@ -627,6 +687,7 @@ interface Ikf360RouteChildren {
   Ikf360AdminRoute: typeof Ikf360AdminRouteWithChildren
   Ikf360DashboardRoute: typeof Ikf360DashboardRoute
   Ikf360IntentRoute: typeof Ikf360IntentRoute
+  Ikf360PreReviewRoute: typeof Ikf360PreReviewRoute
   Ikf360SupportRoute: typeof Ikf360SupportRoute
   Ikf360UploadRoute: typeof Ikf360UploadRoute
   Ikf360IndexRoute: typeof Ikf360IndexRoute
@@ -636,6 +697,7 @@ const Ikf360RouteChildren: Ikf360RouteChildren = {
   Ikf360AdminRoute: Ikf360AdminRouteWithChildren,
   Ikf360DashboardRoute: Ikf360DashboardRoute,
   Ikf360IntentRoute: Ikf360IntentRoute,
+  Ikf360PreReviewRoute: Ikf360PreReviewRoute,
   Ikf360SupportRoute: Ikf360SupportRoute,
   Ikf360UploadRoute: Ikf360UploadRoute,
   Ikf360IndexRoute: Ikf360IndexRoute,
@@ -659,6 +721,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRoute,
   SignupRoute: SignupRoute,
   ParentsPathwayRoute: ParentsPathwayRoute,
+  ApiCronMonthlyContentRoute: ApiCronMonthlyContentRoute,
   ApiCronReviewRemindersRoute: ApiCronReviewRemindersRoute,
   ApiCronStage2NudgeRoute: ApiCronStage2NudgeRoute,
   ApiUploadsIdRoute: ApiUploadsIdRoute,

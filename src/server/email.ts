@@ -357,6 +357,102 @@ export async function sendAdvisorSopReviewFlag(args: {
   await sendEmail({ to: ADVISOR_EMAIL, subject, html, text });
 }
 
+// ---------- Notification Type 1: parent review reminder (4 weeks out) ----------
+
+export async function sendParentReviewReminder(args: {
+  to: string;
+  parentName: string;
+  childName: string;
+  weeksRemaining: number;
+  profileId?: string;
+}): Promise<void> {
+  const fn = firstName(args.parentName);
+  const preReviewUrl = `${APP_BASE_URL}/ikf360/pre-review${args.profileId ? `?child=${args.profileId}` : ""}`;
+  const weeks = args.weeksRemaining;
+  const subject = `${args.childName}'s next review is coming up`;
+  const text = [
+    `Hi ${fn},`,
+    ``,
+    `${args.childName}'s next review is coming up in about ${weeks} ${weeks === 1 ? "week" : "weeks"}. Before we update ${args.childName}'s profile, we'd like to check in on a few things.`,
+    ``,
+    `It's five short questions and takes about five minutes — just anything that's changed since you last told us about your situation.`,
+    ``,
+    `Start the check-in: ${preReviewUrl}`,
+    ``,
+    `— The IKF Pathway 360 team`,
+  ].join("\n");
+  const html = shell(`
+    <p style="margin:0 0 12px;">Hi ${fn},</p>
+    <p style="margin:0 0 16px;"><strong>${args.childName}</strong>'s next review is coming up in about <strong>${weeks} ${weeks === 1 ? "week" : "weeks"}</strong>. Before we update the profile, we'd like to check in on a few things.</p>
+    <p style="margin:0 0 16px;">It's five short questions, about five minutes — just anything that's changed since you last told us about your situation.</p>
+    <p style="margin:0;"><a href="${preReviewUrl}" style="display:inline-block;padding:10px 16px;background:#F5C518;color:#0B1220;text-decoration:none;border-radius:6px;font-weight:600;font-size:13px;">Start the check-in</a></p>
+  `);
+  await sendEmail({ to: args.to, subject, html, text });
+}
+
+// ---------- Notification Type 3: monthly relevant content ----------
+
+export async function sendParentContent(args: {
+  to: string;
+  parentName: string;
+  childName: string;
+  contentTitle: string;
+  contentSummary: string;
+  contentUrl: string;
+}): Promise<void> {
+  const fn = firstName(args.parentName);
+  const subject = `One thing worth reading this month`;
+  const text = [
+    `Hi ${fn},`,
+    ``,
+    `One thing worth reading this month, chosen for where ${args.childName} is right now:`,
+    ``,
+    `${args.contentTitle}`,
+    args.contentSummary ? `${args.contentSummary}` : ``,
+    ``,
+    `Read it: ${args.contentUrl}`,
+    ``,
+    `— The IKF Pathway 360 team`,
+  ].filter(l => l !== undefined).join("\n");
+  const html = shell(`
+    <p style="margin:0 0 12px;">Hi ${fn},</p>
+    <p style="margin:0 0 16px;">One thing worth reading this month, chosen for where <strong>${args.childName}</strong> is right now:</p>
+    <p style="margin:0 0 6px;font-weight:600;font-size:16px;">${args.contentTitle}</p>
+    ${args.contentSummary ? `<p style="margin:0 0 16px;color:#5B6675;">${args.contentSummary}</p>` : ""}
+    <p style="margin:0;"><a href="${args.contentUrl}" style="display:inline-block;padding:10px 16px;background:#F5C518;color:#0B1220;text-decoration:none;border-radius:6px;font-weight:600;font-size:13px;">Read it</a></p>
+  `);
+  await sendEmail({ to: args.to, subject, html, text });
+}
+
+// ---------- Type 1: advisor sees the parent's pre-review check-in ----------
+
+export async function sendAdvisorPreReview(args: {
+  profileId: string;
+  parentName: string;
+  childName: string;
+  lines: { q: string; a: string }[];
+}): Promise<void> {
+  if (!ADVISOR_EMAIL) {
+    console.warn("[email] ADVISOR_EMAIL not set; skipping advisor pre-review notification.");
+    return;
+  }
+  const profileUrl = `${APP_BASE_URL}/ikf360/admin/profiles/${args.profileId}`;
+  const subject = `Pre-review check-in — ${args.childName}`;
+  const text = [
+    `${args.parentName} completed the pre-review check-in for ${args.childName} ahead of the next review.`,
+    ``,
+    ...args.lines.flatMap(l => [`${l.q}`, `  ${l.a || "—"}`, ``]),
+    `Open profile: ${profileUrl}`,
+  ].join("\n");
+  const html = shell(`
+    <p style="margin:0 0 12px;font-weight:600;">Pre-review check-in — ${args.childName}</p>
+    <p style="margin:0 0 16px;"><strong>${args.parentName}</strong> completed the pre-review check-in ahead of the next review.</p>
+    ${args.lines.map(l => `<p style="margin:0 0 4px;color:#6b7280;font-size:13px;">${l.q}</p><p style="margin:0 0 14px;">${l.a || "—"}</p>`).join("")}
+    <p style="margin:0;"><a href="${profileUrl}" style="display:inline-block;padding:10px 16px;background:#F5C518;color:#0B1220;text-decoration:none;border-radius:6px;font-weight:600;font-size:13px;">Open profile</a></p>
+  `);
+  await sendEmail({ to: ADVISOR_EMAIL, subject, html, text });
+}
+
 // ---------- Stage 2: parent assistance acknowledgement (Module E) ----------
 
 export async function sendParentAssistanceAck(args: {

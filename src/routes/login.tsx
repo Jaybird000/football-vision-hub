@@ -1,8 +1,30 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowRight, Loader2 } from "lucide-react";
 import { login } from "@/server/auth";
+
+// Read the non-httpOnly personalisation cookie set at last login. Client-only —
+// the login route is prerendered, so this runs after hydration.
+function readWelcome(): { name: string; reviewIso: string } | null {
+  if (typeof document === "undefined") return null;
+  const m = document.cookie.match(/(?:^|;\s*)ikf_welcome=([^;]+)/);
+  if (!m) return null;
+  try {
+    const parsed = JSON.parse(decodeURIComponent(m[1])) as { name?: string; reviewIso?: string };
+    if (!parsed.name) return null;
+    return { name: parsed.name, reviewIso: parsed.reviewIso ?? "" };
+  } catch {
+    return null;
+  }
+}
+
+function monthsUntil(iso: string): number | null {
+  if (!iso) return null;
+  const t = new Date(iso).getTime();
+  if (isNaN(t)) return null;
+  return Math.max(0, Math.round((t - Date.now()) / (1000 * 60 * 60 * 24 * 30.44)));
+}
 
 export const Route = createFileRoute("/login")({
   validateSearch: (search: Record<string, unknown>): { next?: string } =>
@@ -17,6 +39,16 @@ function LoginPage() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [welcome, setWelcome] = useState<{ name: string; reviewIso: string } | null>(null);
+  useEffect(() => { setWelcome(readWelcome()); }, []);
+
+  let subtext = "Sign in to continue your child's journey. Pick up exactly where you left off — your responses, your assessments, your advisor.";
+  if (welcome) {
+    const months = monthsUntil(welcome.reviewIso);
+    subtext = months != null && months > 0
+      ? `${welcome.name}'s next review is in ${months} ${months === 1 ? "month" : "months"}. Here is where things stand today.`
+      : `${welcome.name}'s journey is waiting for you. Here is where things stand today.`;
+  }
 
   const valid = /\S+@\S+\.\S+/.test(form.email) && form.password.length > 0;
 
@@ -40,7 +72,13 @@ function LoginPage() {
       if (result.role === "admin" || result.role === "advisor") {
         router.navigate({ to: "/ikf360/admin" });
       } else {
-        router.navigate({ to: next === "/ikf360/intent" ? "/ikf360/intent" : "/ikf360" });
+        // Whitelist of deep-link destinations honored after login (type-safe +
+        // open-redirect-proof). Everything else → the explore-first overview.
+        const dest =
+          next === "/ikf360/intent" ? "/ikf360/intent"
+          : next === "/ikf360/pre-review" ? "/ikf360/pre-review"
+          : "/ikf360";
+        router.navigate({ to: dest });
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not sign you in.");
@@ -65,7 +103,7 @@ function LoginPage() {
           <header>
             <h1 className="text-[34px] leading-tight">Welcome back.</h1>
             <p className="mt-3 text-[15px] leading-relaxed" style={{ color: "var(--ikf-text-dim)" }}>
-              Sign in to continue your child's journey. Pick up exactly where you left off — your responses, your assessments, your advisor.
+              {subtext}
             </p>
           </header>
 

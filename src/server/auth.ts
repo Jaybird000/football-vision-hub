@@ -65,6 +65,39 @@ function clearSessionCookie() {
   });
 }
 
+// Login-screen personalisation. The login page is prerendered (static), so we
+// can't personalise it server-side — instead we leave a NON-httpOnly cookie this
+// browser already owns (child's first name + next-review date) that the page
+// reads client-side. No pre-auth DB lookup, no email enumeration. Cleared on
+// logout. Guarded so a failed lookup never blocks sign-in.
+const WELCOME_COOKIE = "ikf_welcome";
+
+async function setWelcomeCookie(profileId: string | null): Promise<void> {
+  if (!profileId) {
+    setCookie(WELCOME_COOKIE, "", { httpOnly: false, sameSite: "lax", path: "/", secure: process.env.NODE_ENV === "production", maxAge: 0 });
+    return;
+  }
+  const rows = await sql<{ child_name: string; valid_until: Date | null }[]>`
+    SELECT p.child_name,
+           (SELECT c.valid_until FROM categorisations c
+              WHERE c.profile_id = p.id AND c.is_current = true
+              ORDER BY c.scored_at DESC LIMIT 1) AS valid_until
+    FROM parent_child_profiles p WHERE p.id = ${profileId} LIMIT 1
+  `.catch(() => [] as { child_name: string; valid_until: Date | null }[]);
+  const r = rows[0];
+  if (!r) return;
+  const name = (r.child_name || "").trim().split(/\s+/)[0] || "";
+  const reviewIso = r.valid_until instanceof Date ? r.valid_until.toISOString() : "";
+  const value = encodeURIComponent(JSON.stringify({ name, reviewIso }));
+  setCookie(WELCOME_COOKIE, value, {
+    httpOnly: false,
+    sameSite: "lax",
+    path: "/",
+    secure: process.env.NODE_ENV === "production",
+    maxAge: SESSION_TTL_DAYS * 24 * 60 * 60,
+  });
+}
+
 const SignupInput = z.object({
   fullName: z.string().trim().min(1).max(120),
   email: z.string().trim().email().max(160),
@@ -124,6 +157,8 @@ export const login = createServerFn({ method: "POST" })
 
     const token = await createSession(user.id);
     writeSessionCookie(token);
+    // Personalise the next visit to the login screen (returning family).
+    await setWelcomeCookie(user.profile_id);
 
     return { id: user.id, email: user.email, fullName: user.full_name, role: user.role, profileId: user.profile_id };
   });
@@ -134,6 +169,21 @@ export const logout = createServerFn({ method: "POST" }).handler(async () => {
     await sql`DELETE FROM sessions WHERE token = ${token}`;
   }
   clearSessionCookie();
+  await setWelcomeCookie(null); // clear the personalisation cookie on explicit logout
+  return { ok: true };
+});
+
+// Refresh the login-screen personalisation cookie for the signed-in parent's
+// active child (called by the dashboard loader so it tracks the latest review
+// date / selected child). No-op when not signed in.
+export const refreshWelcome = createServerFn({ method: "GET" }).handler(async (): Promise<{ ok: boolean }> => {
+  const token = getCookie(SESSION_COOKIE);
+  if (!token) return { ok: false };
+  const rows = await sql<{ profile_id: string | null }[]>`
+    SELECT u.profile_id FROM sessions s JOIN users u ON u.id = s.user_id
+    WHERE s.token = ${token} AND s.expires_at > now() LIMIT 1
+  `.catch(() => [] as { profile_id: string | null }[]);
+  await setWelcomeCookie(rows[0]?.profile_id ?? null);
   return { ok: true };
 });
 

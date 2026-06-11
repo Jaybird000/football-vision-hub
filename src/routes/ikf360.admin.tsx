@@ -1,7 +1,7 @@
 import { createFileRoute, Link, Outlet, redirect, useLocation } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { Search, FileText, Settings, Database, Layers, Grid3x3, Download } from "lucide-react";
+import { Search, FileText, Settings, Database, Layers, Grid3x3, Download, BookOpen } from "lucide-react";
 import { currentUser } from "@/server/auth";
 import { listAdminProfiles, type AdminProfileRow } from "@/server/admin";
 
@@ -81,11 +81,12 @@ function AdminList() {
         </p>
       </header>
 
-      <section className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+      <section className="grid sm:grid-cols-2 lg:grid-cols-5 gap-3">
         <AdminLink to="/ikf360/admin/templates" icon={<Settings size={16} />} label="Templates" hint="Toggle required Stage 2 reports" />
         <AdminLink to="/ikf360/admin/providers" icon={<Database size={16} />} label="Providers" hint="Provider directory per assessment" />
         <AdminLink to="/ikf360/admin/axes" icon={<Layers size={16} />} label="Axes" hint="Stage 3 categorisation axes + values" />
         <AdminLink to="/ikf360/admin/cells" icon={<Grid3x3 size={16} />} label="Cells" hint="Recommendation copy per cell" />
+        <AdminLink to="/ikf360/admin/content" icon={<BookOpen size={16} />} label="Content" hint="Monthly reading sent to parents" />
       </section>
 
       <section className="grid sm:grid-cols-4 gap-4">

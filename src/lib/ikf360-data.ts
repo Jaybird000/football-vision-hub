@@ -564,3 +564,30 @@ export function journeyScoreMap(r: SopResponses): Record<string, number> {
 export function deriveReadiness(r: SopResponses): Readiness {
   return scoreReadiness(journeyScoreMap(r));
 }
+
+// ─── Pre-review check-in (notification Type 1) ───────────────────────────────
+// A short "what's changed since the last SOP" form a parent fills 4 weeks before
+// their review, so the advisor walks into the re-score already knowing what moved.
+
+export type PreReviewQuestion = {
+  id: "pr1" | "pr2" | "pr3" | "pr4" | "pr5";
+  q: string;
+  kind: "single" | "text";
+  options?: string[];
+};
+
+export const PRE_REVIEW_QUESTIONS: PreReviewQuestion[] = [
+  { id: "pr1", kind: "single", q: "Has what you're hoping for from your child's football changed?",
+    options: ["No — same as before", "Yes — we're aiming higher now", "Yes — we've become more realistic", "We're genuinely unsure right now"] },
+  { id: "pr2", kind: "single", q: "Has your family's capacity to invest — time and money — changed?",
+    options: ["No change", "We can sustain more now", "Our capacity has tightened"] },
+  { id: "pr3", kind: "single", q: "Has your timeline changed?",
+    options: ["No change", "We have more time / runway now", "We're approaching a decision point sooner"] },
+  { id: "pr4", kind: "single", q: "Has your openness to relocation changed?",
+    options: ["No change", "We're more open now", "We're less open now"] },
+  { id: "pr5", kind: "text", q: "Anything else that's changed we should know before the review?" },
+];
+
+export type PreReviewResponses = { pr1: string; pr2: string; pr3: string; pr4: string; pr5: string };
+
+export const EMPTY_PRE_REVIEW: PreReviewResponses = { pr1: "", pr2: "", pr3: "", pr4: "", pr5: "" };

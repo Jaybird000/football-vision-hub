@@ -4,24 +4,29 @@ import { useState, type ReactNode } from "react";
 import ReactMarkdown from "react-markdown";
 import {
   ArrowRight, Clock, Plus, Compass, GraduationCap, Trophy, Activity, Brain,
-  Target, Users, FileText, Flag, CheckCircle2, ChevronRight,
+  Target, Users, FileText, Flag, CheckCircle2, ChevronRight, Bell, X, CalendarClock, BookOpen,
 } from "lucide-react";
 import { getMyCategorisation, getMyJourney, type JourneyEvent, type CategorisationSnapshot } from "@/server/stage3";
 import { getMyStage2 } from "@/server/stage2";
 import { listMyChildren, setActiveChild, getMySop, flagSopForReview, type MyChild, type MySopSummary } from "@/server/intent";
+import { listMyNotifications, markNotificationRead, type MyNotification } from "@/server/notifications";
+import { refreshWelcome } from "@/server/auth";
 
 export const Route = createFileRoute("/ikf360/dashboard")({
   loader: async () => {
     const children = await listMyChildren();
     const active = children.find(c => c.isActive) ?? children[0] ?? null;
     const profileId = active?.profileId ?? undefined;
-    const [categorisation, stage2, journey, sop] = await Promise.all([
+    const [categorisation, stage2, journey, sop, notifications] = await Promise.all([
       getMyCategorisation({ data: { profileId } }),
       getMyStage2({ data: { profileId } }),
       getMyJourney({ data: { profileId } }),
       getMySop({ data: { profileId } }),
+      listMyNotifications({ data: { profileId } }),
     ]);
-    return { children, profileId: active?.profileId ?? null, categorisation, stage2, journey, sop };
+    // Keep the login-screen personalisation cookie fresh (active child / review date).
+    await refreshWelcome().catch(() => {});
+    return { children, profileId: active?.profileId ?? null, categorisation, stage2, journey, sop, notifications };
   },
   component: ParentDashboard,
 });
@@ -62,6 +67,12 @@ function ParentDashboard() {
     initialData: isInitial ? data.sop : undefined,
     ...keepPrev,
   });
+  const { data: notifications = [] } = useQuery({
+    queryKey: ["myNotifications", selectedId],
+    queryFn: () => listMyNotifications({ data: { profileId: selectedId ?? undefined } }),
+    initialData: isInitial ? data.notifications : undefined,
+    ...keepPrev,
+  });
 
   const activeMutation = useMutation({
     mutationFn: (profileId: string) => setActiveChild({ data: { profileId } }),
@@ -93,6 +104,7 @@ function ParentDashboard() {
     <div className="max-w-3xl mx-auto">
       <ChildTabs kids={children} selectedId={selectedChild.profileId} onSwitch={switchChild} />
       <GreetingStrip child={selectedChild} sop={sop ?? null} lastReviewed={cat?.scoredAt ?? null} />
+      <NotificationStrip items={notifications} />
 
       {/* Recommendation not published yet — quiet waiting state */}
       {!cat ? (
@@ -113,7 +125,7 @@ function ParentDashboard() {
       ) : (
         <>
           <WhereYouStand childName={childName} cat={cat} />
-          <FocusAreas childName={childName} md={cat.recommendationMd} validUntil={cat.validUntil} />
+          <FocusAreas childName={childName} cat={cat} />
         </>
       )}
 
@@ -164,6 +176,46 @@ function ChildTabs({ kids, selectedId, onSwitch }: { kids: MyChild[]; selectedId
   );
 }
 
+/* ─── Notification strip ──────────────────────────────────────────────────── */
+
+function NotificationStrip({ items }: { items: MyNotification[] }) {
+  const [dismissed, setDismissed] = useState<Set<string>>(new Set());
+  const markRead = useMutation({ mutationFn: (id: string) => markNotificationRead({ data: { id } }) });
+  const visible = items.filter(n => !dismissed.has(n.id));
+  if (visible.length === 0) return null;
+  const icon = (t: MyNotification["type"]) =>
+    t === "review_reminder" ? <CalendarClock size={16} /> : t === "content" ? <BookOpen size={16} /> : <Bell size={16} />;
+  function dismiss(id: string) {
+    setDismissed(prev => new Set(prev).add(id));
+    markRead.mutate(id);
+  }
+  return (
+    <div className="mt-5 space-y-2">
+      {visible.map(n => (
+        <div key={n.id} className="ikf-card p-4 flex items-start gap-3" style={{ borderLeft: "3px solid var(--ikf-brand)" }}>
+          <span className="mt-0.5" style={{ color: "var(--ikf-brand-ink)" }}>{icon(n.type)}</span>
+          <div className="flex-1 min-w-0">
+            <div className="text-[14px] font-semibold">{n.title}</div>
+            {n.body && <div className="text-[12.5px] mt-0.5" style={{ color: "var(--ikf-text-dim)" }}>{n.body}</div>}
+            {n.link && (
+              <a
+                href={n.link}
+                target={n.link.startsWith("http") ? "_blank" : undefined}
+                rel="noopener noreferrer"
+                className="text-[12.5px] font-semibold inline-flex items-center gap-1 mt-1.5"
+                style={{ color: "var(--ikf-brand-ink)" }}
+              >
+                View <ChevronRight size={13} />
+              </a>
+            )}
+          </div>
+          <button onClick={() => dismiss(n.id)} aria-label="Dismiss" className="opacity-50 hover:opacity-100 shrink-0"><X size={15} /></button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 /* ─── Greeting strip ──────────────────────────────────────────────────────── */
 
 function GreetingStrip({ child, sop, lastReviewed }: { child: MyChild; sop: MySopSummary | null; lastReviewed: string | null }) {
@@ -189,7 +241,12 @@ function GreetingStrip({ child, sop, lastReviewed }: { child: MyChild; sop: MySo
 /* ─── Module 1 — Where your child stands today ────────────────────────────── */
 
 function WhereYouStand({ childName, cat }: { childName: string; cat: CategorisationSnapshot }) {
-  const { situation, meaning } = parseRecommendation(cat.recommendationMd);
+  // Prefer the advisor-authored structured content; fall back to parsing the
+  // legacy markdown blob.
+  const parsed = parseRecommendation(cat.recommendationMd);
+  const sc = cat.structuredContent;
+  const situation = (sc?.situation?.trim() || "") || parsed.situation;
+  const meaning = (sc?.meaning?.trim() || "") || parsed.meaning;
   const review = reviewTiming(cat.scoredAt, cat.validUntil);
   return (
     <section className="ikf-card p-7 mt-6">
@@ -227,10 +284,20 @@ function WhereYouStand({ childName, cat }: { childName: string; cat: Categorisat
 
 /* ─── Module 2 — Your focus areas ─────────────────────────────────────────── */
 
-function FocusAreas({ childName, md, validUntil }: { childName: string; md: string; validUntil: string | null }) {
-  const { cards } = parseRecommendation(md);
+function FocusAreas({ childName, cat }: { childName: string; cat: CategorisationSnapshot }) {
+  // Prefer the structured focus cards; fall back to parsing the markdown ## sections.
+  const sc = cat.structuredContent;
+  const structuredCards: FocusCard[] = sc
+    ? ([
+        { key: "football", title: "Football development", icon: <Trophy size={16} />, body: sc.focus.football },
+        { key: "academics", title: "Academics", icon: <GraduationCap size={16} />, body: sc.focus.academics },
+        { key: "physical", title: "Physical development", icon: <Activity size={16} />, body: sc.focus.physical },
+        { key: "mindset", title: "Mindset & resilience", icon: <Brain size={16} />, body: sc.focus.mindset },
+      ] as FocusCard[]).filter(c => c.body && c.body.trim().length > 0)
+    : [];
+  const cards = structuredCards.length > 0 ? structuredCards : parseRecommendation(cat.recommendationMd).cards;
   if (cards.length === 0) return null;
-  const until = validUntil ? monthLabel(validUntil) : null;
+  const until = cat.validUntil ? monthLabel(cat.validUntil) : null;
   return (
     <section className="mt-5">
       <h2 className="text-[15px] uppercase tracking-[0.12em] font-bold mb-4 px-1">

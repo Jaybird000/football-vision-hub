@@ -4,6 +4,7 @@
   "framework": null,
   "crons": [
     { "path": "/api/cron/review-reminders", "schedule": "0 9 * * *" },
-    { "path": "/api/cron/stage2-nudge", "schedule": "30 9 * * *" }
+    { "path": "/api/cron/stage2-nudge", "schedule": "30 9 * * *" },
+    { "path": "/api/cron/monthly-content", "schedule": "0 9 1 * *" }
   ]
 }
