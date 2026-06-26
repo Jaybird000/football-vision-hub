@@ -1,4 +1,4 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
 import {
   Outlet,
   Link,
@@ -119,6 +119,17 @@ function RootShell({ children }: { children: React.ReactNode }) {
   );
 }
 
+// Footer only shows once signed in (client feedback 25 Jun 2026, item 2.d —
+// logged-out visitors see only the landing page, no footer).
+function FooterGate() {
+  const { data: user } = useQuery({
+    queryKey: ["currentUser"],
+    queryFn: () => currentUser(),
+    staleTime: 60_000,
+  });
+  return user ? <Footer /> : null;
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   return (
@@ -127,7 +138,7 @@ function RootComponent() {
         <div className="flex min-h-screen flex-col bg-pitch-black text-chalk">
           <Nav />
           <main className="flex-1"><Outlet /></main>
-          <Footer />
+          <FooterGate />
         </div>
       </LanguageProvider>
     </QueryClientProvider>

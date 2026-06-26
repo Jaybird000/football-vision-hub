@@ -28,7 +28,14 @@ export default defineConfig({
         crawlLinks: true,
         // /ikf360/* is the logged-in product surface — every loader needs a session
         // and/or a DB query. Prerendering returns 500s; the routes are noindex anyway.
-        filter: (page) => !page.path.startsWith("/ikf360"),
+        // The marketing pages are now hard-gated to signed-in users (route-guards.ts),
+        // so a session-less prerender would just redirect them to "/" — exclude them too.
+        filter: (page) =>
+          !page.path.startsWith("/ikf360") &&
+          ![
+            "/about", "/players", "/coaches", "/parents", "/parents/pathway",
+            "/partners", "/initiatives", "/donate",
+          ].includes(page.path),
       },
     }),
     viteReact(),

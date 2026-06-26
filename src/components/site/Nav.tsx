@@ -3,7 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Menu, X, LogOut, User } from "lucide-react";
 import { Logo } from "./Logo";
-import { LangToggle } from "./LangToggle";
 import { useLang } from "@/lib/i18n";
 import { currentUser, logout } from "@/server/auth";
 
@@ -85,17 +84,20 @@ export function Nav() {
             })}
           </div>
         ) : (
-          <div className="hidden md:flex items-center gap-8 text-xs uppercase tracking-widest font-bold">
-            {publicLinks.map(l => (
-              <Link key={l.to} to={l.to} className="text-chalk/80 hover:text-gold-ink transition-colors" activeProps={{ className: "text-gold-ink" }}>
-                {l.label}
-              </Link>
-            ))}
-          </div>
+          // Marketing tabs only appear once signed in (client feedback 25 Jun
+          // 2026, item 2 — visitors see only the landing page).
+          user && (
+            <div className="hidden md:flex items-center gap-8 text-xs uppercase tracking-widest font-bold">
+              {publicLinks.map(l => (
+                <Link key={l.to} to={l.to} className="text-chalk/80 hover:text-gold-ink transition-colors" activeProps={{ className: "text-gold-ink" }}>
+                  {l.label}
+                </Link>
+              ))}
+            </div>
+          )
         )}
 
         <div className="flex items-center gap-3">
-          {!isIkf360 && <LangToggle />}
           {isIkf360 && isAdmin && (
             <Link
               to={isAdminArea ? "/ikf360" : "/ikf360/admin"}
@@ -139,12 +141,20 @@ export function Nav() {
             </div>
           ) : (
             !isIkf360 && (
-              <Link
-                to="/login"
-                className="hidden md:inline-flex border border-neon-strike text-ink px-5 py-2 rounded-full font-bold text-xs uppercase tracking-wider hover:bg-neon-strike transition-colors"
-              >
-                Log in
-              </Link>
+              <div className="hidden md:flex items-center gap-2">
+                <Link
+                  to="/login"
+                  className="inline-flex border border-neon-strike text-ink px-5 py-2 rounded-full font-bold text-xs uppercase tracking-wider hover:bg-neon-strike transition-colors"
+                >
+                  Log in
+                </Link>
+                <Link
+                  to="/signup"
+                  className="inline-flex bg-neon-strike text-ink px-5 py-2 rounded-full font-bold text-xs uppercase tracking-wider hover:scale-[1.02] transition-transform"
+                >
+                  Get started
+                </Link>
+              </div>
             )
           )}
           <button onClick={() => setOpen(!open)} className="md:hidden text-chalk p-2" aria-label="menu">
@@ -161,13 +171,13 @@ export function Nav() {
                   {tab.label}
                 </Link>
               ))
-            : publicLinks.map(l => (
+            : user && publicLinks.map(l => (
                 <Link key={l.to} to={l.to} className="text-chalk/80 hover:text-gold-ink" onClick={() => setOpen(false)}>
                   {l.label}
                 </Link>
               ))}
 
-          {!isIkf360 && (
+          {!isIkf360 && user && (
             <>
               <Link to="/parents" className="text-chalk/80 hover:text-gold-ink" onClick={() => setOpen(false)}>{t("nav", "parents")}</Link>
               <Link to="/partners" className="text-chalk/80 hover:text-gold-ink" onClick={() => setOpen(false)}>{t("nav", "partners")}</Link>
@@ -192,7 +202,10 @@ export function Nav() {
             </>
           ) : (
             !isIkf360 && (
-              <Link to="/login" className="text-chalk/80 hover:text-gold-ink" onClick={() => setOpen(false)}>Log in</Link>
+              <>
+                <Link to="/login" className="text-chalk/80 hover:text-gold-ink" onClick={() => setOpen(false)}>Log in</Link>
+                <Link to="/signup" className="text-gold-ink" onClick={() => setOpen(false)}>Get started →</Link>
+              </>
             )
           )}
         </div>

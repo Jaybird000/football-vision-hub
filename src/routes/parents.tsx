@@ -2,8 +2,10 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 import img from "@/assets/persona-parent.jpg";
 import { PageHero, Section } from "@/components/site/PageHero";
+import { requireAccount } from "@/lib/route-guards";
 
 export const Route = createFileRoute("/parents")({
+  beforeLoad: requireAccount,
   head: () => ({ meta: [
     { title: "For Parents — India Khelo Football" },
     { name: "description", content: "Education, safety, and a structured football career path for your child — fully funded by IKF." },

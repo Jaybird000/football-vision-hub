@@ -8,8 +8,9 @@ import {
 } from "lucide-react";
 import { getMyCategorisation, getMyJourney, type JourneyEvent, type CategorisationSnapshot } from "@/server/stage3";
 import { getMyStage2 } from "@/server/stage2";
-import { listMyChildren, setActiveChild, getMySop, flagSopForReview, type MyChild, type MySopSummary } from "@/server/intent";
+import { listMyChildren, setActiveChild, getMySop, getMyResponses, flagSopForReview, type MyChild, type MySopSummary } from "@/server/intent";
 import { listMyNotifications, markNotificationRead, type MyNotification } from "@/server/notifications";
+import { ACADEMIC_MODIFIERS, JOURNEY_QUESTIONS, type AcademicModifier, type SopResponses } from "@/lib/ikf360-data";
 import { refreshWelcome } from "@/server/auth";
 
 export const Route = createFileRoute("/ikf360/dashboard")({
@@ -267,6 +268,17 @@ function WhereYouStand({ childName, cat }: { childName: string; cat: Categorisat
         </div>
       )}
 
+      {cat.academicModifier && ACADEMIC_MODIFIERS[cat.academicModifier as AcademicModifier] && (
+        <div className="mt-5 rounded-lg p-4" style={{ background: "var(--ikf-surface-2)" }}>
+          <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.12em] mb-1.5" style={{ color: "var(--ikf-brand-ink)" }}>
+            <GraduationCap size={13} /> {ACADEMIC_MODIFIERS[cat.academicModifier as AcademicModifier].label}
+          </div>
+          <p className="text-[13.5px] leading-relaxed" style={{ color: "var(--ikf-text-dim)" }}>
+            {ACADEMIC_MODIFIERS[cat.academicModifier as AcademicModifier].blurb}
+          </p>
+        </div>
+      )}
+
       {review && (
         <div className="mt-6 pt-5 border-t" style={{ borderColor: "var(--ikf-border)" }}>
           <div className="text-[12px] mb-2" style={{ color: "var(--ikf-text-dim)" }}>
@@ -413,9 +425,16 @@ function PeopleWhoCanHelp({ childName, providers }: { childName: string; provide
 
 function YourSop({ childName, sop, profileId }: { childName: string; sop: MySopSummary; profileId: string }) {
   const [open, setOpen] = useState(false);
+  const [showAll, setShowAll] = useState(false);
   const [note, setNote] = useState("");
   const flag = useMutation({
     mutationFn: () => flagSopForReview({ data: { profileId, note: note.trim() } }),
+  });
+  // Full submitted answers (feedback 3.b) — fetched lazily when the parent expands.
+  const { data: full } = useQuery({
+    queryKey: ["myResponses", profileId],
+    queryFn: () => getMyResponses({ data: { profileId } }),
+    enabled: showAll,
   });
   const lines = [
     { label: "What you're hoping for", value: sop.hopingFor },
@@ -440,6 +459,24 @@ function YourSop({ childName, sop, profileId }: { childName: string; sop: MySopS
           </div>
         ))}
       </dl>
+
+      <div className="mt-5">
+        <button
+          onClick={() => setShowAll(v => !v)}
+          className="inline-flex items-center gap-1.5 text-[13px] font-semibold"
+          style={{ color: "var(--ikf-brand-ink)" }}
+        >
+          <ChevronRight size={14} style={{ transform: showAll ? "rotate(90deg)" : "none", transition: "transform 0.2s" }} />
+          {showAll ? "Hide my full answers" : "See everything I submitted"}
+        </button>
+        {showAll && (
+          <div className="mt-4">
+            {full ? <FullSopAnswers s={full} /> : (
+              <div className="text-[13px]" style={{ color: "var(--ikf-text-dim)" }}>Loading your answers…</div>
+            )}
+          </div>
+        )}
+      </div>
 
       <div className="mt-6 pt-5 border-t" style={{ borderColor: "var(--ikf-border)" }}>
         {flag.isSuccess ? (
@@ -476,6 +513,51 @@ function YourSop({ childName, sop, profileId }: { childName: string; sop: MySopS
         )}
       </div>
     </section>
+  );
+}
+
+// Renders the parent's full submitted SOP — family answers, then this child's
+// answers (feedback 3.b — "how can I see what input I gave?").
+function FullSopAnswers({ s }: { s: SopResponses }) {
+  const qText = (id: string) => JOURNEY_QUESTIONS.find(q => q.id === id)?.q ?? id;
+  const concern = s.q6.choices
+    .map(c => (c === "Something else" && s.q6.other ? `Something else — ${s.q6.other}` : c))
+    .join("  ·  ") || "—";
+  const prior = s.q4.prior === "yes" ? `Yes${s.q4.detail ? ` — ${s.q4.detail}` : ""}`
+    : s.q4.prior === "no" ? "No — first contact with IKF" : "—";
+  const family: { q: string; a: string }[] = [
+    { q: qText("q8"), a: s.q8 || "—" },
+    { q: qText("q9"), a: s.q9 || "—" },
+    { q: qText("q10"), a: s.q10 || "—" },
+    { q: qText("q7"), a: s.q7 || "—" },
+    { q: qText("q6"), a: concern },
+  ];
+  const child: { q: string; a: string }[] = [
+    { q: "Child", a: `${s.firstName || "—"}${s.age ? ` · age ${s.age}` : ""}` },
+    { q: qText("q2"), a: s.q2 || "—" },
+    { q: qText("q3"), a: s.q3 || "—" },
+    { q: qText("q4"), a: prior },
+    { q: qText("q5"), a: s.q5 || "—" },
+    { q: "Anything else you wanted us to know", a: s.q11 || "—" },
+  ];
+  const group = (title: string, rows: { q: string; a: string }[]) => (
+    <div>
+      <div className="text-[11px] uppercase tracking-[0.12em] mb-2" style={{ color: "var(--ikf-brand-ink)" }}>{title}</div>
+      <ol className="space-y-2.5">
+        {rows.map((row, i) => (
+          <li key={i} className="rounded-lg p-3" style={{ background: "var(--ikf-surface-2)" }}>
+            <div className="text-[12px] mb-1" style={{ color: "var(--ikf-text-dim)" }}>{row.q}</div>
+            <div className="text-[13.5px] font-medium whitespace-pre-wrap">{row.a}</div>
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+  return (
+    <div className="space-y-5">
+      {group("About your family", family)}
+      {group("About this child", child)}
+    </div>
   );
 }
 

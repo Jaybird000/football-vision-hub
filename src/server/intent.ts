@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { getCookie } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { sql } from "./db";
-import { deriveReadiness, journeyScoreMap, PREFER_NOT_TO_SAY, type SopResponses } from "@/lib/ikf360-data";
+import { deriveReadiness, journeyScoreMap, extractFamily, PREFER_NOT_TO_SAY, type SopResponses, type FamilyResponses } from "@/lib/ikf360-data";
 import { sendParentIntentAck, sendAdvisorNewIntent, sendAdvisorSopReviewFlag } from "./email";
 import { logAudit } from "./audit";
 
@@ -201,6 +201,33 @@ export const getMySopDraft = createServerFn({ method: "GET" }).handler(async ():
   return { responses: rows[0].responses, section: rows[0].section };
 });
 
+// The parent's saved family answers (0017), reused to prefill + skip the family
+// section when a second child is added. Null if not captured yet. Guarded for
+// pre-migration.
+export const getMyFamily = createServerFn({ method: "GET" }).handler(async (): Promise<FamilyResponses | null> => {
+  const userId = await getSessionUserId();
+  if (!userId) return null;
+  const rows = await sql<{ responses: FamilyResponses }[]>`
+    SELECT responses FROM parent_family_responses WHERE user_id = ${userId} LIMIT 1
+  `.catch(() => [] as { responses: FamilyResponses }[]);
+  return rows[0]?.responses ?? null;
+});
+
+// Full SOP responses for one child (family + child), for the parent's own
+// "review your answers" view (feedback 3.b). Ownership-checked.
+export const getMyResponses = createServerFn({ method: "GET" })
+  .inputValidator((d: unknown) => z.object({ profileId: z.string().uuid().optional() }).parse(d ?? {}))
+  .handler(async ({ data }): Promise<SopResponses | null> => {
+    const userId = await getSessionUserId();
+    if (!userId) return null;
+    const profileId = await resolveOwnedProfileId(userId, data.profileId);
+    if (!profileId) return null;
+    const rows = await sql<{ sop_responses: SopResponses | null }[]>`
+      SELECT sop_responses FROM parent_child_profiles WHERE id = ${profileId} LIMIT 1
+    `.catch(() => [] as { sop_responses: SopResponses | null }[]);
+    return rows[0]?.sop_responses ?? null;
+  });
+
 // ─── Submit ──────────────────────────────────────────────────────────────────
 
 export const submitJourney = createServerFn({ method: "POST" })
@@ -237,6 +264,16 @@ export const submitJourney = createServerFn({ method: "POST" })
     // succeeds (storing only the derived scores) before that migration runs.
     await sql`UPDATE parent_child_profiles SET sop_responses = ${sql.json(responses)} WHERE id = ${profileId}`
       .catch(e => console.warn("[journey] sop_responses write skipped (migration 0014 applied?):", e instanceof Error ? e.message : e));
+
+    // Persist the family answers once per parent (0017) so the next child reuses
+    // them. The child row keeps a full denormalised copy above; this is the shared
+    // source of truth for the family subset. Guarded for pre-migration.
+    await sql`
+      INSERT INTO parent_family_responses (user_id, responses, updated_at)
+      VALUES (${user.id}, ${sql.json(extractFamily(responses))}, now())
+      ON CONFLICT (user_id) DO UPDATE
+        SET responses = excluded.responses, updated_at = now()
+    `.catch(e => console.warn("[journey] family responses write skipped (migration 0017 applied?):", e instanceof Error ? e.message : e));
 
     // Multi-child ownership link (0015). Guarded so a submit still succeeds before
     // the migration runs (the profile stays reachable via users.profile_id below).

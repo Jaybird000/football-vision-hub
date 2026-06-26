@@ -1,8 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import img from "@/assets/initiatives-pitch.jpg";
 import { PageHero, Section } from "@/components/site/PageHero";
+import { requireAccount } from "@/lib/route-guards";
 
 export const Route = createFileRoute("/initiatives")({
+  beforeLoad: requireAccount,
   head: () => ({ meta: [
     { title: "Initiatives — India Khelo Football" },
     { name: "description", content: "Programs and projects: Khelo Talent Hunt, Naari Shakti, IKF Academies, Coach Education and rural football outreach." },

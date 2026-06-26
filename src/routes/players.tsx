@@ -1,8 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import img from "@/assets/persona-player.jpg";
 import { PageHero, Section } from "@/components/site/PageHero";
+import { requireAccount } from "@/lib/route-guards";
 
 export const Route = createFileRoute("/players")({
+  beforeLoad: requireAccount,
   head: () => ({ meta: [
     { title: "For Players — India Khelo Football" },
     { name: "description", content: "Register for IKF open trials — free for girls and underprivileged, otherwise a one-time ₹125 city-round registration. Get scouted, get placed, go pro." },

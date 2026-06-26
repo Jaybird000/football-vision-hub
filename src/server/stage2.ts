@@ -35,6 +35,10 @@ export type UploadRecord = {
   mimeType: string;
   status: "uploaded" | "verified" | "rejected";
   uploadedAt: string;
+  // Which partner/provider produced this report (0018). Null for legacy uploads
+  // or when the parent didn't pick one.
+  providerId: string | null;
+  providerName: string | null;
 };
 
 export type Stage2State = {
@@ -92,12 +96,28 @@ async function loadStage2(profileId: string | null, childName: string | null): P
       });
     })(),
     profileId
-      ? sql<{ id: string; assessment_key: string; file_name: string; file_size: number; mime_type: string; status: string; uploaded_at: Date }[]>`
-          SELECT id, assessment_key, file_name, file_size, mime_type, status, uploaded_at
-          FROM assessment_uploads
-          WHERE profile_id = ${profileId}
-          ORDER BY uploaded_at DESC
-        `
+      ? (() => {
+          type URow = { id: string; assessment_key: string; file_name: string; file_size: number; mime_type: string; status: string; uploaded_at: Date; provider_id: string | null; provider_name: string | null };
+          // Tolerate migration 0018 (provider_id) being unapplied — fall back to
+          // the pre-provider query so the upload list keeps working.
+          return sql<URow[]>`
+            SELECT u.id, u.assessment_key, u.file_name, u.file_size, u.mime_type, u.status, u.uploaded_at,
+                   u.provider_id, p.name AS provider_name
+            FROM assessment_uploads u
+            LEFT JOIN providers p ON p.id = u.provider_id
+            WHERE u.profile_id = ${profileId}
+            ORDER BY u.uploaded_at DESC
+          `.catch(async (e) => {
+            console.warn("[stage2] assessment_uploads.provider_id read failed (migration 0018 applied?):", e instanceof Error ? e.message : e);
+            const rows = await sql<{ id: string; assessment_key: string; file_name: string; file_size: number; mime_type: string; status: string; uploaded_at: Date }[]>`
+              SELECT id, assessment_key, file_name, file_size, mime_type, status, uploaded_at
+              FROM assessment_uploads
+              WHERE profile_id = ${profileId}
+              ORDER BY uploaded_at DESC
+            `;
+            return rows.map(r => ({ ...r, provider_id: null, provider_name: null })) as URow[];
+          });
+        })()
       : Promise.resolve([]),
     profileId
       ? sql<{ created_at: Date }[]>`
@@ -146,6 +166,8 @@ async function loadStage2(profileId: string | null, childName: string | null): P
       mimeType: u.mime_type,
       status: u.status as UploadRecord["status"],
       uploadedAt: u.uploaded_at.toISOString(),
+      providerId: u.provider_id ?? null,
+      providerName: u.provider_name ?? null,
     })),
     requiredKeys,
     uploadedRequiredCount,
@@ -200,9 +222,11 @@ export const uploadAssessment = createServerFn({ method: "POST" })
     if (!(data instanceof FormData)) throw new Error("Expected FormData");
     const key = String(data.get("assessmentKey") || "");
     const file = data.get("file");
+    const providerRaw = data.get("providerId");
+    const providerId = providerRaw ? String(providerRaw) : null;
     if (!key) throw new Error("Missing assessmentKey");
     if (!(file instanceof File) || file.size === 0) throw new Error("Missing file");
-    return { key, file };
+    return { key, file, providerId };
   })
   .handler(async ({ data }): Promise<UploadRecord> => {
     const user = await getSessionUser();
@@ -258,6 +282,21 @@ export const uploadAssessment = createServerFn({ method: "POST" })
       row = ins[0];
     }
 
+    // Attribute the upload to the chosen partner (0018). Validate the provider
+    // belongs to this assessment, then write it guarded so a submit still
+    // succeeds before the migration is applied.
+    let providerName: string | null = null;
+    if (data.providerId) {
+      const prov = await sql<{ id: string; name: string }[]>`
+        SELECT id, name FROM providers WHERE id = ${data.providerId} AND assessment_key = ${data.key} LIMIT 1
+      `.catch(() => [] as { id: string; name: string }[]);
+      if (prov.length > 0) {
+        providerName = prov[0].name;
+        await sql`UPDATE assessment_uploads SET provider_id = ${data.providerId} WHERE id = ${row.id}`
+          .catch(e => console.warn("[stage2] provider_id write skipped (migration 0018 applied?):", e instanceof Error ? e.message : e));
+      }
+    }
+
     await logAudit({
       action: existing.length > 0 ? "upload.replace" : "upload.create",
       entityType: "upload",
@@ -309,6 +348,8 @@ export const uploadAssessment = createServerFn({ method: "POST" })
       mimeType: row.mime_type,
       status: row.status as UploadRecord["status"],
       uploadedAt: row.uploaded_at.toISOString(),
+      providerId: data.providerId,
+      providerName,
     };
   });
 

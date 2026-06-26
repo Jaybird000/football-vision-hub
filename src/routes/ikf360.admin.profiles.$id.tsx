@@ -5,7 +5,7 @@ import { ArrowLeft, Loader2, Check, FileText, ExternalLink, CheckCircle2, XCircl
 import { currentUser } from "@/server/auth";
 import { listAxes, getAdminProfileDetail, getProfileCategorisation, scoreProfile } from "@/server/stage3";
 import { setUploadStatus } from "@/server/stage2";
-import { INTENT_QUESTIONS, JOURNEY_QUESTIONS, type SopResponses } from "@/lib/ikf360-data";
+import { INTENT_QUESTIONS, JOURNEY_QUESTIONS, ACADEMIC_MODIFIERS, type SopResponses, type AcademicModifier } from "@/lib/ikf360-data";
 
 // Reconstruct the parent's chosen answer text from the stored score. The SOP
 // stores only the option score (1-4), not which option — so for the few
@@ -61,6 +61,9 @@ function ProfileScorePage() {
 
   const [selections, setSelections] = useState<Record<string, string>>(initialSelections);
   const [advisorNotes, setAdvisorNotes] = useState(categorisation?.advisorNotes ?? "");
+  const [academicModifier, setAcademicModifier] = useState<AcademicModifier | "">(
+    (categorisation?.academicModifier as AcademicModifier | undefined) ?? "",
+  );
   const [preview, setPreview] = useState<{ id: string; title: string; fileName: string; mimeType: string } | null>(null);
 
   useEffect(() => {
@@ -81,6 +84,7 @@ function ProfileScorePage() {
         profileId: params.id,
         selections: Object.entries(selections).map(([axisKey, valueKey]) => ({ axisKey, valueKey })),
         advisorNotes,
+        academicModifier: academicModifier || null,
       },
     }),
     onSuccess: () => {
@@ -176,6 +180,7 @@ function ProfileScorePage() {
                         <div className="flex items-center gap-1.5 text-[11px] mt-1" style={{ color: "var(--ikf-text-dim)" }}>
                           <FileText size={11} />
                           {u.fileName} · {new Date(u.uploadedAt).toLocaleDateString()}
+                          {u.providerName && <> · Partner: <span className="font-semibold">{u.providerName}</span></>}
                         </div>
                       </div>
                       <a
@@ -265,6 +270,33 @@ function ProfileScorePage() {
               </div>
             </div>
           ))}
+
+          <div>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.12em] mb-1.5" style={{ color: "var(--ikf-text-dim)" }}>
+              Academic profile (modifier)
+            </div>
+            <p className="text-[11px] mb-2" style={{ color: "var(--ikf-text-dim)" }}>
+              Not an axis — shifts the recommendation within the category. Optional.
+            </p>
+            <div className="grid gap-2">
+              {(Object.keys(ACADEMIC_MODIFIERS) as AcademicModifier[]).map(k => {
+                const selected = academicModifier === k;
+                return (
+                  <button
+                    key={k}
+                    onClick={() => setAcademicModifier(selected ? "" : k)}
+                    className="text-left p-3 rounded-lg border transition-colors"
+                    style={selected
+                      ? { borderColor: "var(--ikf-brand)", background: "rgba(245,197,24,0.12)" }
+                      : { borderColor: "var(--ikf-border)", background: "var(--ikf-surface-2)" }}
+                  >
+                    <div className="font-semibold text-[13px]">{ACADEMIC_MODIFIERS[k].label}</div>
+                    <div className="text-[11px] mt-0.5" style={{ color: "var(--ikf-text-dim)" }}>{ACADEMIC_MODIFIERS[k].blurb}</div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
           <label className="block">
             <div className="text-[11px] font-semibold uppercase tracking-[0.12em] mb-1.5" style={{ color: "var(--ikf-text-dim)" }}>

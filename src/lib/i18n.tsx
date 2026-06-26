@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, type ReactNode } from "react";
 
 export type Lang = "en" | "hi";
 
@@ -54,16 +54,11 @@ const Ctx = createContext<{ lang: Lang; setLang: (l: Lang) => void; t: <K extend
 });
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [lang, setLangState] = useState<Lang>("en");
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const saved = window.localStorage.getItem("ikf_lang") as Lang | null;
-    if (saved === "en" || saved === "hi") setLangState(saved);
-  }, []);
-  const setLang = (l: Lang) => {
-    setLangState(l);
-    if (typeof window !== "undefined") window.localStorage.setItem("ikf_lang", l);
-  };
+  // English-only for now (client feedback 25 Jun 2026, item 1.a — "Once stable we
+  // will go multilingual"). The `hi` dictionary entries are kept dormant so the
+  // toggle can be reinstated later by restoring the localStorage-backed state.
+  const lang: Lang = "en";
+  const setLang = (_l: Lang) => {};
   const t = <K extends DictKey, S extends SubKey<K>>(k: K, s: S): string => {
     const entry = (dict[k] as Record<string, { en: string; hi: string }>)[s as string];
     return entry?.[lang] ?? entry?.en ?? "";

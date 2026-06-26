@@ -3,8 +3,10 @@ import { ClipboardList, FolderUp, Compass, ArrowRight, ShieldCheck, Languages, C
 import img from "@/assets/persona-parent.jpg";
 import { PageHero, Section } from "@/components/site/PageHero";
 import { useLang } from "@/lib/i18n";
+import { requireAccount } from "@/lib/route-guards";
 
 export const Route = createFileRoute("/parents_/pathway")({
+  beforeLoad: requireAccount,
   head: () => ({ meta: [
     { title: "IKF Pathway 360 — A Parent's Guide" },
     { name: "description", content: "What IKF Pathway 360 is, the journey your child goes through, and exactly what you can expect — explained for parents, before you sign up." },

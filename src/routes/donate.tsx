@@ -4,8 +4,10 @@ import img from "@/assets/naari-shakti.jpg";
 import { PageHero, Section } from "@/components/site/PageHero";
 import { Counter } from "@/components/site/Counter";
 import { ctaSoundProps } from "@/lib/sound";
+import { requireAccount } from "@/lib/route-guards";
 
 export const Route = createFileRoute("/donate")({
+  beforeLoad: requireAccount,
   head: () => ({ meta: [
     { title: "Donate — India Khelo Football" },
     { name: "description", content: "Sponsor a kit, fund a trial, back a city. Every rupee is 80G tax-deductible and goes straight to the grassroots." },

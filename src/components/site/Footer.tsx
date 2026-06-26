@@ -1,31 +1,11 @@
 import { Link } from "@tanstack/react-router";
 import { Logo } from "./Logo";
-import { useLang } from "@/lib/i18n";
 
 export function Footer() {
-  const { t } = useLang();
   return (
     <footer className="border-t border-black/10 pt-20 pb-12 bg-pitch-green">
       <div className="max-w-7xl mx-auto px-6">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-12 pb-16 border-b border-chalk/10">
-          <div className="max-w-lg">
-            <h2 className="font-display text-5xl md:text-7xl leading-[0.9] uppercase">
-              Kickstart the <span className="text-gold-ink">Revolution.</span>
-            </h2>
-            <p className="mt-4 text-chalk/82 uppercase tracking-widest text-xs font-bold italic">
-              {t("donate", "sub")}
-            </p>
-          </div>
-          <div className="flex flex-col gap-3">
-            <Link to="/donate" className="bg-neon-strike text-ink px-10 py-5 font-display text-3xl uppercase tracking-wide hover:scale-[1.02] transition-transform inline-block">
-              {t("donate", "cta")}
-            </Link>
-            <p className="text-[10px] text-chalk/72 uppercase text-center tracking-widest">
-              {t("donate", "note")}
-            </p>
-          </div>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 pt-12 text-sm">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-sm">
           <div className="col-span-2 flex flex-col gap-3">
             <Logo size="lg" />
             <div className="mt-2">
@@ -64,7 +44,6 @@ export function Footer() {
             <ul className="space-y-2 text-chalk/86">
               <li><Link to="/about" className="hover:text-gold-ink">About</Link></li>
               <li><Link to="/initiatives" className="hover:text-gold-ink">Initiatives</Link></li>
-              <li><Link to="/donate" className="hover:text-gold-ink">Donate</Link></li>
             </ul>
           </div>
         </div>

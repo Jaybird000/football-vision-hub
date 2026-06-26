@@ -249,12 +249,16 @@ function AssessmentCard({
 }) {
   const fileRef = useRef<HTMLInputElement | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Which partner produced the report being uploaded (feedback 3.c). Seeded from
+  // the existing upload so a "Replace file" keeps the same partner by default.
+  const [selectedProvider, setSelectedProvider] = useState<string | null>(upload?.providerId ?? null);
 
   const uploadMutation = useMutation({
     mutationFn: async (file: File) => {
       const fd = new FormData();
       fd.set("assessmentKey", template.key);
       fd.set("file", file);
+      if (selectedProvider) fd.set("providerId", selectedProvider);
       return uploadAssessment({ data: fd });
     },
     onSuccess: () => { setError(null); onChanged(); },
@@ -306,35 +310,55 @@ function AssessmentCard({
       {providers.length > 0 && (
         <div className="text-[12px]">
           <div className="uppercase tracking-[0.14em] mb-2 flex items-center justify-between gap-2" style={{ color: "var(--ikf-text-dim)" }}>
-            <span>Recommended providers</span>
+            <span>Select the partner whose report you're uploading</span>
             {providers.some(p => p.chargeInr != null) && <span>Report charge</span>}
           </div>
           <ul className="space-y-1.5">
-            {providers.map(p => (
-              <li key={p.id} className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <a
-                    href={p.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 hover:underline"
-                    style={{ color: "var(--ikf-brand-ink)" }}
+            {providers.map(p => {
+              const selected = selectedProvider === p.id;
+              return (
+                <li key={p.id}>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedProvider(selected ? null : p.id)}
+                    className="w-full text-left rounded-lg border p-2.5 flex items-start justify-between gap-3 transition-colors"
+                    style={selected
+                      ? { borderColor: "var(--ikf-brand)", background: "var(--ikf-surface-2)" }
+                      : { borderColor: "var(--ikf-border)", background: "transparent" }}
                   >
-                    {p.name}{p.city ? ` · ${p.city}` : ""} <ExternalLink size={11} />
-                  </a>
-                  {p.description && (
-                    <span className="ml-2 text-[12px]" style={{ color: "var(--ikf-text-dim)" }}>
-                      — {p.description}
-                    </span>
-                  )}
-                </div>
-                {p.chargeInr != null && (
-                  <span className="shrink-0 text-[12px] font-bold tabular-nums" style={{ color: "var(--ikf-accent)" }}>
-                    ₹{p.chargeInr.toLocaleString("en-IN")}
-                  </span>
-                )}
-              </li>
-            ))}
+                    <div className="min-w-0 flex items-start gap-2">
+                      <span
+                        className="mt-0.5 shrink-0 inline-flex items-center justify-center w-4 h-4 rounded-full"
+                        style={{ border: `2px solid ${selected ? "var(--ikf-brand)" : "var(--ikf-border)"}`, background: selected ? "var(--ikf-brand)" : "transparent", color: "#0B1220" }}
+                      >
+                        {selected && <Check size={10} strokeWidth={3} />}
+                      </span>
+                      <span className="min-w-0">
+                        <span className="font-semibold">{p.name}{p.city ? ` · ${p.city}` : ""}</span>
+                        {p.description && (
+                          <span className="ml-1.5" style={{ color: "var(--ikf-text-dim)" }}>— {p.description}</span>
+                        )}
+                        <a
+                          href={p.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={e => e.stopPropagation()}
+                          className="ml-1.5 inline-flex items-center gap-1 hover:underline"
+                          style={{ color: "var(--ikf-brand-ink)" }}
+                        >
+                          visit <ExternalLink size={10} />
+                        </a>
+                      </span>
+                    </div>
+                    {p.chargeInr != null && (
+                      <span className="shrink-0 text-[12px] font-bold tabular-nums" style={{ color: "var(--ikf-accent)" }}>
+                        ₹{p.chargeInr.toLocaleString("en-IN")}
+                      </span>
+                    )}
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         </div>
       )}
@@ -353,6 +377,9 @@ function AssessmentCard({
               {upload.fileName}
             </a>
             <span className="opacity-60 flex-shrink-0">· {formatBytes(upload.fileSize)}</span>
+            {upload.providerName && (
+              <span className="opacity-70 flex-shrink-0 truncate" title={`Partner: ${upload.providerName}`}>· {upload.providerName}</span>
+            )}
           </div>
           <button
             onClick={() => deleteMutation.mutate(upload.id)}
@@ -388,8 +415,8 @@ function AssessmentCard({
         />
         <button
           onClick={pickFile}
-          disabled={uploadMutation.isPending}
-          className="ikf-btn-primary inline-flex items-center gap-2 text-[13px] disabled:opacity-50"
+          disabled={uploadMutation.isPending || (providers.length > 0 && !selectedProvider)}
+          className="ikf-btn-primary inline-flex items-center gap-2 text-[13px] disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {uploadMutation.isPending ? (
             <><Loader2 size={14} className="animate-spin" /> Uploading…</>
@@ -398,7 +425,9 @@ function AssessmentCard({
           )}
         </button>
         <span className="text-[11px]" style={{ color: "var(--ikf-text-dim)" }}>
-          PDF, DOC, DOCX, JPG, PNG · Max 15 MB
+          {providers.length > 0 && !selectedProvider
+            ? "Select a partner above to upload"
+            : "PDF, DOC, DOCX, JPG, PNG · Max 15 MB"}
         </span>
       </div>
     </div>

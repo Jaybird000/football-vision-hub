@@ -45,7 +45,7 @@ function Overview() {
           <div><span className="font-semibold" style={{ color: "var(--ikf-text)" }}>2 · Deep Assessment</span><div style={{ color: "var(--ikf-text-dim)" }}>Add reports at your own pace.</div></div>
           <div><span className="font-semibold" style={{ color: "var(--ikf-text)" }}>3 · Recommendation</span><div style={{ color: "var(--ikf-text-dim)" }}>A clear, personalised plan.</div></div>
         </div>
-        <Link to="/parents/pathway" className="ikf-btn-primary inline-flex items-center gap-2 text-[13px]">
+        <Link to="/parents/pathway" target="_blank" rel="noopener noreferrer" className="ikf-btn-primary inline-flex items-center gap-2 text-[13px]">
           Read the full parent guide <ArrowRight size={14} />
         </Link>
       </section>

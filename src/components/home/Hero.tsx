@@ -14,8 +14,11 @@ export function Hero() {
     <section className="relative bg-[#FFFFFF] text-[#144A6C]">
       <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-12 px-6 pb-20 pt-28 md:pb-28 md:pt-36 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16">
         <div>
-          <span className="font-sans text-[11px] font-semibold uppercase tracking-[0.32em] text-[#1A2229] animate-fade-up">
-            IKF Pathway 360
+          <span className="inline-flex items-center gap-2 animate-fade-up">
+            <span className="h-px w-8 bg-[#0A5A94]/40" aria-hidden="true" />
+            <span className="font-sans text-[15px] sm:text-[18px] font-bold uppercase tracking-[0.22em] text-[#0A5A94]">
+              IKF Pathway&nbsp;360
+            </span>
           </span>
           <h1
             className="mt-6 font-serif text-[clamp(2.25rem,5.2vw,4rem)] font-medium leading-[1.06] tracking-[-0.015em] animate-fade-up"

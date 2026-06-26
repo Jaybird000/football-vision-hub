@@ -354,6 +354,27 @@ export const EMPTY_SOP_RESPONSES: SopResponses = {
   q11: "",
 };
 
+// The family/parent-level answers (asked once per parent, reused for every child)
+// vs the child-specific answers (asked per kid). Sections 1-2 of the wizard are
+// family; 3-4 are child. See [[parent-journey-sop]] feedback item 4.a.
+export const FAMILY_QUESTION_IDS = ["q6", "q7", "q8", "q9", "q10"] as const;
+export const FAMILY_SECTIONS = [1, 2] as const;
+export const CHILD_SECTIONS = [3, 4] as const;
+
+export type FamilyResponses = Pick<SopResponses, "q6" | "q7" | "q8" | "q9" | "q10">;
+
+export const EMPTY_FAMILY: FamilyResponses = {
+  q6: { choices: [], other: "" },
+  q7: "",
+  q8: "",
+  q9: "",
+  q10: "",
+};
+
+export function extractFamily(r: SopResponses): FamilyResponses {
+  return { q6: r.q6, q7: r.q7, q8: r.q8, q9: r.q9, q10: r.q10 };
+}
+
 export type JourneyOption = { label: string; score?: number };
 
 export type JourneyQuestion = {
@@ -479,33 +500,35 @@ export type JourneySection = {
   close: string | null; // bridging copy shown before the next section (null on the last)
 };
 
+// Family-first ordering (feedback 4.a): sections 1-2 ask about the family once;
+// sections 3-4 are about the specific child and repeat for each kid added.
 export const JOURNEY_SECTIONS: JourneySection[] = [
   {
     n: 1,
-    eyebrow: "About your child",
-    header: "Tell us about your child's football journey so far.",
-    subtext: "Just the basics — we build the detailed picture during the assessment.",
-    close: "Good. Now let's talk about what you're hoping this journey leads to.",
+    eyebrow: "Your family",
+    header: "Football journeys don't happen in isolation — they happen within families.",
+    subtext: "We ask these questions about your family once, and they apply to every child you add. Answer as honestly as you can — nothing here is judged. Everything here helps us give you a recommendation that actually fits your reality.",
+    close: "Thank you for being open about that. That takes courage.",
   },
   {
     n: 2,
-    eyebrow: "What you're hoping for",
-    header: "Every parent has a different picture of what success looks like. Tell us yours.",
-    subtext: "Be honest — including with yourself. There is no wrong answer, and your response shapes everything that follows.",
-    close: "Thank you for being honest. That takes courage — and it makes everything we do next more useful.",
+    eyebrow: "Your hopes & concerns",
+    header: "What are you hoping for — and what's been on your mind?",
+    subtext: "Be honest, including with yourself. There is no wrong answer, and your response shapes everything that follows.",
+    close: "Good. Now let's talk about your child.",
   },
   {
     n: 3,
-    eyebrow: "Your family's situation",
-    header: "Football journeys don't happen in isolation. They happen within families — with real constraints and real possibilities.",
-    subtext: "This section asks some practical questions. Answer as honestly as you can. Nothing here is judged. Everything here is used to give you a recommendation that actually fits your reality.",
-    close: "Almost done. One last section — and it's entirely yours.",
+    eyebrow: "About your child",
+    header: "Tell us about your child's football journey so far.",
+    subtext: "Just the basics — we build the detailed picture during the assessment.",
+    close: "Almost there — one last thing about your child.",
   },
   {
     n: 4,
-    eyebrow: "One last thing",
-    header: "Is there anything else we should know?",
-    subtext: "This is an open space. Use it however you want — a question you've been sitting with, something about your child's situation that doesn't fit a dropdown, or something you simply want IKF to know before we begin. Not mandatory — but the parents who use it tend to get the most precise picture.",
+    eyebrow: "Hopes for your child",
+    header: "What does the best version of their football story look like?",
+    subtext: "And anything else you'd like us to know about this child. Not mandatory — but the parents who use it tend to get the most precise picture.",
     close: null,
   },
 ];
@@ -564,6 +587,33 @@ export function journeyScoreMap(r: SopResponses): Record<string, number> {
 export function deriveReadiness(r: SopResponses): Readiness {
   return scoreReadiness(journeyScoreMap(r));
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Academic profile as a MODIFIER within a category (IKF Categorisation IP).
+// Not a separate axis — the advisor tags the academic profile during scoring and
+// the matching blurb is appended to the cell recommendation, shifting its
+// weight/direction without exploding the 3x3 matrix into 27 variants.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type AcademicModifier = "strong" | "average" | "developing";
+
+export const ACADEMIC_MODIFIERS: Record<AcademicModifier, { label: string; blurb: string }> = {
+  strong: {
+    label: "Strong academics",
+    blurb:
+      "A strong academic profile widens your child's options. The football pathway above can run in parallel with a scholarship or academic route — keep both doors open, and don't over-commit to football at the cost of schooling.",
+  },
+  average: {
+    label: "Steady academics",
+    blurb:
+      "Academics are on track. Keep a steady balance — the plan above holds, with regular check-ins so training load never crowds out schoolwork.",
+  },
+  developing: {
+    label: "Academics need support",
+    blurb:
+      "Academics need attention alongside football. Before scaling up the football commitment above, put a support plan in place at school — a sustainable future depends on both.",
+  },
+};
 
 // ─── Pre-review check-in (notification Type 1) ───────────────────────────────
 // A short "what's changed since the last SOP" form a parent fills 4 weeks before

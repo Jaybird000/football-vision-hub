@@ -14,11 +14,12 @@ import {
   STAGE1_EXPLAINER,
   deriveReadiness,
   type SopResponses,
+  type FamilyResponses,
   type JourneyQuestion,
   type Readiness,
 } from "@/lib/ikf360-data";
 import { currentUser } from "@/server/auth";
-import { submitJourney, getMyIntent, getMySopDraft, saveSopDraft, type MyIntent } from "@/server/intent";
+import { submitJourney, getMyIntent, getMySopDraft, getMyFamily, saveSopDraft, type MyIntent } from "@/server/intent";
 
 export const Route = createFileRoute("/ikf360/intent")({
   // The SOP autosaves and resumes per account, so it requires a signed-in
@@ -38,17 +39,18 @@ export const Route = createFileRoute("/ikf360/intent")({
   loader: async () => ({
     existing: await getMyIntent(),
     draft: await getMySopDraft(),
+    family: await getMyFamily(),
   }),
   component: JourneyRoute,
 });
 
 function JourneyRoute() {
-  const { existing, draft } = Route.useLoaderData();
+  const { existing, draft, family } = Route.useLoaderData();
   const { addChild } = Route.useSearch();
   // When adding another child, always show the form (the resumable per-user
   // draft is reused if one is in progress).
   if (existing && !addChild) return <AlreadySubmitted intent={existing} />;
-  return <JourneyForm initial={draft} />;
+  return <JourneyForm initial={draft} family={family} addChild={!!addChild} />;
 }
 
 // ─── Already submitted ───────────────────────────────────────────────────────
@@ -157,12 +159,35 @@ function DetailRow({ label, value }: { label: string; value: string }) {
 
 type Step = "entry" | "section" | "bridge" | "submitting" | "done";
 
-function JourneyForm({ initial }: { initial: { responses: SopResponses; section: number } | null }) {
-  const [responses, setResponses] = useState<SopResponses>(initial?.responses ?? EMPTY_SOP_RESPONSES);
-  // Resume straight into the saved section if a draft exists; otherwise open on
-  // the entry/trust screen.
-  const [step, setStep] = useState<Step>(initial ? "section" : "entry");
-  const [section, setSection] = useState<number>(initial?.section ?? 1);
+function JourneyForm({ initial, family, addChild }: {
+  initial: { responses: SopResponses; section: number } | null;
+  family: FamilyResponses | null;
+  addChild: boolean;
+}) {
+  const familyKnown = !!family;
+  // When the family answers are already on file we skip the family sections (1-2)
+  // and only ask the child sections (3-4) — unless the parent chooses to edit them.
+  const [editFamily, setEditFamily] = useState(false);
+  const showFamily = !familyKnown || editFamily;
+  const flow = showFamily ? [1, 2, 3, 4] : [3, 4];
+
+  // Seed: blank → saved family (reused) → draft (on top).
+  const [responses, setResponses] = useState<SopResponses>(() => ({
+    ...EMPTY_SOP_RESPONSES,
+    ...(family ?? {}),
+    ...(initial?.responses ?? {}),
+  }));
+
+  const [pos, setPos] = useState<number>(() => {
+    if (!initial) return 0;
+    const i = flow.indexOf(initial.section);
+    return i >= 0 ? i : 0;
+  });
+  const section = flow[pos];
+  const isLast = pos === flow.length - 1;
+
+  // Entry/trust screen only for a brand-new first child (full flow, no draft).
+  const [step, setStep] = useState<Step>(initial || !showFamily ? "section" : "entry");
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [result, setResult] = useState<{ id: string; readiness: Readiness } | null>(null);
   const [saved, setSaved] = useState(false);
@@ -188,6 +213,7 @@ function JourneyForm({ initial }: { initial: { responses: SopResponses; section:
   const readiness = result?.readiness ?? deriveReadiness(responses);
   const sectionMeta = JOURNEY_SECTIONS[section - 1];
   const valid = sectionValid(section, responses);
+  const reusedFamily = familyKnown && !editFamily; // family answers carried over
 
   async function submit() {
     setStep("submitting");
@@ -204,19 +230,21 @@ function JourneyForm({ initial }: { initial: { responses: SopResponses; section:
   }
 
   function advance() {
-    if (section < 4) {
-      // Section close → bridging screen → next section.
-      setStep("bridge");
-    } else {
-      void submit();
-    }
+    if (!isLast) setStep("bridge");
+    else void submit();
+  }
+
+  function startEditFamily() {
+    setEditFamily(true);
+    setPos(0);
+    setStep("section");
   }
 
   // ── Entry / trust screen ──
   if (step === "entry") {
     return (
       <div className="max-w-2xl mx-auto animate-fade-up">
-        <Progress section={1} />
+        <Progress pos={0} total={flow.length} />
         <header className="mt-2">
           <h1 className="text-[26px] sm:text-[34px] leading-tight">{JOURNEY_ENTRY.headline}</h1>
         </header>
@@ -230,7 +258,7 @@ function JourneyForm({ initial }: { initial: { responses: SopResponses; section:
             <TrustChip icon={Lock} text="Never shared without your permission" />
           </div>
         </div>
-        <button onClick={() => { setStep("section"); setSection(1); }} className="ikf-btn-primary inline-flex items-center gap-2 mt-7">
+        <button onClick={() => setStep("section")} className="ikf-btn-primary inline-flex items-center gap-2 mt-7">
           {JOURNEY_ENTRY.button} <ArrowRight size={16} />
         </button>
       </div>
@@ -240,10 +268,10 @@ function JourneyForm({ initial }: { initial: { responses: SopResponses; section:
   // ── Section-close bridge ──
   if (step === "bridge") {
     const close = JOURNEY_SECTIONS[section - 1].close;
-    const nextSection = section + 1;
+    const nextMeta = JOURNEY_SECTIONS[flow[pos + 1] - 1];
     return (
       <div className="max-w-2xl mx-auto animate-fade-up">
-        <Progress section={section} />
+        <Progress pos={pos} total={flow.length} />
         <div className="ikf-card p-8 mt-6 text-center">
           <div className="w-12 h-12 rounded-full inline-flex items-center justify-center mb-5" style={{ background: "var(--ikf-surface-2)", color: "var(--ikf-brand-ink)" }}>
             <Check size={22} strokeWidth={2.5} />
@@ -254,8 +282,8 @@ function JourneyForm({ initial }: { initial: { responses: SopResponses; section:
           <button onClick={() => setStep("section")} className="text-[13px] inline-flex items-center gap-1.5" style={{ color: "var(--ikf-text-dim)" }}>
             <ArrowLeft size={14} /> Back
           </button>
-          <button onClick={() => { setSection(nextSection); setStep("section"); }} className="ikf-btn-primary inline-flex items-center gap-2">
-            Continue to Section {nextSection} <ArrowRight size={16} />
+          <button onClick={() => { setPos(pos + 1); setStep("section"); }} className="ikf-btn-primary inline-flex items-center gap-2">
+            Continue — {nextMeta.eyebrow} <ArrowRight size={16} />
           </button>
         </div>
       </div>
@@ -302,9 +330,20 @@ function JourneyForm({ initial }: { initial: { responses: SopResponses; section:
   // ── A section of questions ──
   return (
     <div className="max-w-2xl mx-auto animate-fade-up">
-      <Progress section={section} saved={saved} />
+      <Progress pos={pos} total={flow.length} saved={saved} />
 
-      <header className="mt-2 mb-7">
+      {reusedFamily && (
+        <div className="mt-3 mb-1 ikf-card p-3.5 flex items-center justify-between gap-3" style={{ background: "var(--ikf-surface-2)" }}>
+          <span className="text-[12px]" style={{ color: "var(--ikf-text-dim)" }}>
+            Using your saved family answers — you only answer about this child.
+          </span>
+          <button onClick={startEditFamily} className="text-[12px] font-semibold shrink-0" style={{ color: "var(--ikf-brand-ink)" }}>
+            Edit family answers
+          </button>
+        </div>
+      )}
+
+      <header className="mt-4 mb-7">
         <div className="text-[11px] uppercase tracking-[0.18em] mb-2" style={{ color: "var(--ikf-brand-ink)" }}>{sectionMeta.eyebrow}</div>
         <h1 className="text-[24px] sm:text-[30px] leading-tight">{sectionMeta.header}</h1>
         <p className="mt-3 text-[14px] leading-relaxed" style={{ color: "var(--ikf-text-dim)" }}>{sectionMeta.subtext}</p>
@@ -324,13 +363,13 @@ function JourneyForm({ initial }: { initial: { responses: SopResponses; section:
       </div>
 
       <div className="flex items-center justify-between mt-9">
-        {section > 1 ? (
-          <button onClick={() => { setSection(section - 1); }} className="text-[13px] inline-flex items-center gap-1.5" style={{ color: "var(--ikf-text-dim)" }}>
+        {pos > 0 ? (
+          <button onClick={() => setPos(pos - 1)} className="text-[13px] inline-flex items-center gap-1.5" style={{ color: "var(--ikf-text-dim)" }}>
             <ArrowLeft size={14} /> Back
           </button>
         ) : <span />}
         <button onClick={advance} disabled={!valid} className="ikf-btn-primary inline-flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed">
-          {section < 4 ? <>Continue to Section {section + 1} <ArrowRight size={16} /></> : <>Start my child's profile <ArrowRight size={16} /></>}
+          {!isLast ? <>Continue <ArrowRight size={16} /></> : <>Start my child's profile <ArrowRight size={16} /></>}
         </button>
       </div>
     </div>
@@ -340,17 +379,18 @@ function JourneyForm({ initial }: { initial: { responses: SopResponses; section:
 // ─── Per-section validation (gates the Continue button) ──────────────────────
 
 function sectionValid(section: number, r: SopResponses): boolean {
+  // 1-2 are family (asked once); 3-4 are about the child.
   if (section === 1) {
-    return Boolean(r.firstName.trim() && r.age != null && r.q2 && r.q3 && (r.q4.prior === "yes" || r.q4.prior === "no"));
+    return Boolean(r.q8 && r.q9 && r.q10);
   }
   if (section === 2) {
     const concernOk = r.q6.choices.length >= 1 && (!r.q6.choices.includes("Something else") || Boolean(r.q6.other.trim()));
-    return Boolean(r.q5 && concernOk && r.q7);
+    return Boolean(r.q7 && concernOk);
   }
   if (section === 3) {
-    return Boolean(r.q8 && r.q9 && r.q10);
+    return Boolean(r.firstName.trim() && r.age != null && r.q2 && r.q3 && (r.q4.prior === "yes" || r.q4.prior === "no"));
   }
-  return true; // Section 4 — Q11 is optional.
+  return Boolean(r.q5); // Section 4 — q5 required; q11 optional.
 }
 
 // ─── Sections ────────────────────────────────────────────────────────────────
@@ -361,7 +401,73 @@ function q(id: JourneyQuestion["id"]): JourneyQuestion {
   return JOURNEY_QUESTIONS.find(x => x.id === id)!;
 }
 
+// Section 1 — Family: funding capacity (q8, with escape valve), relocation (q9),
+// career-path openness (q10).
 function SectionOne({ r, set }: SectionProps) {
+  const q8 = q("q8");
+  return (
+    <>
+      <QuestionBlock title={q8.q}>
+        <div className="space-y-3">
+          {q8.options.map(o => (
+            <OptionButton key={o.label} label={o.label} selected={r.q8 === o.label} onClick={() => set({ q8: o.label })} />
+          ))}
+          {/* Q8 is the highest drop-off question — a visible, lower-key escape
+              valve gives parents a way to stay in the form honestly. */}
+          <button
+            onClick={() => set({ q8: PREFER_NOT_TO_SAY })}
+            className="w-full text-left p-4 rounded-lg border border-dashed text-[13px] transition-colors"
+            style={r.q8 === PREFER_NOT_TO_SAY
+              ? { borderColor: "var(--ikf-brand)", background: "var(--ikf-surface-2)", color: "var(--ikf-text)" }
+              : { borderColor: "var(--ikf-border)", background: "transparent", color: "var(--ikf-text-dim)" }}
+          >
+            {PREFER_NOT_TO_SAY}
+          </button>
+        </div>
+      </QuestionBlock>
+
+      <SingleQuestion q={q("q9")} value={r.q9} onSelect={v => set({ q9: v })} />
+      <SingleQuestion q={q("q10")} value={r.q10} onSelect={v => set({ q10: v })} />
+    </>
+  );
+}
+
+// Section 2 — Family: support duration (q7) + biggest concern(s) (q6).
+function SectionTwo({ r, set }: SectionProps) {
+  return (
+    <>
+      <SingleQuestion q={q("q7")} value={r.q7} onSelect={v => set({ q7: v })} />
+
+      <QuestionBlock title={q("q6").q} note={q("q6").note}>
+        <div className="space-y-3">
+          {q("q6").options.map(o => {
+            const selected = r.q6.choices.includes(o.label);
+            const atMax = r.q6.choices.length >= (q("q6").max ?? 2);
+            const disabled = !selected && atMax;
+            return (
+              <OptionButton key={o.label} label={o.label} selected={selected} disabled={disabled} multi
+                onClick={() => {
+                  if (selected) set({ q6: { ...r.q6, choices: r.q6.choices.filter(c => c !== o.label) } });
+                  else if (!atMax) set({ q6: { ...r.q6, choices: [...r.q6.choices, o.label] } });
+                }} />
+            );
+          })}
+        </div>
+        {r.q6.choices.includes("Something else") && (
+          <div className="mt-4">
+            <Field label="Tell us more">
+              <input className="ikf-input" value={r.q6.other} onChange={e => set({ q6: { ...r.q6, other: e.target.value } })} placeholder="What's been on your mind?" />
+            </Field>
+          </div>
+        )}
+      </QuestionBlock>
+    </>
+  );
+}
+
+// Section 3 — Child: name + age, years playing (q2), where trains (q3), prior IKF
+// camps (q4 + conditional detail).
+function SectionThree({ r, set }: SectionProps) {
   return (
     <>
       <QuestionBlock title="What is your child's name and age?" note="First name is enough — we already have the rest from your account.">
@@ -400,90 +506,32 @@ function SectionOne({ r, set }: SectionProps) {
   );
 }
 
-function SectionTwo({ r, set }: SectionProps) {
+// Section 4 — Child: age-22 vision (q5) + open text (q11).
+function SectionFour({ r, set }: SectionProps) {
   return (
     <>
       <SingleQuestion q={q("q5")} value={r.q5} onSelect={v => set({ q5: v })} />
 
-      <QuestionBlock title={q("q6").q} note={q("q6").note}>
-        <div className="space-y-3">
-          {q("q6").options.map(o => {
-            const selected = r.q6.choices.includes(o.label);
-            const atMax = r.q6.choices.length >= (q("q6").max ?? 2);
-            const disabled = !selected && atMax;
-            return (
-              <OptionButton key={o.label} label={o.label} selected={selected} disabled={disabled} multi
-                onClick={() => {
-                  if (selected) set({ q6: { ...r.q6, choices: r.q6.choices.filter(c => c !== o.label) } });
-                  else if (!atMax) set({ q6: { ...r.q6, choices: [...r.q6.choices, o.label] } });
-                }} />
-            );
-          })}
-        </div>
-        {r.q6.choices.includes("Something else") && (
-          <div className="mt-4">
-            <Field label="Tell us more">
-              <input className="ikf-input" value={r.q6.other} onChange={e => set({ q6: { ...r.q6, other: e.target.value } })} placeholder="What's been on your mind?" />
-            </Field>
-          </div>
-        )}
+      <QuestionBlock title="Is there anything else we should know about this child?" note="Optional — an open space for anything that doesn't fit a dropdown.">
+        <textarea
+          className="ikf-input min-h-[160px]"
+          value={r.q11}
+          onChange={e => set({ q11: e.target.value })}
+          placeholder={JOURNEY_Q11_PLACEHOLDER}
+        />
       </QuestionBlock>
-
-      <SingleQuestion q={q("q7")} value={r.q7} onSelect={v => set({ q7: v })} />
     </>
-  );
-}
-
-function SectionThree({ r, set }: SectionProps) {
-  const q8 = q("q8");
-  return (
-    <>
-      <QuestionBlock title={q8.q}>
-        <div className="space-y-3">
-          {q8.options.map(o => (
-            <OptionButton key={o.label} label={o.label} selected={r.q8 === o.label} onClick={() => set({ q8: o.label })} />
-          ))}
-          {/* Q8 is the highest drop-off question — a visible, lower-key escape
-              valve gives parents a way to stay in the form honestly. */}
-          <button
-            onClick={() => set({ q8: PREFER_NOT_TO_SAY })}
-            className="w-full text-left p-4 rounded-lg border border-dashed text-[13px] transition-colors"
-            style={r.q8 === PREFER_NOT_TO_SAY
-              ? { borderColor: "var(--ikf-brand)", background: "var(--ikf-surface-2)", color: "var(--ikf-text)" }
-              : { borderColor: "var(--ikf-border)", background: "transparent", color: "var(--ikf-text-dim)" }}
-          >
-            {PREFER_NOT_TO_SAY}
-          </button>
-        </div>
-      </QuestionBlock>
-
-      <SingleQuestion q={q("q9")} value={r.q9} onSelect={v => set({ q9: v })} />
-      <SingleQuestion q={q("q10")} value={r.q10} onSelect={v => set({ q10: v })} />
-    </>
-  );
-}
-
-function SectionFour({ r, set }: SectionProps) {
-  return (
-    <QuestionBlock title="" >
-      <textarea
-        className="ikf-input min-h-[160px]"
-        value={r.q11}
-        onChange={e => set({ q11: e.target.value })}
-        placeholder={JOURNEY_Q11_PLACEHOLDER}
-      />
-    </QuestionBlock>
   );
 }
 
 // ─── Shared bits ─────────────────────────────────────────────────────────────
 
-function Progress({ section, saved }: { section: number; saved?: boolean }) {
-  const total = JOURNEY_SECTIONS.length;
+function Progress({ pos, total, saved }: { pos: number; total: number; saved?: boolean }) {
+  const step = pos + 1;
   return (
     <div className="mb-2">
       <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.16em] mb-2" style={{ color: "var(--ikf-text-dim)" }}>
-        <span>Section {section} of {total}</span>
+        <span>Step {step} of {total}</span>
         {saved !== undefined && (
           <span className="inline-flex items-center gap-1" style={{ color: "var(--ikf-text-dim)" }}>
             {saved ? <><Check size={11} /> Saved</> : "Saving…"}
@@ -491,7 +539,7 @@ function Progress({ section, saved }: { section: number; saved?: boolean }) {
         )}
       </div>
       <div className="h-1 rounded-full overflow-hidden" style={{ background: "var(--ikf-surface-2)" }}>
-        <div className="h-full transition-all duration-500" style={{ width: `${(section / total) * 100}%`, background: "var(--ikf-brand)" }} />
+        <div className="h-full transition-all duration-500" style={{ width: `${(step / total) * 100}%`, background: "var(--ikf-brand)" }} />
       </div>
     </div>
   );

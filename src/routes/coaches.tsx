@@ -1,8 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import img from "@/assets/persona-coach.jpg";
 import { PageHero, Section } from "@/components/site/PageHero";
+import { requireAccount } from "@/lib/route-guards";
 
 export const Route = createFileRoute("/coaches")({
+  beforeLoad: requireAccount,
   head: () => ({ meta: [
     { title: "For Coaches — India Khelo Football" },
     { name: "description", content: "Nominate talent, get AIFF-aligned certification, and become part of India's largest grassroots scouting network." },

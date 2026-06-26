@@ -112,6 +112,8 @@ export type CategorisationSnapshot = {
   scoredByName: string;
   scoredAt: string;
   validUntil: string | null;
+  // Academic profile modifier (0019): 'strong' | 'average' | 'developing' | null.
+  academicModifier: string | null;
 };
 
 // ---------- axes + values ----------
@@ -331,6 +333,7 @@ const ScoreProfileInput = z.object({
   })).min(1),
   advisorNotes: z.string().max(2000).optional().default(""),
   validForDays: z.number().int().min(1).max(3650).optional().default(180), // 6 months default
+  academicModifier: z.enum(["strong", "average", "developing"]).nullable().optional().default(null),
 });
 
 export const scoreProfile = createServerFn({ method: "POST" })
@@ -392,6 +395,11 @@ export const scoreProfile = createServerFn({ method: "POST" })
       await sql`UPDATE categorisations SET structured_content = ${sql.json(structuredContent)} WHERE id = ${rows[0].id}`
         .catch(e => console.warn("[stage3] categorisation structured_content write skipped (migration 0016 applied?):", e instanceof Error ? e.message : e));
     }
+
+    // Academic modifier (guarded, 0019) — written even when null so a re-score can
+    // clear a previously-set modifier.
+    await sql`UPDATE categorisations SET academic_modifier = ${data.academicModifier} WHERE id = ${rows[0].id}`
+      .catch(e => console.warn("[stage3] academic_modifier write skipped (migration 0019 applied?):", e instanceof Error ? e.message : e));
 
     // Bump profile to stage 3
     await sql`UPDATE parent_child_profiles SET stage = 3, updated_at = now() WHERE id = ${data.profileId}`;
@@ -474,6 +482,9 @@ export const getMyCategorisation = createServerFn({ method: "GET" })
     const scRows = await sql<{ structured_content: StructuredContent | null }[]>`
       SELECT structured_content FROM categorisations WHERE id = ${r.id} LIMIT 1
     `.catch(() => [] as { structured_content: StructuredContent | null }[]);
+    const amRows = await sql<{ academic_modifier: string | null }[]>`
+      SELECT academic_modifier FROM categorisations WHERE id = ${r.id} LIMIT 1
+    `.catch(() => [] as { academic_modifier: string | null }[]);
     return {
       id: r.id,
       cellKey: r.cell_key,
@@ -485,6 +496,7 @@ export const getMyCategorisation = createServerFn({ method: "GET" })
       scoredByName: r.scored_by_name,
       scoredAt: r.scored_at.toISOString(),
       validUntil: r.valid_until?.toISOString() ?? null,
+      academicModifier: amRows[0]?.academic_modifier ?? null,
     };
   });
 
@@ -555,6 +567,9 @@ export const getProfileCategorisation = createServerFn({ method: "GET" })
     const scRows = await sql<{ structured_content: StructuredContent | null }[]>`
       SELECT structured_content FROM categorisations WHERE id = ${r.id} LIMIT 1
     `.catch(() => [] as { structured_content: StructuredContent | null }[]);
+    const amRows = await sql<{ academic_modifier: string | null }[]>`
+      SELECT academic_modifier FROM categorisations WHERE id = ${r.id} LIMIT 1
+    `.catch(() => [] as { academic_modifier: string | null }[]);
     return {
       id: r.id,
       cellKey: r.cell_key,
@@ -566,6 +581,7 @@ export const getProfileCategorisation = createServerFn({ method: "GET" })
       scoredByName: r.scored_by_name,
       scoredAt: r.scored_at.toISOString(),
       validUntil: r.valid_until?.toISOString() ?? null,
+      academicModifier: amRows[0]?.academic_modifier ?? null,
     };
   });
 
@@ -591,7 +607,7 @@ export type AdminProfileDetail = {
   // Full Parent Journey SOP responses (0014). Present for profiles submitted via
   // the new 4-section SOP; null for legacy 8-question rows.
   sopResponses: SopResponses | null;
-  uploads: { id: string; assessmentKey: string; assessmentTitle: string; fileName: string; mimeType: string; status: string; uploadedAt: string }[];
+  uploads: { id: string; assessmentKey: string; assessmentTitle: string; fileName: string; mimeType: string; status: string; uploadedAt: string; providerName: string | null }[];
   // Mentor-help requests for this profile (Module E). Empty if none / table absent.
   assistanceRequests: { id: string; message: string; missingKeys: string[]; status: string; createdAt: string }[];
 };
@@ -606,13 +622,27 @@ export const getAdminProfileDetail = createServerFn({ method: "GET" })
     `;
     if (prows.length === 0) return null;
     const p = prows[0];
-    const urows = await sql<{ id: string; assessment_key: string; title: string; file_name: string; mime_type: string; status: string; uploaded_at: Date }[]>`
-      SELECT u.id, u.assessment_key, t.title, u.file_name, u.mime_type, u.status, u.uploaded_at
+    type URow = { id: string; assessment_key: string; title: string; file_name: string; mime_type: string; status: string; uploaded_at: Date; provider_name: string | null };
+    // provider_name via the 0018 provider_id column; guarded so the page loads
+    // before that migration is applied.
+    const urows = await sql<URow[]>`
+      SELECT u.id, u.assessment_key, t.title, u.file_name, u.mime_type, u.status, u.uploaded_at,
+             pr.name AS provider_name
       FROM assessment_uploads u
       JOIN assessment_templates t ON t.key = u.assessment_key
+      LEFT JOIN providers pr ON pr.id = u.provider_id
       WHERE u.profile_id = ${data.profileId}
       ORDER BY u.uploaded_at DESC
-    `;
+    `.catch(async () => {
+      const rows = await sql<Omit<URow, "provider_name">[]>`
+        SELECT u.id, u.assessment_key, t.title, u.file_name, u.mime_type, u.status, u.uploaded_at
+        FROM assessment_uploads u
+        JOIN assessment_templates t ON t.key = u.assessment_key
+        WHERE u.profile_id = ${data.profileId}
+        ORDER BY u.uploaded_at DESC
+      `;
+      return rows.map(r => ({ ...r, provider_name: null })) as URow[];
+    });
     // Mentor-help requests (Module E). Guarded so the page still loads if
     // migration 0010 hasn't been applied yet.
     const arows = await sql<{ id: string; message: string; missing_keys: string[]; status: string; created_at: Date }[]>`
@@ -666,6 +696,7 @@ export const getAdminProfileDetail = createServerFn({ method: "GET" })
         mimeType: u.mime_type,
         status: u.status,
         uploadedAt: u.uploaded_at.toISOString(),
+        providerName: u.provider_name ?? null,
       })),
     };
   });

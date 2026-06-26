@@ -1,8 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import img from "@/assets/persona-partner.jpg";
 import { PageHero, Section } from "@/components/site/PageHero";
+import { requireAccount } from "@/lib/route-guards";
 
 export const Route = createFileRoute("/partners")({
+  beforeLoad: requireAccount,
   head: () => ({ meta: [
     { title: "For Partners — India Khelo Football" },
     { name: "description", content: "Corporate CSR, brand partnerships, and academy sponsorship opportunities with India's largest football grassroots platform." },
