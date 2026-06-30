@@ -16,7 +16,10 @@ export const Route = createFileRoute("/")({
         content:
           "Most parents fund a nine-year football journey with no honest picture of where their child stands. IKF Pathway 360 assesses the whole family and gives you one clear, honest recommendation. Start free.",
       },
-      { property: "og:title", content: "IKF Pathway 360 — An honest picture of your child's football journey" },
+      {
+        property: "og:title",
+        content: "IKF Pathway 360 — An honest picture of your child's football journey",
+      },
       {
         property: "og:description",
         content:

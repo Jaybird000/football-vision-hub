@@ -8,42 +8,51 @@ export function Footer() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-sm">
           <div className="col-span-2 flex flex-col gap-3">
             <Logo size="lg" />
-            <div className="mt-2">
-              <div className="flex flex-col gap-2">
-                <p className="text-xs text-chalk uppercase tracking-[0.25em] font-bold">
-                  Powered by &amp; Digital Partner
-                </p>
-                <a
-                  href="https://www.sportsvision.ai/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-block opacity-90 hover:opacity-100 transition-opacity"
-                  aria-label="Sports Vision"
-                >
-                  <img
-                    src="/SV_01_Black.png"
-                    alt="Sports Vision"
-                    className="h-10 md:h-12 w-auto object-contain"
-                    draggable={false}
-                  />
-                </a>
-              </div>
-            </div>
+            {/* Partner logos (Sports Vision + MFK) now live in the global footer
+                bar in __root.tsx so they appear on every page. */}
           </div>
           <div>
-            <h4 className="font-display text-xl uppercase mb-4 text-chalk font-bold tracking-wider">Pathway</h4>
+            <h4 className="font-display text-xl uppercase mb-4 text-chalk font-bold tracking-wider">
+              Pathway
+            </h4>
             <ul className="space-y-2 text-chalk/86">
-              <li><Link to="/players" className="hover:text-gold-ink">Players</Link></li>
-              <li><Link to="/parents" className="hover:text-gold-ink">Parents</Link></li>
-              <li><Link to="/coaches" className="hover:text-gold-ink">Coaches</Link></li>
-              <li><Link to="/partners" className="hover:text-gold-ink">Partners</Link></li>
+              <li>
+                <Link to="/players" className="hover:text-gold-ink">
+                  Players
+                </Link>
+              </li>
+              <li>
+                <Link to="/parents" className="hover:text-gold-ink">
+                  Parents
+                </Link>
+              </li>
+              <li>
+                <Link to="/coaches" className="hover:text-gold-ink">
+                  Coaches
+                </Link>
+              </li>
+              <li>
+                <Link to="/partners" className="hover:text-gold-ink">
+                  Partners
+                </Link>
+              </li>
             </ul>
           </div>
           <div>
-            <h4 className="font-display text-xl uppercase mb-4 text-chalk font-bold tracking-wider">Org</h4>
+            <h4 className="font-display text-xl uppercase mb-4 text-chalk font-bold tracking-wider">
+              Org
+            </h4>
             <ul className="space-y-2 text-chalk/86">
-              <li><Link to="/about" className="hover:text-gold-ink">About</Link></li>
-              <li><Link to="/initiatives" className="hover:text-gold-ink">Initiatives</Link></li>
+              <li>
+                <Link to="/about" className="hover:text-gold-ink">
+                  About
+                </Link>
+              </li>
+              <li>
+                <Link to="/initiatives" className="hover:text-gold-ink">
+                  Initiatives
+                </Link>
+              </li>
             </ul>
           </div>
         </div>

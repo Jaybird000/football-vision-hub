@@ -1,9 +1,11 @@
+import { useEffect } from "react";
 import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
 import {
   Outlet,
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
@@ -12,6 +14,7 @@ import appCss from "../styles.css?url";
 import { LanguageProvider } from "@/lib/i18n";
 import { Nav } from "@/components/site/Nav";
 import { Footer } from "@/components/site/Footer";
+import { PartnerLogos } from "@/components/site/PartnerLogos";
 import { currentUser } from "@/server/auth";
 
 function NotFoundComponent() {
@@ -77,9 +80,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "India Khelo Football — From the Street to the Stadium" },
-      { name: "description", content: "India's grassroots football scouting platform. Open city-round trials — free for girls and underprivileged children — feeding zonal camps, national finals and I-League / ISL scouts." },
+      {
+        name: "description",
+        content:
+          "India's grassroots football scouting platform. Open city-round trials — free for girls and underprivileged children — feeding zonal camps, national finals and I-League / ISL scouts.",
+      },
       { property: "og:title", content: "India Khelo Football" },
-      { property: "og:description", content: "From the street to the stadium. India's grassroots football pipeline." },
+      {
+        property: "og:description",
+        content: "From the street to the stadium. India's grassroots football pipeline.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -89,7 +99,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "stylesheet", href: appCss },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=Hind:wght@400;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600;1,8..60,400&display=swap" },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=Hind:wght@400;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600;1,8..60,400&display=swap",
+      },
     ],
   }),
   shellComponent: RootShell,
@@ -130,15 +143,34 @@ function FooterGate() {
   return user ? <Footer /> : null;
 }
 
+// Every route change starts the new page at the top. scrollRestoration handles
+// most link navigations, but this guarantees it for all of them (including
+// back/forward) so a page never opens mid-scroll.
+function ScrollToTop() {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   return (
     <QueryClientProvider client={queryClient}>
       <LanguageProvider>
+        <ScrollToTop />
         <div className="flex min-h-screen flex-col bg-pitch-black text-chalk">
           <Nav />
-          <main className="flex-1"><Outlet /></main>
+          <main className="flex-1">
+            <Outlet />
+          </main>
           <FooterGate />
+          {/* Partner attribution shows on EVERY page's footer (all routes render
+              through this layout) — Sports Vision + MFK at equal size. */}
+          <div className="border-t border-black/10 bg-[#F2F5F7] px-6 py-10">
+            <PartnerLogos />
+          </div>
         </div>
       </LanguageProvider>
     </QueryClientProvider>

@@ -1,0 +1,5 @@
+# Local secrets — never upload to Vercel. Production env vars are configured in
+# the Vercel project settings (Environment Variables), not from these files.
+.env
+.env.*
+.dev.vars
