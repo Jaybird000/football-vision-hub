@@ -15,6 +15,9 @@ export type AssessmentTemplate = {
   description: string;
   required: boolean;
   sortOrder: number;
+  // 0021 — richer "what/why" context + a link to the IKF predefined upload format.
+  contextMd: string | null;
+  formatUrl: string | null;
 };
 
 export type ProviderListing = {
@@ -25,6 +28,9 @@ export type ProviderListing = {
   url: string;
   city: string | null;
   chargeInr: number | null;
+  // 0021 — 'integrated' partners auto-fetch via API (stubbed; coming soon),
+  // 'manual' partners mean the parent uploads the report themselves.
+  integrationType: "integrated" | "manual";
 };
 
 export type UploadRecord = {
@@ -71,28 +77,41 @@ async function getSessionUser(): Promise<{ id: string; role: Role; profileId: st
 
 async function loadStage2(profileId: string | null, childName: string | null): Promise<Stage2State> {
   const [templates, providers, uploads, openAssist] = await Promise.all([
-    sql<{ key: string; category: string; title: string; description: string; required: boolean; sort_order: number }[]>`
-      SELECT key, category, title, description, required, sort_order
-      FROM assessment_templates
-      ORDER BY sort_order, key
-    `,
     (() => {
-      type PRow = { id: string; assessment_key: string; name: string; description: string; url: string; city: string | null; charge_inr: number | null };
-      // Tolerate migration 0011 (charge_inr) being unapplied — fall back to the
-      // pre-charge query so the upload portal keeps listing providers.
+      type TRow = { key: string; category: string; title: string; description: string; required: boolean; sort_order: number; context_md: string | null; format_url: string | null };
+      // Tolerate migration 0021 (context_md/format_url) being unapplied.
+      return sql<TRow[]>`
+        SELECT key, category, title, description, required, sort_order, context_md, format_url
+        FROM assessment_templates
+        ORDER BY sort_order, key
+      `.catch(async (e) => {
+        console.warn("[stage2] assessment_templates.context_md read failed (migration 0021 applied?):", e instanceof Error ? e.message : e);
+        const rows = await sql<Omit<TRow, "context_md" | "format_url">[]>`
+          SELECT key, category, title, description, required, sort_order
+          FROM assessment_templates
+          ORDER BY sort_order, key
+        `;
+        return rows.map(r => ({ ...r, context_md: null, format_url: null })) as TRow[];
+      });
+    })(),
+    (() => {
+      type PRow = { id: string; assessment_key: string; name: string; description: string; url: string; city: string | null; charge_inr: number | null; integration_type: string };
+      // Tolerate migrations 0011 (charge_inr) / 0021 (integration_type) being
+      // unapplied — fall back progressively so the portal keeps listing providers.
       return sql<PRow[]>`
-        SELECT id, assessment_key, name, description, url, city, charge_inr
+        SELECT id, assessment_key, name, description, url, city, charge_inr, integration_type
         FROM providers
         WHERE is_active = true
         ORDER BY assessment_key, sort_order, name
       `.catch(async (e) => {
-        console.warn("[stage2] providers.charge_inr read failed (migration 0011 applied?):", e instanceof Error ? e.message : e);
-        return sql<PRow[]>`
+        console.warn("[stage2] providers.integration_type/charge_inr read failed (migrations 0011/0021 applied?):", e instanceof Error ? e.message : e);
+        const rows = await sql<{ id: string; assessment_key: string; name: string; description: string; url: string; city: string | null }[]>`
           SELECT id, assessment_key, name, description, url, city
           FROM providers
           WHERE is_active = true
           ORDER BY assessment_key, sort_order, name
         `;
+        return rows.map(r => ({ ...r, charge_inr: null, integration_type: "manual" })) as PRow[];
       });
     })(),
     profileId
@@ -148,6 +167,8 @@ async function loadStage2(profileId: string | null, childName: string | null): P
       description: t.description,
       required: t.required,
       sortOrder: t.sort_order,
+      contextMd: t.context_md ?? null,
+      formatUrl: t.format_url ?? null,
     })),
     providers: providers.map(p => ({
       id: p.id,
@@ -157,6 +178,7 @@ async function loadStage2(profileId: string | null, childName: string | null): P
       url: p.url,
       city: p.city,
       chargeInr: p.charge_inr != null ? Number(p.charge_inr) : null,
+      integrationType: p.integration_type === "integrated" ? "integrated" : "manual",
     })),
     uploads: uploads.map(u => ({
       id: u.id,

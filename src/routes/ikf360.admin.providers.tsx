@@ -34,6 +34,7 @@ type DraftProvider = {
   city: string;
   chargeInr: string; // free-text in the form; parsed to number on save
   isActive: boolean;
+  integrationType: "integrated" | "manual";
 };
 
 const emptyDraft = (assessmentKey: string): DraftProvider => ({
@@ -44,6 +45,7 @@ const emptyDraft = (assessmentKey: string): DraftProvider => ({
   city: "",
   chargeInr: "",
   isActive: true,
+  integrationType: "manual",
 });
 
 function ProvidersAdmin() {
@@ -134,6 +136,7 @@ function ProvidersAdmin() {
                       city: p.city ?? "",
                       chargeInr: p.chargeInr != null ? String(p.chargeInr) : "",
                       isActive: p.isActive,
+                      integrationType: p.integrationType,
                     })}
                     onDelete={() => {
                       if (confirm(`Delete "${p.name}"?`)) del.mutate(p.id);
@@ -297,6 +300,17 @@ function EditModal({
             </button>
           </Field>
         </div>
+
+        <Field label="Integration">
+          <select
+            className="ikf-input"
+            value={draft.integrationType}
+            onChange={e => onChange({ integrationType: e.target.value === "integrated" ? "integrated" : "manual" })}
+          >
+            <option value="manual">Manual — parent uploads the report</option>
+            <option value="integrated">Integrated — auto-fetch via API (coming soon)</option>
+          </select>
+        </Field>
 
         <Field label="Description (optional)">
           <textarea

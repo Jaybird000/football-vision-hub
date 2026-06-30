@@ -479,3 +479,65 @@ export async function sendParentAssistanceAck(args: {
   `);
   await sendEmail({ to: args.to, subject, html, text });
 }
+
+// ---------- Password reset (0020) ----------
+
+export async function sendPasswordResetEmail(args: {
+  to: string;
+  name: string;
+  resetUrl: string;
+}): Promise<void> {
+  const fn = firstName(args.name);
+  const subject = `Reset your IKF Pathway 360 password`;
+  const text = [
+    `Hi ${fn},`,
+    ``,
+    `We received a request to reset the password on your IKF Pathway 360 account.`,
+    `Open this link to choose a new password (it expires in one hour):`,
+    ``,
+    args.resetUrl,
+    ``,
+    `If you didn't request this, you can safely ignore this email — your password won't change.`,
+    ``,
+    `— The IKF Pathway 360 team`,
+  ].join("\n");
+  const html = shell(`
+    <p style="margin:0 0 12px;">Hi ${fn},</p>
+    <p style="margin:0 0 16px;">We received a request to reset the password on your IKF Pathway 360 account.</p>
+    <p style="margin:0 0 16px;"><a href="${args.resetUrl}" style="display:inline-block;padding:10px 16px;background:#F5C518;color:#0B1220;text-decoration:none;border-radius:6px;font-weight:600;font-size:13px;">Choose a new password</a></p>
+    <p style="margin:0 0 16px;color:#6b7280;font-size:13px;">This link expires in one hour. If the button doesn't work, paste this into your browser:<br/>${args.resetUrl}</p>
+    <p style="margin:0;">If you didn't request this, you can safely ignore this email — your password won't change.<br/>— The IKF Pathway 360 team</p>
+  `);
+  await sendEmail({ to: args.to, subject, html, text });
+}
+
+// ---------- Mentor assignment (30 Jun 2026) ----------
+
+export async function sendMentorAssigned(args: {
+  to: string;
+  mentorName: string;
+  childName: string;
+  parentName: string;
+  profileId: string;
+}): Promise<void> {
+  const fn = firstName(args.mentorName);
+  const profileUrl = `${APP_BASE_URL}/ikf360/admin/profiles/${args.profileId}`;
+  const subject = `You've been assigned as ${args.childName}'s mentor`;
+  const text = [
+    `Hi ${fn},`,
+    ``,
+    `You've been assigned as the IKF Pathway 360 mentor for ${args.childName} (parent: ${args.parentName}).`,
+    `They now appear on your caseload. Open the profile to review their Parent SOP and guide their next steps:`,
+    ``,
+    profileUrl,
+    ``,
+    `— The IKF Pathway 360 team`,
+  ].join("\n");
+  const html = shell(`
+    <p style="margin:0 0 12px;">Hi ${fn},</p>
+    <p style="margin:0 0 16px;">You've been assigned as the IKF Pathway 360 mentor for <strong>${args.childName}</strong> (parent: ${args.parentName}). They now appear on your caseload.</p>
+    <p style="margin:0 0 16px;"><a href="${profileUrl}" style="display:inline-block;padding:10px 16px;background:#F5C518;color:#0B1220;text-decoration:none;border-radius:6px;font-weight:600;font-size:13px;">Open the profile</a></p>
+    <p style="margin:0;">— The IKF Pathway 360 team</p>
+  `);
+  await sendEmail({ to: args.to, subject, html, text });
+}

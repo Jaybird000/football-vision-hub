@@ -595,6 +595,70 @@ export function deriveReadiness(r: SopResponses): Readiness {
 // weight/direction without exploding the 3x3 matrix into 27 variants.
 // ─────────────────────────────────────────────────────────────────────────────
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Parent categorisation — Axis 2 "Parental Capacity & Intent" (the IKF parent
+// types: aligned / aspirational / disengaged). Assignment stays the advisor's
+// call, but we DERIVE a suggestion from the SOP family answers and document the
+// logic so it's visible and explainable (client feedback 30 Jun 2026, item 1).
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type ParentTypeKey = "aligned" | "aspirational" | "disengaged";
+
+export type ParentTypeSuggestion = { valueKey: ParentTypeKey; label: string; rationale: string };
+
+const PARENT_TYPE_LABEL: Record<ParentTypeKey, string> = {
+  aligned: "Aligned & Sustained",
+  aspirational: "Aspirational but Constrained",
+  disengaged: "Disengaged or Unclear",
+};
+
+// Suggest the parent type from the SOP. Intent comes from support duration (q7)
+// + career-path openness (q10); capacity comes from funding (q8). Returns null
+// if there's nothing to go on. The advisor still confirms or overrides.
+export function suggestParentType(r: SopResponses): ParentTypeSuggestion | null {
+  const m = journeyScoreMap(r); // q7,q8,q10 scores (q8 absent if "prefer not to say")
+  const support = m.q7;   // 1 (decide now) … 4 (5–7+ yrs)
+  const career = m.q10;   // 2 … 4
+  const funding = m.q8;   // 2 … 4, or undefined when not shared
+  if (support == null && career == null && funding == null) return null;
+
+  const make = (valueKey: ParentTypeKey, rationale: string): ParentTypeSuggestion =>
+    ({ valueKey, label: PARENT_TYPE_LABEL[valueKey], rationale });
+
+  // Weak / near-term intent → Disengaged or Unclear.
+  if (support != null && support <= 1) {
+    return make("disengaged", "The family frames support as a near-term decision ('within the next year'), so long-horizon intent isn't settled yet.");
+  }
+  const intentParts = [support, career].filter((x): x is number => x != null);
+  const intent = intentParts.length ? intentParts.reduce((a, b) => a + b, 0) / intentParts.length : 0;
+  if (intent > 0 && intent < 2.5) {
+    return make("disengaged", "Stated commitment and openness to football pathways are both limited, so intent reads as unclear.");
+  }
+
+  // Strong intent: capacity decides Aligned vs Constrained.
+  if (funding != null && funding >= 3) {
+    return make("aligned", "Strong, sustained commitment with the funding capacity to match it.");
+  }
+  if (funding == null) {
+    return make("aspirational", "Strong commitment, but the family didn't share funding capacity — treat capacity as a constraint to confirm.");
+  }
+  return make("aspirational", "Strong commitment, but the family flagged limited or variable funding capacity.");
+}
+
+// Admin-facing explainer (feedback item 1 — "document what parent types exist
+// and what logic assigns them"). Rendered read-only on the scoring page.
+export const PARENT_TYPE_DOC = {
+  intro:
+    "Every profile is categorised on two axes. Player Potential (High / Developing / Uncertain) is the advisor's read of the child. Parental Capacity & Intent — the parent type — captures how aligned the family is and what they can sustain. The same player can need a very different recommendation depending on the parent type.",
+  logic:
+    "The suggested parent type is derived from the SOP family answers: support duration (how long they'll actively back the journey) and openness to football careers gauge INTENT; funding capacity gauges CAPACITY. Strong intent + matching capacity → Aligned & Sustained. Strong intent + limited/variable/undisclosed capacity → Aspirational but Constrained. Weak or near-term intent → Disengaged or Unclear. The suggestion is a starting point — the advisor confirms or overrides.",
+  types: [
+    { key: "aligned" as const, label: PARENT_TYPE_LABEL.aligned, meaning: "Intent is clear and capacity matches the commitment.", signals: "Long support horizon, open to football pathways, can sustain serious/moderate investment." },
+    { key: "aspirational" as const, label: PARENT_TYPE_LABEL.aspirational, meaning: "Intent is strong, but financial / geographic / time capacity is limited.", signals: "Long support horizon but limited or variable funding, or funding not disclosed." },
+    { key: "disengaged" as const, label: PARENT_TYPE_LABEL.disengaged, meaning: "Intent is vague, inconsistent, or near a decision point.", signals: "Short / 'decide soon' support horizon, or low openness across the board." },
+  ],
+} as const;
+
 export type AcademicModifier = "strong" | "average" | "developing";
 
 export const ACADEMIC_MODIFIERS: Record<AcademicModifier, { label: string; blurb: string }> = {

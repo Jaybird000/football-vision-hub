@@ -5,7 +5,8 @@ import { ArrowLeft, Loader2, Check, FileText, ExternalLink, CheckCircle2, XCircl
 import { currentUser } from "@/server/auth";
 import { listAxes, getAdminProfileDetail, getProfileCategorisation, scoreProfile } from "@/server/stage3";
 import { setUploadStatus } from "@/server/stage2";
-import { INTENT_QUESTIONS, JOURNEY_QUESTIONS, ACADEMIC_MODIFIERS, type SopResponses, type AcademicModifier } from "@/lib/ikf360-data";
+import { listMentors, assignMentor } from "@/server/admin";
+import { INTENT_QUESTIONS, JOURNEY_QUESTIONS, ACADEMIC_MODIFIERS, PARENT_TYPE_DOC, suggestParentType, type SopResponses, type AcademicModifier } from "@/lib/ikf360-data";
 
 // Reconstruct the parent's chosen answer text from the stored score. The SOP
 // stores only the option score (1-4), not which option — so for the few
@@ -29,12 +30,13 @@ export const Route = createFileRoute("/ikf360/admin/profiles/$id")({
     profile: await getAdminProfileDetail({ data: { profileId: params.id } }),
     axes: await listAxes(),
     categorisation: await getProfileCategorisation({ data: { profileId: params.id } }),
+    mentors: await listMentors(),
   }),
   component: ProfileScorePage,
 });
 
 function ProfileScorePage() {
-  const { profile, axes, categorisation: initialCat } = Route.useLoaderData();
+  const { profile, axes, categorisation: initialCat, mentors } = Route.useLoaderData();
   const params = Route.useParams();
   const qc = useQueryClient();
   const router = useRouter();
@@ -48,6 +50,12 @@ function ProfileScorePage() {
   const review = useMutation({
     mutationFn: ({ uploadId, status }: { uploadId: string; status: "verified" | "rejected" }) =>
       setUploadStatus({ data: { uploadId, status } }),
+    onSuccess: () => router.invalidate(),
+  });
+
+  const assign = useMutation({
+    mutationFn: (mentorUserId: string | null) =>
+      assignMentor({ data: { profileId: params.id, mentorUserId } }),
     onSuccess: () => router.invalidate(),
   });
 
@@ -116,6 +124,36 @@ function ProfileScorePage() {
           {profile.parentName} · {profile.parentEmail} · readiness <span className="font-semibold">{profile.readiness}</span> · stage <span className="font-semibold">{profile.stage}</span>
         </p>
       </div>
+
+      <section className="ikf-card p-5 mb-6">
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div>
+            <h2 className="text-[15px] font-bold">Assigned mentor</h2>
+            <p className="text-[12px] mt-0.5" style={{ color: "var(--ikf-text-dim)" }}>
+              {profile.advisorName ? <>Currently <span className="font-semibold">{profile.advisorName}</span>. The mentor is emailed when assigned.</> : "Not assigned yet. The mentor is emailed when you assign them."}
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <select
+              className="ikf-input"
+              value={profile.advisorId ?? ""}
+              disabled={assign.isPending}
+              onChange={e => assign.mutate(e.target.value || null)}
+            >
+              <option value="">— Unassigned —</option>
+              {mentors.map(m => (
+                <option key={m.id} value={m.id}>{m.fullName} ({m.activeParents})</option>
+              ))}
+            </select>
+            {assign.isPending && <Loader2 size={16} className="animate-spin" style={{ color: "var(--ikf-brand-ink)" }} />}
+          </div>
+        </div>
+        {assign.error && (
+          <div className="mt-3 p-2.5 rounded-lg text-[12px]" style={{ background: "rgba(220,38,38,0.08)", color: "#dc2626" }}>
+            {assign.error instanceof Error ? assign.error.message : "Couldn't update the mentor."}
+          </div>
+        )}
+      </section>
 
       {profile.assistanceRequests.length > 0 && (
         <section className="ikf-card p-5 mb-6" style={{ borderColor: "var(--ikf-brand)" }}>
@@ -248,6 +286,14 @@ function ProfileScorePage() {
               <div className="text-[11px] font-semibold uppercase tracking-[0.12em] mb-1.5" style={{ color: "var(--ikf-text-dim)" }}>
                 {axis.name}
               </div>
+              {axis.key === "parent_capacity" && (
+                <ParentTypeSuggestion
+                  suggestion={profile.sopResponses ? suggestParentType(profile.sopResponses) : null}
+                  current={selections[axis.key]}
+                  hasValue={(key) => axis.values.some(v => v.key === key)}
+                  onUse={(key) => setSelections({ ...selections, [axis.key]: key })}
+                />
+              )}
               <div className="grid gap-2">
                 {axis.values.map(v => {
                   const selected = selections[axis.key] === v.key;
@@ -429,6 +475,56 @@ function SopDetail({ label, value }: { label: string; value: string }) {
     <div>
       <dt className="text-[10px] font-semibold uppercase tracking-[0.12em] mb-0.5" style={{ color: "var(--ikf-text-dim)" }}>{label}</dt>
       <dd className="text-[13px]">{value}</dd>
+    </div>
+  );
+}
+
+// SOP-derived parent-type suggestion + the read-only "how it's assigned" doc
+// (feedback 30 Jun 2026, item 1). Advisor confirms or overrides.
+function ParentTypeSuggestion({
+  suggestion, current, hasValue, onUse,
+}: {
+  suggestion: ReturnType<typeof suggestParentType>;
+  current: string | undefined;
+  hasValue: (key: string) => boolean;
+  onUse: (key: string) => void;
+}) {
+  const [showDoc, setShowDoc] = useState(false);
+  const valid = suggestion && hasValue(suggestion.valueKey);
+  return (
+    <div className="mb-2 rounded-lg p-3 text-[12px]" style={{ background: "var(--ikf-surface-2)", border: "1px dashed var(--ikf-border)" }}>
+      {valid ? (
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <span style={{ color: "var(--ikf-text-dim)" }}>Suggested from the SOP: </span>
+            <span className="font-semibold">{suggestion!.label}</span>
+            <div className="mt-0.5" style={{ color: "var(--ikf-text-dim)" }}>{suggestion!.rationale}</div>
+          </div>
+          {current !== suggestion!.valueKey && (
+            <button onClick={() => onUse(suggestion!.valueKey)} className="shrink-0 text-[11px] font-semibold underline" style={{ color: "var(--ikf-brand-ink)" }}>
+              Use this
+            </button>
+          )}
+        </div>
+      ) : (
+        <div style={{ color: "var(--ikf-text-dim)" }}>No SOP-based suggestion yet (the family answers needed aren't on file).</div>
+      )}
+      <button onClick={() => setShowDoc(v => !v)} className="mt-2 text-[11px] underline" style={{ color: "var(--ikf-text-dim)" }}>
+        {showDoc ? "Hide" : "How parent types are assigned"}
+      </button>
+      {showDoc && (
+        <div className="mt-2 space-y-2" style={{ color: "var(--ikf-text-dim)" }}>
+          <p>{PARENT_TYPE_DOC.intro}</p>
+          <p>{PARENT_TYPE_DOC.logic}</p>
+          <ul className="space-y-1.5">
+            {PARENT_TYPE_DOC.types.map(t => (
+              <li key={t.key}>
+                <span className="font-semibold" style={{ color: "var(--ikf-text)" }}>{t.label}</span> — {t.meaning} <span className="opacity-80">({t.signals})</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }

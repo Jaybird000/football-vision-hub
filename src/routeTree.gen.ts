@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignupRouteImport } from './routes/signup'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PlayersRouteImport } from './routes/players'
 import { Route as PartnersRouteImport } from './routes/partners'
@@ -17,6 +18,7 @@ import { Route as ParentsRouteImport } from './routes/parents'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as InitiativesRouteImport } from './routes/initiatives'
 import { Route as Ikf360RouteImport } from './routes/ikf360'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as DonateRouteImport } from './routes/donate'
 import { Route as CodepenExportRouteImport } from './routes/codepen-export'
 import { Route as CoachesRouteImport } from './routes/coaches'
@@ -30,8 +32,10 @@ import { Route as Ikf360PreReviewRouteImport } from './routes/ikf360.pre-review'
 import { Route as Ikf360IntentRouteImport } from './routes/ikf360.intent'
 import { Route as Ikf360DashboardRouteImport } from './routes/ikf360.dashboard'
 import { Route as Ikf360AdminRouteImport } from './routes/ikf360.admin'
+import { Route as Ikf360UploadAssessmentKeyRouteImport } from './routes/ikf360.upload.$assessmentKey'
 import { Route as Ikf360AdminTemplatesRouteImport } from './routes/ikf360.admin.templates'
 import { Route as Ikf360AdminProvidersRouteImport } from './routes/ikf360.admin.providers'
+import { Route as Ikf360AdminMentorsRouteImport } from './routes/ikf360.admin.mentors'
 import { Route as Ikf360AdminContentRouteImport } from './routes/ikf360.admin.content'
 import { Route as Ikf360AdminCellsRouteImport } from './routes/ikf360.admin.cells'
 import { Route as Ikf360AdminAxesRouteImport } from './routes/ikf360.admin.axes'
@@ -45,6 +49,11 @@ import { Route as Ikf360AdminProfilesIdRouteImport } from './routes/ikf360.admin
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -80,6 +89,11 @@ const InitiativesRoute = InitiativesRouteImport.update({
 const Ikf360Route = Ikf360RouteImport.update({
   id: '/ikf360',
   path: '/ikf360',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DonateRoute = DonateRouteImport.update({
@@ -147,6 +161,12 @@ const Ikf360AdminRoute = Ikf360AdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => Ikf360Route,
 } as any)
+const Ikf360UploadAssessmentKeyRoute =
+  Ikf360UploadAssessmentKeyRouteImport.update({
+    id: '/$assessmentKey',
+    path: '/$assessmentKey',
+    getParentRoute: () => Ikf360UploadRoute,
+  } as any)
 const Ikf360AdminTemplatesRoute = Ikf360AdminTemplatesRouteImport.update({
   id: '/templates',
   path: '/templates',
@@ -155,6 +175,11 @@ const Ikf360AdminTemplatesRoute = Ikf360AdminTemplatesRouteImport.update({
 const Ikf360AdminProvidersRoute = Ikf360AdminProvidersRouteImport.update({
   id: '/providers',
   path: '/providers',
+  getParentRoute: () => Ikf360AdminRoute,
+} as any)
+const Ikf360AdminMentorsRoute = Ikf360AdminMentorsRouteImport.update({
+  id: '/mentors',
+  path: '/mentors',
   getParentRoute: () => Ikf360AdminRoute,
 } as any)
 const Ikf360AdminContentRoute = Ikf360AdminContentRouteImport.update({
@@ -209,6 +234,7 @@ export interface FileRoutesByFullPath {
   '/coaches': typeof CoachesRoute
   '/codepen-export': typeof CodepenExportRoute
   '/donate': typeof DonateRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/ikf360': typeof Ikf360RouteWithChildren
   '/initiatives': typeof InitiativesRoute
   '/login': typeof LoginRoute
@@ -216,13 +242,14 @@ export interface FileRoutesByFullPath {
   '/partners': typeof PartnersRoute
   '/players': typeof PlayersRoute
   '/privacy': typeof PrivacyRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/ikf360/admin': typeof Ikf360AdminRouteWithChildren
   '/ikf360/dashboard': typeof Ikf360DashboardRoute
   '/ikf360/intent': typeof Ikf360IntentRoute
   '/ikf360/pre-review': typeof Ikf360PreReviewRoute
   '/ikf360/support': typeof Ikf360SupportRoute
-  '/ikf360/upload': typeof Ikf360UploadRoute
+  '/ikf360/upload': typeof Ikf360UploadRouteWithChildren
   '/parents/pathway': typeof ParentsPathwayRoute
   '/ikf360/': typeof Ikf360IndexRoute
   '/api/cron/monthly-content': typeof ApiCronMonthlyContentRoute
@@ -233,8 +260,10 @@ export interface FileRoutesByFullPath {
   '/ikf360/admin/axes': typeof Ikf360AdminAxesRoute
   '/ikf360/admin/cells': typeof Ikf360AdminCellsRoute
   '/ikf360/admin/content': typeof Ikf360AdminContentRoute
+  '/ikf360/admin/mentors': typeof Ikf360AdminMentorsRoute
   '/ikf360/admin/providers': typeof Ikf360AdminProvidersRoute
   '/ikf360/admin/templates': typeof Ikf360AdminTemplatesRoute
+  '/ikf360/upload/$assessmentKey': typeof Ikf360UploadAssessmentKeyRoute
   '/ikf360/admin/profiles/$id': typeof Ikf360AdminProfilesIdRoute
 }
 export interface FileRoutesByTo {
@@ -243,19 +272,21 @@ export interface FileRoutesByTo {
   '/coaches': typeof CoachesRoute
   '/codepen-export': typeof CodepenExportRoute
   '/donate': typeof DonateRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/initiatives': typeof InitiativesRoute
   '/login': typeof LoginRoute
   '/parents': typeof ParentsRoute
   '/partners': typeof PartnersRoute
   '/players': typeof PlayersRoute
   '/privacy': typeof PrivacyRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/ikf360/admin': typeof Ikf360AdminRouteWithChildren
   '/ikf360/dashboard': typeof Ikf360DashboardRoute
   '/ikf360/intent': typeof Ikf360IntentRoute
   '/ikf360/pre-review': typeof Ikf360PreReviewRoute
   '/ikf360/support': typeof Ikf360SupportRoute
-  '/ikf360/upload': typeof Ikf360UploadRoute
+  '/ikf360/upload': typeof Ikf360UploadRouteWithChildren
   '/parents/pathway': typeof ParentsPathwayRoute
   '/ikf360': typeof Ikf360IndexRoute
   '/api/cron/monthly-content': typeof ApiCronMonthlyContentRoute
@@ -266,8 +297,10 @@ export interface FileRoutesByTo {
   '/ikf360/admin/axes': typeof Ikf360AdminAxesRoute
   '/ikf360/admin/cells': typeof Ikf360AdminCellsRoute
   '/ikf360/admin/content': typeof Ikf360AdminContentRoute
+  '/ikf360/admin/mentors': typeof Ikf360AdminMentorsRoute
   '/ikf360/admin/providers': typeof Ikf360AdminProvidersRoute
   '/ikf360/admin/templates': typeof Ikf360AdminTemplatesRoute
+  '/ikf360/upload/$assessmentKey': typeof Ikf360UploadAssessmentKeyRoute
   '/ikf360/admin/profiles/$id': typeof Ikf360AdminProfilesIdRoute
 }
 export interface FileRoutesById {
@@ -277,6 +310,7 @@ export interface FileRoutesById {
   '/coaches': typeof CoachesRoute
   '/codepen-export': typeof CodepenExportRoute
   '/donate': typeof DonateRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/ikf360': typeof Ikf360RouteWithChildren
   '/initiatives': typeof InitiativesRoute
   '/login': typeof LoginRoute
@@ -284,13 +318,14 @@ export interface FileRoutesById {
   '/partners': typeof PartnersRoute
   '/players': typeof PlayersRoute
   '/privacy': typeof PrivacyRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/ikf360/admin': typeof Ikf360AdminRouteWithChildren
   '/ikf360/dashboard': typeof Ikf360DashboardRoute
   '/ikf360/intent': typeof Ikf360IntentRoute
   '/ikf360/pre-review': typeof Ikf360PreReviewRoute
   '/ikf360/support': typeof Ikf360SupportRoute
-  '/ikf360/upload': typeof Ikf360UploadRoute
+  '/ikf360/upload': typeof Ikf360UploadRouteWithChildren
   '/parents_/pathway': typeof ParentsPathwayRoute
   '/ikf360/': typeof Ikf360IndexRoute
   '/api/cron/monthly-content': typeof ApiCronMonthlyContentRoute
@@ -301,8 +336,10 @@ export interface FileRoutesById {
   '/ikf360/admin/axes': typeof Ikf360AdminAxesRoute
   '/ikf360/admin/cells': typeof Ikf360AdminCellsRoute
   '/ikf360/admin/content': typeof Ikf360AdminContentRoute
+  '/ikf360/admin/mentors': typeof Ikf360AdminMentorsRoute
   '/ikf360/admin/providers': typeof Ikf360AdminProvidersRoute
   '/ikf360/admin/templates': typeof Ikf360AdminTemplatesRoute
+  '/ikf360/upload/$assessmentKey': typeof Ikf360UploadAssessmentKeyRoute
   '/ikf360/admin/profiles/$id': typeof Ikf360AdminProfilesIdRoute
 }
 export interface FileRouteTypes {
@@ -313,6 +350,7 @@ export interface FileRouteTypes {
     | '/coaches'
     | '/codepen-export'
     | '/donate'
+    | '/forgot-password'
     | '/ikf360'
     | '/initiatives'
     | '/login'
@@ -320,6 +358,7 @@ export interface FileRouteTypes {
     | '/partners'
     | '/players'
     | '/privacy'
+    | '/reset-password'
     | '/signup'
     | '/ikf360/admin'
     | '/ikf360/dashboard'
@@ -337,8 +376,10 @@ export interface FileRouteTypes {
     | '/ikf360/admin/axes'
     | '/ikf360/admin/cells'
     | '/ikf360/admin/content'
+    | '/ikf360/admin/mentors'
     | '/ikf360/admin/providers'
     | '/ikf360/admin/templates'
+    | '/ikf360/upload/$assessmentKey'
     | '/ikf360/admin/profiles/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -347,12 +388,14 @@ export interface FileRouteTypes {
     | '/coaches'
     | '/codepen-export'
     | '/donate'
+    | '/forgot-password'
     | '/initiatives'
     | '/login'
     | '/parents'
     | '/partners'
     | '/players'
     | '/privacy'
+    | '/reset-password'
     | '/signup'
     | '/ikf360/admin'
     | '/ikf360/dashboard'
@@ -370,8 +413,10 @@ export interface FileRouteTypes {
     | '/ikf360/admin/axes'
     | '/ikf360/admin/cells'
     | '/ikf360/admin/content'
+    | '/ikf360/admin/mentors'
     | '/ikf360/admin/providers'
     | '/ikf360/admin/templates'
+    | '/ikf360/upload/$assessmentKey'
     | '/ikf360/admin/profiles/$id'
   id:
     | '__root__'
@@ -380,6 +425,7 @@ export interface FileRouteTypes {
     | '/coaches'
     | '/codepen-export'
     | '/donate'
+    | '/forgot-password'
     | '/ikf360'
     | '/initiatives'
     | '/login'
@@ -387,6 +433,7 @@ export interface FileRouteTypes {
     | '/partners'
     | '/players'
     | '/privacy'
+    | '/reset-password'
     | '/signup'
     | '/ikf360/admin'
     | '/ikf360/dashboard'
@@ -404,8 +451,10 @@ export interface FileRouteTypes {
     | '/ikf360/admin/axes'
     | '/ikf360/admin/cells'
     | '/ikf360/admin/content'
+    | '/ikf360/admin/mentors'
     | '/ikf360/admin/providers'
     | '/ikf360/admin/templates'
+    | '/ikf360/upload/$assessmentKey'
     | '/ikf360/admin/profiles/$id'
   fileRoutesById: FileRoutesById
 }
@@ -415,6 +464,7 @@ export interface RootRouteChildren {
   CoachesRoute: typeof CoachesRoute
   CodepenExportRoute: typeof CodepenExportRoute
   DonateRoute: typeof DonateRoute
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
   Ikf360Route: typeof Ikf360RouteWithChildren
   InitiativesRoute: typeof InitiativesRoute
   LoginRoute: typeof LoginRoute
@@ -422,6 +472,7 @@ export interface RootRouteChildren {
   PartnersRoute: typeof PartnersRoute
   PlayersRoute: typeof PlayersRoute
   PrivacyRoute: typeof PrivacyRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   SignupRoute: typeof SignupRoute
   ParentsPathwayRoute: typeof ParentsPathwayRoute
   ApiCronMonthlyContentRoute: typeof ApiCronMonthlyContentRoute
@@ -437,6 +488,13 @@ declare module '@tanstack/react-router' {
       path: '/signup'
       fullPath: '/signup'
       preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -486,6 +544,13 @@ declare module '@tanstack/react-router' {
       path: '/ikf360'
       fullPath: '/ikf360'
       preLoaderRoute: typeof Ikf360RouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/donate': {
@@ -579,6 +644,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Ikf360AdminRouteImport
       parentRoute: typeof Ikf360Route
     }
+    '/ikf360/upload/$assessmentKey': {
+      id: '/ikf360/upload/$assessmentKey'
+      path: '/$assessmentKey'
+      fullPath: '/ikf360/upload/$assessmentKey'
+      preLoaderRoute: typeof Ikf360UploadAssessmentKeyRouteImport
+      parentRoute: typeof Ikf360UploadRoute
+    }
     '/ikf360/admin/templates': {
       id: '/ikf360/admin/templates'
       path: '/templates'
@@ -591,6 +663,13 @@ declare module '@tanstack/react-router' {
       path: '/providers'
       fullPath: '/ikf360/admin/providers'
       preLoaderRoute: typeof Ikf360AdminProvidersRouteImport
+      parentRoute: typeof Ikf360AdminRoute
+    }
+    '/ikf360/admin/mentors': {
+      id: '/ikf360/admin/mentors'
+      path: '/mentors'
+      fullPath: '/ikf360/admin/mentors'
+      preLoaderRoute: typeof Ikf360AdminMentorsRouteImport
       parentRoute: typeof Ikf360AdminRoute
     }
     '/ikf360/admin/content': {
@@ -664,6 +743,7 @@ interface Ikf360AdminRouteChildren {
   Ikf360AdminAxesRoute: typeof Ikf360AdminAxesRoute
   Ikf360AdminCellsRoute: typeof Ikf360AdminCellsRoute
   Ikf360AdminContentRoute: typeof Ikf360AdminContentRoute
+  Ikf360AdminMentorsRoute: typeof Ikf360AdminMentorsRoute
   Ikf360AdminProvidersRoute: typeof Ikf360AdminProvidersRoute
   Ikf360AdminTemplatesRoute: typeof Ikf360AdminTemplatesRoute
   Ikf360AdminProfilesIdRoute: typeof Ikf360AdminProfilesIdRoute
@@ -674,6 +754,7 @@ const Ikf360AdminRouteChildren: Ikf360AdminRouteChildren = {
   Ikf360AdminAxesRoute: Ikf360AdminAxesRoute,
   Ikf360AdminCellsRoute: Ikf360AdminCellsRoute,
   Ikf360AdminContentRoute: Ikf360AdminContentRoute,
+  Ikf360AdminMentorsRoute: Ikf360AdminMentorsRoute,
   Ikf360AdminProvidersRoute: Ikf360AdminProvidersRoute,
   Ikf360AdminTemplatesRoute: Ikf360AdminTemplatesRoute,
   Ikf360AdminProfilesIdRoute: Ikf360AdminProfilesIdRoute,
@@ -683,13 +764,25 @@ const Ikf360AdminRouteWithChildren = Ikf360AdminRoute._addFileChildren(
   Ikf360AdminRouteChildren,
 )
 
+interface Ikf360UploadRouteChildren {
+  Ikf360UploadAssessmentKeyRoute: typeof Ikf360UploadAssessmentKeyRoute
+}
+
+const Ikf360UploadRouteChildren: Ikf360UploadRouteChildren = {
+  Ikf360UploadAssessmentKeyRoute: Ikf360UploadAssessmentKeyRoute,
+}
+
+const Ikf360UploadRouteWithChildren = Ikf360UploadRoute._addFileChildren(
+  Ikf360UploadRouteChildren,
+)
+
 interface Ikf360RouteChildren {
   Ikf360AdminRoute: typeof Ikf360AdminRouteWithChildren
   Ikf360DashboardRoute: typeof Ikf360DashboardRoute
   Ikf360IntentRoute: typeof Ikf360IntentRoute
   Ikf360PreReviewRoute: typeof Ikf360PreReviewRoute
   Ikf360SupportRoute: typeof Ikf360SupportRoute
-  Ikf360UploadRoute: typeof Ikf360UploadRoute
+  Ikf360UploadRoute: typeof Ikf360UploadRouteWithChildren
   Ikf360IndexRoute: typeof Ikf360IndexRoute
 }
 
@@ -699,7 +792,7 @@ const Ikf360RouteChildren: Ikf360RouteChildren = {
   Ikf360IntentRoute: Ikf360IntentRoute,
   Ikf360PreReviewRoute: Ikf360PreReviewRoute,
   Ikf360SupportRoute: Ikf360SupportRoute,
-  Ikf360UploadRoute: Ikf360UploadRoute,
+  Ikf360UploadRoute: Ikf360UploadRouteWithChildren,
   Ikf360IndexRoute: Ikf360IndexRoute,
 }
 
@@ -712,6 +805,7 @@ const rootRouteChildren: RootRouteChildren = {
   CoachesRoute: CoachesRoute,
   CodepenExportRoute: CodepenExportRoute,
   DonateRoute: DonateRoute,
+  ForgotPasswordRoute: ForgotPasswordRoute,
   Ikf360Route: Ikf360RouteWithChildren,
   InitiativesRoute: InitiativesRoute,
   LoginRoute: LoginRoute,
@@ -719,6 +813,7 @@ const rootRouteChildren: RootRouteChildren = {
   PartnersRoute: PartnersRoute,
   PlayersRoute: PlayersRoute,
   PrivacyRoute: PrivacyRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   SignupRoute: SignupRoute,
   ParentsPathwayRoute: ParentsPathwayRoute,
   ApiCronMonthlyContentRoute: ApiCronMonthlyContentRoute,

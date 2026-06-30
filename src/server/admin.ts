@@ -2,6 +2,9 @@ import { createServerFn } from "@tanstack/react-start";
 import { getCookie } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { sql } from "./db";
+import { hashPassword } from "./password";
+import { logAudit } from "./audit";
+import { sendMentorAssigned } from "./email";
 
 type Role = "parent" | "advisor" | "admin";
 
@@ -27,11 +30,13 @@ export type AdminTemplate = {
   category: string;
   title: string;
   description: string;
-  
   required: boolean;
   sortOrder: number;
   providerCount: number;
   uploadCount: number;
+  // 0021 — per-assessment context + IKF predefined-format download link.
+  contextMd: string | null;
+  formatUrl: string | null;
 };
 
 export type AdminProvider = {
@@ -44,21 +49,36 @@ export type AdminProvider = {
   chargeInr: number | null;
   isActive: boolean;
   sortOrder: number;
+  // 0021 — 'integrated' (auto-fetch, stubbed) vs 'manual' (parent uploads).
+  integrationType: "integrated" | "manual";
 };
 
 export const listAdminTemplates = createServerFn({ method: "GET" }).handler(async (): Promise<AdminTemplate[]> => {
   await requireAdmin();
-  const rows = await sql<{
+  type Row = {
     key: string; category: string; title: string; description: string;
     required: boolean; sort_order: number; provider_count: string; upload_count: string;
-  }[]>`
+    context_md: string | null; format_url: string | null;
+  };
+  // Tolerate migration 0021 (context_md/format_url) not being applied.
+  const rows = await sql<Row[]>`
     SELECT
-      t.key, t.category, t.title, t.description, t.required, t.sort_order,
+      t.key, t.category, t.title, t.description, t.required, t.sort_order, t.context_md, t.format_url,
       (SELECT COUNT(*) FROM providers p WHERE p.assessment_key = t.key AND p.is_active) AS provider_count,
       (SELECT COUNT(*) FROM assessment_uploads u WHERE u.assessment_key = t.key) AS upload_count
     FROM assessment_templates t
     ORDER BY t.sort_order, t.key
-  `;
+  `.catch(async (e) => {
+    console.warn("[admin] templates.context_md read failed (migration 0021 applied?):", e instanceof Error ? e.message : e);
+    return sql<Row[]>`
+      SELECT
+        t.key, t.category, t.title, t.description, t.required, t.sort_order,
+        (SELECT COUNT(*) FROM providers p WHERE p.assessment_key = t.key AND p.is_active) AS provider_count,
+        (SELECT COUNT(*) FROM assessment_uploads u WHERE u.assessment_key = t.key) AS upload_count
+      FROM assessment_templates t
+      ORDER BY t.sort_order, t.key
+    `;
+  });
   return rows.map(r => ({
     key: r.key,
     category: r.category,
@@ -68,6 +88,8 @@ export const listAdminTemplates = createServerFn({ method: "GET" }).handler(asyn
     sortOrder: r.sort_order,
     providerCount: Number(r.provider_count),
     uploadCount: Number(r.upload_count),
+    contextMd: r.context_md ?? null,
+    formatUrl: r.format_url ?? null,
   }));
 });
 
@@ -94,6 +116,8 @@ const UpsertTemplateInput = z.object({
   required: z.boolean().optional().default(false),
   sortOrder: z.number().int().min(0).max(100000).optional().default(0),
   isNew: z.boolean().optional().default(false),
+  contextMd: z.string().trim().max(4000).optional().default(""),
+  formatUrl: z.string().trim().max(500).optional().default(""),
 });
 
 export const upsertTemplate = createServerFn({ method: "POST" })
@@ -115,6 +139,9 @@ export const upsertTemplate = createServerFn({ method: "POST" })
         WHERE key = ${data.key}
       `;
     }
+    // 0021 columns written separately + guarded so the upsert works pre-migration.
+    await sql`UPDATE assessment_templates SET context_md = ${data.contextMd.trim() || null}, format_url = ${data.formatUrl.trim() || null} WHERE key = ${data.key}`
+      .catch(e => console.warn("[admin] template context_md/format_url write skipped (migration 0021 applied?):", e instanceof Error ? e.message : e));
     return { key: data.key };
   });
 
@@ -140,15 +167,16 @@ export const listAdminProviders = createServerFn({ method: "GET" }).handler(asyn
   type Row = {
     id: string; assessment_key: string; name: string; description: string;
     url: string; city: string | null; charge_inr: number | null; is_active: boolean; sort_order: number;
+    integration_type: string | null;
   };
-  // Tolerate migration 0011 (charge_inr) not being applied yet — fall back to a
-  // query without the column so the providers admin still loads.
+  // Tolerate migrations 0011 (charge_inr) / 0021 (integration_type) not being
+  // applied yet — fall back to a query without those columns so the admin loads.
   const rows = await sql<Row[]>`
-    SELECT id, assessment_key, name, description, url, city, charge_inr, is_active, sort_order
+    SELECT id, assessment_key, name, description, url, city, charge_inr, is_active, sort_order, integration_type
     FROM providers
     ORDER BY assessment_key, sort_order, name
   `.catch(async (e) => {
-    console.warn("[admin] providers.charge_inr read failed (migration 0011 applied?):", e instanceof Error ? e.message : e);
+    console.warn("[admin] providers.integration_type/charge_inr read failed (migrations 0011/0021 applied?):", e instanceof Error ? e.message : e);
     return sql<Row[]>`
       SELECT id, assessment_key, name, description, url, city, is_active, sort_order
       FROM providers
@@ -165,6 +193,7 @@ export const listAdminProviders = createServerFn({ method: "GET" }).handler(asyn
     chargeInr: r.charge_inr != null ? Number(r.charge_inr) : null,
     isActive: r.is_active,
     sortOrder: r.sort_order,
+    integrationType: r.integration_type === "integrated" ? "integrated" : "manual",
   }));
 });
 
@@ -178,6 +207,7 @@ const UpsertProviderInput = z.object({
   chargeInr: z.number().int().min(0).max(10_000_000).nullable().optional().default(null),
   isActive: z.boolean().optional().default(true),
   sortOrder: z.number().int().min(0).optional().default(0),
+  integrationType: z.enum(["integrated", "manual"]).optional().default("manual"),
 });
 
 export const upsertProvider = createServerFn({ method: "POST" })
@@ -217,6 +247,8 @@ export const upsertProvider = createServerFn({ method: "POST" })
           WHERE id = ${data.id}
         `;
       });
+      await sql`UPDATE providers SET integration_type = ${data.integrationType} WHERE id = ${data.id}`
+        .catch(e => console.warn("[admin] provider integration_type write skipped (migration 0021 applied?):", e instanceof Error ? e.message : e));
       return { id: data.id };
     }
     const rows = await sql<{ id: string }[]>`
@@ -231,6 +263,9 @@ export const upsertProvider = createServerFn({ method: "POST" })
         RETURNING id
       `;
     });
+    // integration_type (0021) written separately + guarded so editing works pre-migration.
+    await sql`UPDATE providers SET integration_type = ${data.integrationType} WHERE id = ${rows[0].id}`
+      .catch(e => console.warn("[admin] provider integration_type write skipped (migration 0021 applied?):", e instanceof Error ? e.message : e));
     return { id: rows[0].id };
   });
 
@@ -296,3 +331,131 @@ export const listAdminProfiles = createServerFn({ method: "GET" }).handler(async
     createdAt: r.created_at.toISOString(),
   }));
 });
+
+// ─── Mentor management (30 Jun 2026) ─────────────────────────────────────────
+// A "mentor" is an `advisor`-role user. Admins onboard mentors and assign one to
+// each profile via the (previously unused) parent_child_profiles.advisor_id; a
+// mentor logs into the same console and sees only their caseload.
+
+// Creating mentors is admin-only (advisors can't mint new advisors).
+async function requireSuperAdmin(): Promise<{ id: string; role: Role }> {
+  const me = await requireAdmin();
+  if (me.role !== "admin") throw new Error("Admin only.");
+  return me;
+}
+
+export type Mentor = {
+  id: string;
+  fullName: string;
+  email: string;
+  role: "advisor" | "admin";
+  activeParents: number;
+};
+
+export const listMentors = createServerFn({ method: "GET" }).handler(async (): Promise<Mentor[]> => {
+  await requireAdmin();
+  const rows = await sql<{ id: string; full_name: string; email: string; role: "advisor" | "admin"; active_parents: string }[]>`
+    SELECT u.id, u.full_name, u.email, u.role,
+           (SELECT COUNT(*) FROM parent_child_profiles p WHERE p.advisor_id = u.id) AS active_parents
+    FROM users u
+    WHERE u.role IN ('advisor', 'admin')
+    ORDER BY u.full_name
+  `;
+  return rows.map(r => ({
+    id: r.id,
+    fullName: r.full_name,
+    email: r.email,
+    role: r.role,
+    activeParents: Number(r.active_parents),
+  }));
+});
+
+const CreateMentorInput = z.object({
+  fullName: z.string().trim().min(1).max(120),
+  email: z.string().trim().email().max(160),
+  password: z.string().min(8).max(200),
+});
+
+export const createMentor = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => CreateMentorInput.parse(d))
+  .handler(async ({ data }): Promise<{ id: string }> => {
+    await requireSuperAdmin();
+    const email = data.email.trim().toLowerCase();
+    const existing = await sql<{ id: string }[]>`SELECT id FROM users WHERE email = ${email} LIMIT 1`;
+    if (existing.length > 0) throw new Error("A user with this email already exists.");
+    const passwordHash = await hashPassword(data.password);
+    const rows = await sql<{ id: string }[]>`
+      INSERT INTO users (email, password_hash, full_name, role)
+      VALUES (${email}, ${passwordHash}, ${data.fullName}, 'advisor')
+      RETURNING id
+    `;
+    await logAudit({ action: "mentor.create", entityType: "user", entityId: rows[0].id, payload: { email } });
+    return { id: rows[0].id };
+  });
+
+const AssignMentorInput = z.object({
+  profileId: z.string().uuid(),
+  mentorUserId: z.string().uuid().nullable(),
+});
+
+export const assignMentor = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => AssignMentorInput.parse(d))
+  .handler(async ({ data }): Promise<{ ok: true }> => {
+    await requireAdmin();
+    await sql`UPDATE parent_child_profiles SET advisor_id = ${data.mentorUserId}, updated_at = now() WHERE id = ${data.profileId}`;
+    await logAudit({ action: "mentor.assign", entityType: "profile", entityId: data.profileId, payload: { mentorUserId: data.mentorUserId } });
+    if (data.mentorUserId) {
+      const [mrows, prows] = await Promise.all([
+        sql<{ email: string; full_name: string }[]>`SELECT email, full_name FROM users WHERE id = ${data.mentorUserId} LIMIT 1`,
+        sql<{ child_name: string; parent_name: string }[]>`SELECT child_name, parent_name FROM parent_child_profiles WHERE id = ${data.profileId} LIMIT 1`,
+      ]);
+      if (mrows[0] && prows[0]) {
+        void sendMentorAssigned({
+          to: mrows[0].email,
+          mentorName: mrows[0].full_name,
+          childName: prows[0].child_name,
+          parentName: prows[0].parent_name,
+          profileId: data.profileId,
+        }).catch(err => console.error("[admin] mentor-assigned send failed:", err));
+      }
+    }
+    return { ok: true };
+  });
+
+export type CaseProfile = {
+  profileId: string;
+  childName: string;
+  childAge: number;
+  parentName: string;
+  parentEmail: string;
+  stage: number;
+  readiness: string;
+  createdAt: string;
+};
+
+const CaseloadInput = z.object({ mentorId: z.string().uuid().optional() });
+
+// A mentor's live caseload. Advisors always see their OWN assigned profiles;
+// admins may pass a mentorId to view any mentor's caseload.
+export const getMentorCaseload = createServerFn({ method: "GET" })
+  .inputValidator((d: unknown) => CaseloadInput.parse(d ?? {}))
+  .handler(async ({ data }): Promise<CaseProfile[]> => {
+    const me = await requireAdmin();
+    const mentorId = me.role === "admin" && data.mentorId ? data.mentorId : me.id;
+    const rows = await sql<{ id: string; child_name: string; child_age: number; parent_name: string; parent_email: string; stage: number; readiness: string; created_at: Date }[]>`
+      SELECT id, child_name, child_age, parent_name, parent_email, stage, readiness, created_at
+      FROM parent_child_profiles
+      WHERE advisor_id = ${mentorId}
+      ORDER BY created_at DESC
+    `;
+    return rows.map(r => ({
+      profileId: r.id,
+      childName: r.child_name,
+      childAge: r.child_age,
+      parentName: r.parent_name,
+      parentEmail: r.parent_email,
+      stage: r.stage,
+      readiness: r.readiness,
+      createdAt: r.created_at.toISOString(),
+    }));
+  });

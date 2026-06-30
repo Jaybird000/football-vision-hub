@@ -15,6 +15,7 @@ const PARENT_TABS: { to: string; label: string }[] = [
 
 const ADMIN_TABS: { to: string; label: string }[] = [
   { to: "/ikf360/admin", label: "Profiles" },
+  { to: "/ikf360/admin/mentors", label: "Mentors" },
   { to: "/ikf360/admin/templates", label: "Templates" },
   { to: "/ikf360/admin/providers", label: "Providers" },
   { to: "/ikf360/admin/axes", label: "Axes" },

@@ -598,6 +598,9 @@ export type AdminProfileDetail = {
   readiness: "high" | "medium" | "forming";
   stage: number;
   submittedAt: string;
+  // Assigned mentor (advisor user) — 30 Jun 2026. Null when unassigned.
+  advisorId: string | null;
+  advisorName: string | null;
   // Raw Parent SOP answers: question id → chosen option score (1-4). The admin
   // UI prefers `answerChoices` (exact text) and falls back to reconstructing from
   // these scores for profiles submitted before migration 0013.
@@ -616,9 +619,12 @@ export const getAdminProfileDetail = createServerFn({ method: "GET" })
   .inputValidator((d: unknown) => GetProfileCatInput.parse(d))
   .handler(async ({ data }): Promise<AdminProfileDetail | null> => {
     await requireAdmin();
-    const prows = await sql<{ id: string; child_name: string; parent_name: string; parent_email: string; parent_phone: string | null; child_age: number; child_gender: string; readiness: string; stage: number; answers: Record<string, number>; created_at: Date }[]>`
-      SELECT id, child_name, parent_name, parent_email, parent_phone, child_age, child_gender, readiness, stage, answers, created_at
-      FROM parent_child_profiles WHERE id = ${data.profileId} LIMIT 1
+    const prows = await sql<{ id: string; child_name: string; parent_name: string; parent_email: string; parent_phone: string | null; child_age: number; child_gender: string; readiness: string; stage: number; answers: Record<string, number>; created_at: Date; advisor_id: string | null; advisor_name: string | null }[]>`
+      SELECT p.id, p.child_name, p.parent_name, p.parent_email, p.parent_phone, p.child_age, p.child_gender, p.readiness, p.stage, p.answers, p.created_at,
+             p.advisor_id, a.full_name AS advisor_name
+      FROM parent_child_profiles p
+      LEFT JOIN users a ON a.id = p.advisor_id
+      WHERE p.id = ${data.profileId} LIMIT 1
     `;
     if (prows.length === 0) return null;
     const p = prows[0];
@@ -675,6 +681,8 @@ export const getAdminProfileDetail = createServerFn({ method: "GET" })
       childAge: p.child_age,
       childGender: p.child_gender,
       city: cityRows[0]?.city ?? null,
+      advisorId: p.advisor_id ?? null,
+      advisorName: p.advisor_name ?? null,
       readiness: p.readiness as "high" | "medium" | "forming",
       stage: p.stage,
       submittedAt: p.created_at.toISOString(),

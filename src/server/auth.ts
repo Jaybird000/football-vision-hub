@@ -3,6 +3,7 @@ import { getCookie, setCookie } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { sql } from "./db";
 import { hashPassword, verifyPassword } from "./password";
+import { sendPasswordResetEmail } from "./email";
 
 const SESSION_COOKIE = "ikf_session";
 const SESSION_TTL_DAYS = 30;
@@ -202,3 +203,66 @@ export const currentUser = createServerFn({ method: "GET" }).handler(async (): P
   const u = rows[0];
   return { id: u.id, email: u.email, fullName: u.full_name, role: u.role, profileId: u.profile_id };
 });
+
+// ─── Password reset (0020) ───────────────────────────────────────────────────
+
+const APP_BASE_URL = process.env.APP_BASE_URL || "http://localhost:5173";
+const RESET_TTL_MS = 60 * 60 * 1000; // 1 hour
+
+const RequestResetInput = z.object({ email: z.string().trim().email().max(160) });
+
+// Always returns { ok: true } regardless of whether the email exists — never
+// reveal which addresses have accounts (no enumeration). Guarded so the form
+// works before migration 0020 is applied (no token stored → no email).
+export const requestPasswordReset = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => RequestResetInput.parse(d))
+  .handler(async ({ data }): Promise<{ ok: true }> => {
+    const email = normalizeEmail(data.email);
+    const rows = await sql<{ id: string; full_name: string }[]>`
+      SELECT id, full_name FROM users WHERE email = ${email} LIMIT 1
+    `.catch(() => [] as { id: string; full_name: string }[]);
+    const user = rows[0];
+    if (user) {
+      const token = randomSessionToken();
+      const expiresAt = new Date(Date.now() + RESET_TTL_MS);
+      const stored = await sql`
+        INSERT INTO password_reset_tokens (token, user_id, expires_at)
+        VALUES (${token}, ${user.id}, ${expiresAt})
+      `.then(() => true).catch(e => {
+        console.warn("[auth] reset token store skipped (migration 0020 applied?):", e instanceof Error ? e.message : e);
+        return false;
+      });
+      if (stored) {
+        void sendPasswordResetEmail({
+          to: email,
+          name: user.full_name,
+          resetUrl: `${APP_BASE_URL}/reset-password?token=${encodeURIComponent(token)}`,
+        }).catch(err => console.error("[auth] reset email send failed:", err));
+      }
+    }
+    return { ok: true };
+  });
+
+const ResetPasswordInput = z.object({
+  token: z.string().min(1).max(200),
+  password: z.string().min(8).max(200),
+});
+
+export const resetPassword = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => ResetPasswordInput.parse(d))
+  .handler(async ({ data }): Promise<{ ok: true }> => {
+    const rows = await sql<{ user_id: string; expires_at: Date; used_at: Date | null }[]>`
+      SELECT user_id, expires_at, used_at FROM password_reset_tokens WHERE token = ${data.token} LIMIT 1
+    `;
+    const row = rows[0];
+    if (!row || row.used_at) throw new Error("This reset link is invalid or has already been used.");
+    const expires = row.expires_at instanceof Date ? row.expires_at.getTime() : new Date(row.expires_at).getTime();
+    if (expires < Date.now()) throw new Error("This reset link has expired. Please request a new one.");
+
+    const passwordHash = await hashPassword(data.password);
+    await sql`UPDATE users SET password_hash = ${passwordHash}, updated_at = now() WHERE id = ${row.user_id}`;
+    await sql`UPDATE password_reset_tokens SET used_at = now() WHERE token = ${data.token}`;
+    // Invalidate any active sessions — a reset should sign other devices out.
+    await sql`DELETE FROM sessions WHERE user_id = ${row.user_id}`.catch(() => { /* best effort */ });
+    return { ok: true };
+  });

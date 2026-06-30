@@ -1,27 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRef, useState } from "react";
-import { Check, Clock, ExternalLink, FileUp, ShieldCheck, ArrowRight, Loader2, AlertCircle, FileText, Trash2, LifeBuoy, Send, CheckCircle2 } from "lucide-react";
-import { getMyStage2, uploadAssessment, deleteUpload, requestMentorAssistance, type Stage2State, type UploadRecord } from "@/server/stage2";
+import { useState } from "react";
+import { Check, Clock, FileUp, ShieldCheck, ArrowRight, Loader2, AlertCircle, LifeBuoy, Send, CheckCircle2 } from "lucide-react";
+import { getMyStage2, requestMentorAssistance, type Stage2State } from "@/server/stage2";
 
 export const Route = createFileRoute("/ikf360/upload")({
   loader: async () => ({ initial: await getMyStage2() }),
   component: UploadPortal,
 });
-
-const ACCEPTED_MIME = [
-  "application/pdf",
-  "application/msword",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  "image/jpeg",
-  "image/png",
-];
-
-function formatBytes(b: number) {
-  if (b < 1024) return `${b} B`;
-  if (b < 1024 * 1024) return `${(b / 1024).toFixed(1)} KB`;
-  return `${(b / 1024 / 1024).toFixed(1)} MB`;
-}
 
 function UploadPortal() {
   const { initial } = Route.useLoaderData();
@@ -58,13 +44,6 @@ function Portal({ state, onChanged }: { state: Stage2State; onChanged: () => voi
   }, {});
 
   const uploadByKey = new Map(state.uploads.map(u => [u.assessmentKey, u]));
-  const providersByKey = state.templates.reduce<Record<string, Stage2State["providers"]>>((acc, t) => {
-    acc[t.key] = state.providers.filter(p => p.assessmentKey === t.key);
-    return acc;
-  }, {});
-
-  // Module E: required reports the parent hasn't uploaded yet — drives the
-  // "don't have these documents? contact your IKF mentor" panel.
   const missingRequired = state.templates.filter(t => t.required && !uploadByKey.has(t.key));
 
   return (
@@ -88,7 +67,7 @@ function Portal({ state, onChanged }: { state: Stage2State; onChanged: () => voi
       <header className="mb-8">
         <h1 className="text-[26px] sm:text-[34px] leading-tight">Upload your child's reports</h1>
         <p className="mt-3 text-[15px] leading-relaxed" style={{ color: "var(--ikf-text-dim)" }}>
-          {state.childName ? `For ${state.childName}. ` : ""}IKF doesn't conduct these assessments — pick a recommended provider, get the report, then upload the PDF/DOC/JPG here. Re-uploads overwrite the previous version.
+          {state.childName ? `For ${state.childName}. ` : ""}Open each assessment to see what it is, pick an IKF partner, and upload the report. Re-uploads overwrite the previous version.
         </p>
       </header>
 
@@ -122,16 +101,31 @@ function Portal({ state, onChanged }: { state: Stage2State; onChanged: () => voi
             </span>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-5">
-            {items.map(t => (
-              <AssessmentCard
-                key={t.key}
-                template={t}
-                upload={uploadByKey.get(t.key)}
-                providers={providersByKey[t.key] ?? []}
-                onChanged={onChanged}
-              />
-            ))}
+          <div className="grid md:grid-cols-2 gap-4">
+            {items.map(t => {
+              const upload = uploadByKey.get(t.key);
+              const status: "verified" | "uploaded" | "pending" | "rejected" = upload?.status ?? "pending";
+              return (
+                <Link
+                  key={t.key}
+                  to="/ikf360/upload/$assessmentKey"
+                  params={{ assessmentKey: t.key }}
+                  className="ikf-card p-5 flex items-center justify-between gap-3 transition-colors hover:border-[var(--ikf-brand)]"
+                >
+                  <div className="min-w-0">
+                    <h3 className="text-[15px] font-bold leading-tight">{t.title}</h3>
+                    <div className="text-[11px] uppercase tracking-[0.12em] mt-1" style={{ color: t.required ? "var(--ikf-brand-ink)" : "var(--ikf-text-dim)" }}>
+                      {t.required ? "Required" : "Optional"}
+                      {upload?.providerName ? <span style={{ color: "var(--ikf-text-dim)" }}> · {upload.providerName}</span> : ""}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <StatusBadge status={status} />
+                    <ArrowRight size={16} style={{ color: "var(--ikf-text-dim)" }} />
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         </section>
       ))}
@@ -156,8 +150,6 @@ function MentorAssistancePanel({
     onSuccess: () => onChanged(),
   });
 
-  // Already requested (this session or a prior visit) → show the reassuring
-  // "we've got it" state instead of the form.
   if (state.assistanceRequestedAt || mutation.isSuccess) {
     return (
       <div className="ikf-card p-6 mb-8 flex items-start gap-3" style={{ borderColor: "var(--ikf-brand)" }}>
@@ -231,204 +223,6 @@ function MentorAssistancePanel({
             </div>
           )}
         </div>
-      </div>
-    </div>
-  );
-}
-
-function AssessmentCard({
-  template,
-  upload,
-  providers,
-  onChanged,
-}: {
-  template: Stage2State["templates"][number];
-  upload: UploadRecord | undefined;
-  providers: Stage2State["providers"];
-  onChanged: () => void;
-}) {
-  const fileRef = useRef<HTMLInputElement | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  // Which partner produced the report being uploaded (feedback 3.c). Seeded from
-  // the existing upload so a "Replace file" keeps the same partner by default.
-  const [selectedProvider, setSelectedProvider] = useState<string | null>(upload?.providerId ?? null);
-
-  const uploadMutation = useMutation({
-    mutationFn: async (file: File) => {
-      const fd = new FormData();
-      fd.set("assessmentKey", template.key);
-      fd.set("file", file);
-      if (selectedProvider) fd.set("providerId", selectedProvider);
-      return uploadAssessment({ data: fd });
-    },
-    onSuccess: () => { setError(null); onChanged(); },
-    onError: (err) => setError(err instanceof Error ? err.message : "Upload failed."),
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => deleteUpload({ data: { uploadId: id } }),
-    onSuccess: () => onChanged(),
-    onError: (err) => setError(err instanceof Error ? err.message : "Could not remove file."),
-  });
-
-  function pickFile() { fileRef.current?.click(); }
-  function onChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const f = e.target.files?.[0];
-    if (!f) return;
-    setError(null);
-    uploadMutation.mutate(f);
-    e.target.value = "";
-  }
-
-  const status: "verified" | "uploaded" | "pending" | "rejected" = upload?.status ?? "pending";
-  const isRequired = template.required;
-
-  return (
-    <div className="ikf-card p-6 flex flex-col gap-4">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex-1">
-          <h3 className="text-[16px] font-bold leading-tight">{template.title}</h3>
-          {isRequired ? (
-            <div className="text-[10px] uppercase tracking-[0.14em] mt-1.5 font-bold" style={{ color: "var(--ikf-brand-ink)" }}>
-              Required
-            </div>
-          ) : (
-            <div className="text-[10px] uppercase tracking-[0.14em] mt-1.5" style={{ color: "var(--ikf-text-dim)" }}>
-              Optional
-            </div>
-          )}
-        </div>
-        <StatusBadge status={status} />
-      </div>
-
-      {template.description && (
-        <p className="text-[13px] leading-relaxed" style={{ color: "var(--ikf-text-dim)" }}>
-          {template.description}
-        </p>
-      )}
-
-      {providers.length > 0 && (
-        <div className="text-[12px]">
-          <div className="uppercase tracking-[0.14em] mb-2 flex items-center justify-between gap-2" style={{ color: "var(--ikf-text-dim)" }}>
-            <span>Select the partner whose report you're uploading</span>
-            {providers.some(p => p.chargeInr != null) && <span>Report charge</span>}
-          </div>
-          <ul className="space-y-1.5">
-            {providers.map(p => {
-              const selected = selectedProvider === p.id;
-              return (
-                <li key={p.id}>
-                  <button
-                    type="button"
-                    onClick={() => setSelectedProvider(selected ? null : p.id)}
-                    className="w-full text-left rounded-lg border p-2.5 flex items-start justify-between gap-3 transition-colors"
-                    style={selected
-                      ? { borderColor: "var(--ikf-brand)", background: "var(--ikf-surface-2)" }
-                      : { borderColor: "var(--ikf-border)", background: "transparent" }}
-                  >
-                    <div className="min-w-0 flex items-start gap-2">
-                      <span
-                        className="mt-0.5 shrink-0 inline-flex items-center justify-center w-4 h-4 rounded-full"
-                        style={{ border: `2px solid ${selected ? "var(--ikf-brand)" : "var(--ikf-border)"}`, background: selected ? "var(--ikf-brand)" : "transparent", color: "#0B1220" }}
-                      >
-                        {selected && <Check size={10} strokeWidth={3} />}
-                      </span>
-                      <span className="min-w-0">
-                        <span className="font-semibold">{p.name}{p.city ? ` · ${p.city}` : ""}</span>
-                        {p.description && (
-                          <span className="ml-1.5" style={{ color: "var(--ikf-text-dim)" }}>— {p.description}</span>
-                        )}
-                        <a
-                          href={p.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={e => e.stopPropagation()}
-                          className="ml-1.5 inline-flex items-center gap-1 hover:underline"
-                          style={{ color: "var(--ikf-brand-ink)" }}
-                        >
-                          visit <ExternalLink size={10} />
-                        </a>
-                      </span>
-                    </div>
-                    {p.chargeInr != null && (
-                      <span className="shrink-0 text-[12px] font-bold tabular-nums" style={{ color: "var(--ikf-accent)" }}>
-                        ₹{p.chargeInr.toLocaleString("en-IN")}
-                      </span>
-                    )}
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      )}
-
-      {upload && (
-        <div className="rounded-lg p-3 text-[12px] flex items-center justify-between gap-3" style={{ background: "var(--ikf-surface-2)" }}>
-          <div className="flex items-center gap-2 min-w-0">
-            <FileText size={14} style={{ color: "var(--ikf-text-dim)", flexShrink: 0 }} />
-            <a
-              href={`/api/uploads/${upload.id}?inline=1`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="truncate hover:underline"
-              title={upload.fileName}
-            >
-              {upload.fileName}
-            </a>
-            <span className="opacity-60 flex-shrink-0">· {formatBytes(upload.fileSize)}</span>
-            {upload.providerName && (
-              <span className="opacity-70 flex-shrink-0 truncate" title={`Partner: ${upload.providerName}`}>· {upload.providerName}</span>
-            )}
-          </div>
-          <button
-            onClick={() => deleteMutation.mutate(upload.id)}
-            disabled={deleteMutation.isPending}
-            className="opacity-60 hover:opacity-100 transition-opacity"
-            title="Remove file"
-          >
-            {deleteMutation.isPending ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
-          </button>
-        </div>
-      )}
-
-      {error && (
-        <div
-          className="text-[12px] p-3 rounded-lg"
-          style={{
-            background: "rgba(220, 38, 38, 0.08)",
-            color: "#dc2626",
-            border: "1px solid rgba(220, 38, 38, 0.2)",
-          }}
-        >
-          {error}
-        </div>
-      )}
-
-      <div className="flex items-center gap-3 mt-auto">
-        <input
-          ref={fileRef}
-          type="file"
-          accept={ACCEPTED_MIME.join(",")}
-          onChange={onChange}
-          hidden
-        />
-        <button
-          onClick={pickFile}
-          disabled={uploadMutation.isPending || (providers.length > 0 && !selectedProvider)}
-          className="ikf-btn-primary inline-flex items-center gap-2 text-[13px] disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {uploadMutation.isPending ? (
-            <><Loader2 size={14} className="animate-spin" /> Uploading…</>
-          ) : (
-            <><FileUp size={14} /> {upload ? "Replace file" : "Upload file"}</>
-          )}
-        </button>
-        <span className="text-[11px]" style={{ color: "var(--ikf-text-dim)" }}>
-          {providers.length > 0 && !selectedProvider
-            ? "Select a partner above to upload"
-            : "PDF, DOC, DOCX, JPG, PNG · Max 15 MB"}
-        </span>
       </div>
     </div>
   );

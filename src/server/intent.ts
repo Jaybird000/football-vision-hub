@@ -409,6 +409,24 @@ export const getMySop = createServerFn({ method: "GET" })
     };
   });
 
+// The parent-facing name of the mentor (advisor) assigned to a child, or null.
+// Surfaced on the dashboard (feedback 30 Jun 2026, item 4).
+export const getMyMentor = createServerFn({ method: "GET" })
+  .inputValidator((d: unknown) => z.object({ profileId: z.string().uuid().optional() }).parse(d ?? {}))
+  .handler(async ({ data }): Promise<{ name: string } | null> => {
+    const userId = await getSessionUserId();
+    if (!userId) return null;
+    const profileId = await resolveOwnedProfileId(userId, data.profileId);
+    if (!profileId) return null;
+    const rows = await sql<{ full_name: string }[]>`
+      SELECT a.full_name
+      FROM parent_child_profiles p
+      JOIN users a ON a.id = p.advisor_id
+      WHERE p.id = ${profileId} LIMIT 1
+    `.catch(() => [] as { full_name: string }[]);
+    return rows[0] ? { name: rows[0].full_name } : null;
+  });
+
 const FlagReviewInput = z.object({
   profileId: z.string().uuid().optional(),
   note: z.string().trim().max(2000).optional().default(""),

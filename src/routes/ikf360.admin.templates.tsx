@@ -24,6 +24,8 @@ type DraftTemplate = {
   required: boolean;
   sortOrder: number;
   isNew: boolean;
+  contextMd: string;
+  formatUrl: string;
 };
 
 function TemplatesAdmin() {
@@ -73,7 +75,7 @@ function TemplatesAdmin() {
             </p>
           </div>
           <button
-            onClick={() => setEditing({ key: "", category: "", title: "", description: "", required: false, sortOrder: nextSort, isNew: true })}
+            onClick={() => setEditing({ key: "", category: "", title: "", description: "", required: false, sortOrder: nextSort, isNew: true, contextMd: "", formatUrl: "" })}
             className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-md text-[13px] font-semibold shrink-0"
             style={{ background: "var(--ikf-brand)", color: "#0B1220" }}
           >
@@ -136,13 +138,13 @@ function TemplatesAdmin() {
                 <td className="p-4">
                   <div className="flex items-center justify-end gap-1">
                     <button
-                      onClick={() => setEditing({ key: t.key, category: t.category, title: t.title, description: t.description, required: t.required, sortOrder: t.sortOrder, isNew: false })}
+                      onClick={() => setEditing({ key: t.key, category: t.category, title: t.title, description: t.description, required: t.required, sortOrder: t.sortOrder, isNew: false, contextMd: t.contextMd ?? "", formatUrl: t.formatUrl ?? "" })}
                       className="p-2 rounded-md opacity-70 hover:opacity-100" title="Edit"
                     >
                       <Edit3 size={14} />
                     </button>
                     <button
-                      onClick={() => setEditing({ key: "", category: t.category, title: `${t.title} (copy)`, description: t.description, required: t.required, sortOrder: nextSort, isNew: true })}
+                      onClick={() => setEditing({ key: "", category: t.category, title: `${t.title} (copy)`, description: t.description, required: t.required, sortOrder: nextSort, isNew: true, contextMd: t.contextMd ?? "", formatUrl: t.formatUrl ?? "" })}
                       className="p-2 rounded-md opacity-70 hover:opacity-100" title="Duplicate"
                     >
                       <Copy size={14} />
@@ -238,6 +240,14 @@ function TemplateModal({
 
         <Field label="Description (optional)">
           <textarea className="ikf-input" rows={2} value={draft.description} onChange={e => onChange({ description: e.target.value })} placeholder="What this report covers." />
+        </Field>
+
+        <Field label="Context — what it is & why (optional)" hint="Shown at the top of this assessment's upload page.">
+          <textarea className="ikf-input" rows={3} value={draft.contextMd} onChange={e => onChange({ contextMd: e.target.value })} placeholder="Why this report matters for the recommendation, and what a good one looks like." />
+        </Field>
+
+        <Field label="IKF predefined format URL (optional)" hint="Link parents download to upload in the IKF format.">
+          <input className="ikf-input" value={draft.formatUrl} onChange={e => onChange({ formatUrl: e.target.value })} placeholder="https://… (PDF/DOC template)" />
         </Field>
 
         <div className="grid grid-cols-2 gap-4">

@@ -143,6 +143,11 @@ function LoginPage() {
                 autoComplete="current-password"
                 required
               />
+              <div className="mt-2 text-right">
+                <Link to="/forgot-password" className="text-[12px] underline" style={{ color: "var(--ikf-text-dim)" }}>
+                  Forgot password?
+                </Link>
+              </div>
             </Field>
 
             <button

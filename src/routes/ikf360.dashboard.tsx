@@ -7,8 +7,8 @@ import {
   Target, Users, FileText, Flag, CheckCircle2, ChevronRight, Bell, X, CalendarClock, BookOpen,
 } from "lucide-react";
 import { getMyCategorisation, getMyJourney, type JourneyEvent, type CategorisationSnapshot } from "@/server/stage3";
-import { getMyStage2 } from "@/server/stage2";
-import { listMyChildren, setActiveChild, getMySop, getMyResponses, flagSopForReview, type MyChild, type MySopSummary } from "@/server/intent";
+import { getMyStage2, type Stage2State } from "@/server/stage2";
+import { listMyChildren, setActiveChild, getMySop, getMyResponses, getMyMentor, flagSopForReview, type MyChild, type MySopSummary } from "@/server/intent";
 import { listMyNotifications, markNotificationRead, type MyNotification } from "@/server/notifications";
 import { ACADEMIC_MODIFIERS, JOURNEY_QUESTIONS, type AcademicModifier, type SopResponses } from "@/lib/ikf360-data";
 import { refreshWelcome } from "@/server/auth";
@@ -18,16 +18,17 @@ export const Route = createFileRoute("/ikf360/dashboard")({
     const children = await listMyChildren();
     const active = children.find(c => c.isActive) ?? children[0] ?? null;
     const profileId = active?.profileId ?? undefined;
-    const [categorisation, stage2, journey, sop, notifications] = await Promise.all([
+    const [categorisation, stage2, journey, sop, notifications, mentor] = await Promise.all([
       getMyCategorisation({ data: { profileId } }),
       getMyStage2({ data: { profileId } }),
       getMyJourney({ data: { profileId } }),
       getMySop({ data: { profileId } }),
       listMyNotifications({ data: { profileId } }),
+      getMyMentor({ data: { profileId } }),
     ]);
     // Keep the login-screen personalisation cookie fresh (active child / review date).
     await refreshWelcome().catch(() => {});
-    return { children, profileId: active?.profileId ?? null, categorisation, stage2, journey, sop, notifications };
+    return { children, profileId: active?.profileId ?? null, categorisation, stage2, journey, sop, notifications, mentor };
   },
   component: ParentDashboard,
 });
@@ -74,6 +75,12 @@ function ParentDashboard() {
     initialData: isInitial ? data.notifications : undefined,
     ...keepPrev,
   });
+  const { data: mentor } = useQuery({
+    queryKey: ["myMentor", selectedId],
+    queryFn: () => getMyMentor({ data: { profileId: selectedId ?? undefined } }),
+    initialData: isInitial ? data.mentor : undefined,
+    ...keepPrev,
+  });
 
   const activeMutation = useMutation({
     mutationFn: (profileId: string) => setActiveChild({ data: { profileId } }),
@@ -105,6 +112,7 @@ function ParentDashboard() {
     <div className="max-w-3xl mx-auto">
       <ChildTabs kids={children} selectedId={selectedChild.profileId} onSwitch={switchChild} />
       <GreetingStrip child={selectedChild} sop={sop ?? null} lastReviewed={cat?.scoredAt ?? null} />
+      <StatusStrip mentorName={mentor?.name ?? null} stage={selectedChild.stage} stage2={stage2} scored={!!cat} />
       <NotificationStrip items={notifications} />
 
       {/* Recommendation not published yet — quiet waiting state */}
@@ -235,6 +243,37 @@ function GreetingStrip({ child, sop, lastReviewed }: { child: MyChild; sop: MySo
           </span>
         ))}
       </div>
+    </div>
+  );
+}
+
+/* ─── At-a-glance status: mentor · reports · stage ────────────────────────── */
+
+function StatusStrip({ mentorName, stage, stage2, scored }: { mentorName: string | null; stage: number; stage2: Stage2State; scored: boolean }) {
+  void stage;
+  const req = stage2.requiredKeys.length;
+  const done = stage2.uploadedRequiredCount;
+  const statusLabel = scored
+    ? "Recommendation ready"
+    : stage2.minimumDatasetReached
+      ? "Awaiting recommendation"
+      : "Gathering reports";
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-5">
+      <StatusCell icon={<Users size={15} />} label="Your mentor" value={mentorName ?? "Being assigned"} muted={!mentorName} />
+      <StatusCell icon={<FileText size={15} />} label="Reports" value={req > 0 ? `${done} of ${req} required in` : "No required reports"} />
+      <StatusCell icon={<Compass size={15} />} label="Status" value={statusLabel} />
+    </div>
+  );
+}
+
+function StatusCell({ icon, label, value, muted }: { icon: ReactNode; label: string; value: string; muted?: boolean }) {
+  return (
+    <div className="ikf-card p-4">
+      <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.12em] mb-1" style={{ color: "var(--ikf-brand-ink)" }}>
+        {icon} {label}
+      </div>
+      <div className="text-[14px] font-semibold" style={{ color: muted ? "var(--ikf-text-dim)" : "var(--ikf-text)" }}>{value}</div>
     </div>
   );
 }
